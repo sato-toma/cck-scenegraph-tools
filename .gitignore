@@ -31,7 +31,8 @@ AssetBundles/
 Thumbs.db
 
 # VS Code
-.vscode/
+.vscode/*
+!.vscode/mcp.json
 
 # Unity package cache / build artifacts
 packages/*/Library/
