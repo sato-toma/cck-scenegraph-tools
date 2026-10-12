@@ -94,4 +94,5 @@ Unity MCP は、変更系のツールも公開します。初期段階では読�
 - [データフローと責務](docs/architecture/data-flow.md)
 - [SceneGraph TOML スキーマ](docs/schema/scene-graph-toml.md)
 - [ADR 0001: Unity exporter と analyzer の共有仕様](docs/adr/0001-cross-package-contract.md)
+- [ADR 0002: MCP のシーン情報の照合](docs/adr/0002-mcp-scene-data-reconciliation.md)
 - [開発ロードマップ](docs/development-roadmap.md)

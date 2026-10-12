@@ -83,7 +83,7 @@ MCP の応答から新しい `SceneGraph.toml` を直接生成するのではな
 - `enabled` や取得不能な `properties` は未知のままとし、`true` や空値へ置き換えない。プロパティ値も、キー名・型・unsupported 表現を確認してから個別に対応させる。
 - `project` は既存 TOML の値を保つ。MCP 応答のシーン名をプロジェクト識別名として流用しない。
 
-この方針ならば、MCP から識別・検査できた事実だけを利用し、既存 `SceneGraphParser` の入力契約を推測値で汚染しない。
+この方針ならば、MCP から識別・検査できた事実だけを利用し、既存 `SceneGraphParser` の入力契約を推測値で汚染しない。照合の入出力、規則、実装順序は [ADR 0002](adr/0002-mcp-scene-data-reconciliation.md) に定義する。
 
 ### 識別子の取得不能・重複名・曖昧な対象
 
