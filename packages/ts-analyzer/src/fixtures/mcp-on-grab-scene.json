@@ -1,0 +1,62 @@
+{
+  "getSceneHierarchy": {
+    "sceneName": "test",
+    "scenePath": "Assets/test.unity",
+    "isDirty": false,
+    "isActive": true,
+    "roots": [
+      {
+        "name": "onGrab",
+        "instanceId": 41018,
+        "hierarchyPath": "/onGrab",
+        "activeSelf": true,
+        "components": [
+          "Transform",
+          "Item",
+          "Rigidbody",
+          "MovableItem",
+          "GrabbableItem",
+          "ScriptableItem"
+        ],
+        "children": [
+          {
+            "name": "Cube",
+            "instanceId": 40966,
+            "hierarchyPath": "/onGrab/Cube",
+            "activeSelf": true,
+            "components": [
+              "Transform",
+              "MeshFilter",
+              "MeshRenderer",
+              "BoxCollider"
+            ],
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "findGameObjects": {
+    "count": 2,
+    "gameObjects": [
+      {
+        "globalId": "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1369298475-0",
+        "assetPath": null,
+        "guid": null,
+        "fileId": null,
+        "instanceId": 41018,
+        "hierarchyPath": "/onGrab",
+        "type": "GameObject"
+      },
+      {
+        "globalId": "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-676474044-0",
+        "assetPath": null,
+        "guid": null,
+        "fileId": null,
+        "instanceId": 40966,
+        "hierarchyPath": "/onGrab/Cube",
+        "type": "GameObject"
+      }
+    ]
+  }
+}

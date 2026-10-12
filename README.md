@@ -77,7 +77,7 @@ npx ts-analyzer analyze ./SceneGraph.toml ./script.ts
 
 ## Unity MCP（GitHub Copilot Agent mode 連携）
 
-Unity CLI に組み込まれた MCP サーバーを使い、VS Code の GitHub Copilot Agent mode から起動中の Unity Editor のシーン情報を読み取れます。独自の MCP サーバーは実装していません。
+Unity CLI に組み込まれた MCP サーバーを使い、VS Code の GitHub Copilot Agent mode から Unity Editor と連携できます。シーン構成を解析する正規入力は、既存のカスタム `SelectiveComponentTomlExporter` が出力する `SceneGraph.toml` です。MCP の階層・Component 読み取りは補助診断に限り、SceneGraph の代替にはしません。独自の MCP サーバーは実装していません。
 
 - 設定ファイル: [`.mcp.json`](.mcp.json)。`unity mcp` を起動し、`packages/unity-semantic-graph/Samples~` を対象にします。VS Code、Copilot CLI など対応クライアントが読む共通形式で、絶対パスやユーザー固有の値は含めません。
 - 必要なもの: Windows、VS Code 1.141 以降（GitHub Copilot Chat は同梱）、Unity CLI（`winget install --id Unity.CLI --exact`）、Unity 6000.2.6f2、GitHub Copilot のサインイン。
@@ -85,7 +85,7 @@ Unity CLI に組み込まれた MCP サーバーを使い、VS Code の GitHub C
 - AI エージェント向けの作業手順: [.github/skills/unity-mcp-setup/SKILL.md](.github/skills/unity-mcp-setup/SKILL.md)
 - 調査結果と SceneGraph との対応: [docs/unity-cli-mcp.md](docs/unity-cli-mcp.md)
 
-Unity MCP は、変更系のツールも公開します。初期段階では読み取り専用のツールだけを使い、MCP が使えなくても既存の静的解析は単独で実行できます。
+Unity MCP は、変更系のツールも公開します。Component 追加は承認済みの修正計画に対する `add_component` を主経路とし、無承認の変更は行いません。変更後はカスタムExporterでSceneGraphを再出力して検証します。MCPが利用できなくても、Exporterによる出力と既存の静的解析は単独で実行できます。
 
 ## 設計資料
 

@@ -21,6 +21,11 @@ SceneGraph + 構造化された要求 + ClusterScriptDefinitions
   -> ConstraintValidator
   -> ClusterScriptAnalyzer
   -> CLI report / CI 結果
+
+Unity CLI MCP の読み取り応答
+  -> McpSceneAdapter
+  -> McpSceneSnapshot（GlobalObjectId・階層・短縮Component名・取得状態）
+  -> 将来の Reconciler（未実装）
 ```
 
 ## 責務
@@ -47,6 +52,7 @@ SceneGraph + 構造化された要求 + ClusterScriptDefinitions
 - 同一 API・同一型条件の要求は集約し、全ての出現位置・条件・根拠を残す。条件抽出は単純な `if` ブロックに限定し、解釈できない条件は `unknown` とする。
 - `ComponentRequirementValidator` は `Source_Code_Asset` とソースファイルを対応付け、対象 GameObject が一意なら `ConstraintValidator` でそのオブジェクトの階層内にある有効な Component と照合する。結果には照合した Component の所有 GameObject ID / path も含める。対象不明・複数候補・未対応引数は、それぞれ `unverified`・`ambiguous`・`unsupported` として返す。
 - 照合結果は `AnalysisResult.componentRequests` で取得できる。既存の `issues`、CLI レポート、終了コードは変更しない。
+- `McpSceneAdapter` は Unity CLI MCP の `get_scene_hierarchy` / `find_gameobjects` 応答を純粋関数で正規化する。`instanceId` は応答間の結合にだけ使い、GlobalObjectId が得られない対象は診断に記録してスナップショットから除外する。Component の `enabled` は MCP から取得できないため `unsupported` とし、SceneGraph や analyzer の入力に変換しない。
 
 ### 要求モデルとバリデータ
 
@@ -54,7 +60,7 @@ SceneGraph + 構造化された要求 + ClusterScriptDefinitions
 - `ComponentRequirementValidator` は要求を `Source_Code_Asset` に紐づく対象 GameObject に対応付け、照合結果を要求に付与する。
 - `ConstraintValidator` は一つの GameObject と Component 制約を比較する低レベルの判定器。対象解決や解析レポート全体の生成は担当しない。
 - `$.getUnityComponent("...")` は Component の参照であり、必須条件とは限らないため、型を抽出しても既定では `unverified` とする。
-- この経路は現在の SceneGraph TOML を使う。Unity CLI MCP のシーン情報を同じ SceneGraph モデルに接続する作業は別フェーズとする。
+- この経路は現在の SceneGraph TOML を使う。MCP 応答の正規化は実装済みだが、Reconciler・analyzerへの接続・不足判定は未実装であり、既存の解析経路には影響しない。
 
 ### Constraint validator
 

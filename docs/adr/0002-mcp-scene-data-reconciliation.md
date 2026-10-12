@@ -47,6 +47,9 @@ exporter の SceneGraph.toml -> SceneGraphParser -> SceneGraph ┘
 ```ts
 interface McpSceneSnapshot {
   sceneName: string;
+  scenePath: string;
+  isActive: boolean;
+  isDirty: boolean;
   gameObjects: McpGameObject[];
 }
 
@@ -54,16 +57,21 @@ interface McpGameObject {
   globalId: string;          // find_gameobjects.globalId
   hierarchyPath: string;     // get_scene_hierarchy.hierarchyPath（先頭 "/" を保持）
   name: string;
+  activeSelf: boolean;
   components: McpComponent[];
 }
 
 interface McpComponent {
-  globalId?: string;         // get_component_properties で取得できた場合のみ
   shortTypeName: string;     // "Item"、"Rigidbody" など
+  enabled: { status: "unsupported"; reason: string };
 }
 ```
 
 アダプタは `McpSceneSnapshot` を作る段階で、取得できなかった値を `undefined` のままにする。既定値で埋めない。
+
+実機応答では、`get_scene_hierarchy` の各 GameObject に一時的な `instanceId` が含まれ、`find_gameobjects` は同じ `instanceId` と安定した `globalId` を返す。アダプタはこの2つの応答を `instanceId` で結び、さらに `hierarchyPath` が一致することを確認してから `globalId` を割り当てる。`instanceId` はツール応答間の一時的な結合にだけ使い、スナップショットの識別子には保存しない。対象が対応しない場合やパスが変わっていた場合は推測で結合せず、診断に記録する。
+
+現行の読み取りツールは Component の短縮型名と GameObject の `activeSelf` を返すが、Component の `enabled` は返さない。正規化後も `enabled` を `unsupported` として保持し、`true` / `false` を推定しない。Component の GlobalObjectId は `get_component_properties` で個別に取得できるが、階層応答には Component の識別子がないため、現在のスナップショットには割り当てない。
 
 ### 変換規則
 
@@ -120,6 +128,8 @@ interface McpReconciliationReport {
    - 同じ fixture を `SceneGraphParser` で読み、既存サンプル（`onGrab`）の結果が変わらないことも確認する。
 2. 実機の MCP 応答から fixture を採取し、アダプタ（応答の正規化）を追加する。
 3. CLI へ照合コマンドを追加するかは、手順 1・2 の結果を見て別途決める。追加する場合は終了コードを文書化する。
+
+手順 2 の読み取り応答 fixture と正規化アダプタは `packages/ts-analyzer/src/fixtures/mcp-on-grab-scene.json` および `McpSceneAdapter` に実装した。現段階では Unity CLI MCP のツール呼び出しは Agent Host が担い、アダプタは読み取りツールの応答を入力として受け取る。Component の `enabled` が取得できないこと、および MCP 取得と SceneGraph 照合をつなぐ CLI は未完了である。
 
 ## 未確認の事項
 
