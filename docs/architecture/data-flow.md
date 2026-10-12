@@ -45,7 +45,7 @@ SceneGraph + 検出結果 + ClusterScriptDefinitions
 - 親 GameObject を含めるかどうかは、現在の analyzer の解決規則に従う。
 - 「文字列が一致した」ことと「正しい GameObject に属する」ことを分けて報告できる設計を目指す。
 
-## 重要な契約
+## SceneGraph.toml の構造で守ること
 
 - コンポーネント型は Unity の完全修飾名を基本とする。
 - `enabled = false` のコンポーネントは、存在していても使用可能とはみなさない。

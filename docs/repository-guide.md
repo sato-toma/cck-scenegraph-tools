@@ -33,7 +33,7 @@
 - `.github/workflows/`
   - 現在は TypeScript analyzer の build/test を実行
 - `docs/`
-  - 設計、データ契約、ADR、開発計画
+  - 設計、SceneGraph.toml の構造定義、ADR、開発計画
 - `.github/copilot-instructions.md`
   - このリポジトリで Agent が守る作業規約
 - `.github/skills/`

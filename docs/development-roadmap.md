@@ -7,7 +7,7 @@
 - [ ] Node のバージョン、npm lock、CI の verify 手順を固定する。
 - [ ] 解析結果の exit code を定義する。問題あり、入力エラー、実行エラーを分ける。
 
-## Phase 1: データ契約を安定させる
+## Phase 1: SceneGraph.toml の構造を安定させる
 
 - [ ] TOML の version/schemaVersion を追加する。
 - [ ] `path` / `parent` / `id` の意味を一つに決める。
@@ -42,4 +42,4 @@
 
 ## 優先順位
 
-最初に Phase 0 と Phase 1 を進める。解析精度を上げても入力契約が揺れると結果を信頼できないため、AST 化や VS Code 統合より先に schema と CI の再現性を固める。
+最初に Phase 0 と Phase 1 を進める。解析精度を上げても入力（SceneGraph.toml）の構造が揺れると結果を信頼できないため、AST 化や VS Code 統合より先に schema と CI の再現性を固める。

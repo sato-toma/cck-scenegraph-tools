@@ -1,4 +1,4 @@
-# ADR 0001: Unity exporter と analyzer の契約を TOML に置く
+# ADR 0001: Unity exporter と analyzer の共有仕様を TOML に置く
 
 - 状態: Accepted
 - 日付: 2026-09-21
@@ -9,7 +9,7 @@ Unity Editor と Node.js/TypeScript analyzer は異なる実行環境で動く�
 
 ## 決定
 
-`SceneGraph.toml` を Unity exporter と TypeScript analyzer の共有契約とする。契約の中心は GameObject の安定 ID、階層パス、コンポーネント完全修飾型、enabled 状態、プロパティである。
+`SceneGraph.toml` は、Unity exporter が Unity プロジェクト（シーン）の構造をダンプした構造化ファイルとし、TypeScript analyzer はこのファイルの構造をもとに静的解析する。そのため、この構造が exporter と analyzer の共有仕様になる。構造の中心は GameObject の安定 ID、階層パス、コンポーネント完全修飾型、enabled 状態、プロパティである。
 
 ## 理由
 

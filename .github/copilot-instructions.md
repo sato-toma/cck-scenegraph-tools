@@ -9,7 +9,7 @@ This repository exports Unity Cluster Creator Kit scene data to `SceneGraph.toml
 - Write user-facing documentation in Japanese unless the task requests another language.
 - Write code comments and commit messages in English.
 - Keep changes focused on the owning package and update cross-package contract files when TOML changes.
-- Treat `SceneGraph.toml` as a compatibility contract between Unity exporter and TypeScript analyzer.
+- Treat `SceneGraph.toml` as a structured dump of the Unity project written by the exporter; the TypeScript analyzer performs static analysis based on its structure, so changing the structure affects both packages.
 - Prefer exact Unity component full names for constraint matching.
 - Do not silently change analyzer exit-code behavior or report formats; document and test such changes.
 - Add or update tests for parser, validator, analyzer, and exporter behavior affected by a change.

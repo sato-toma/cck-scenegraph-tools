@@ -74,9 +74,23 @@ npm run verify
 npx ts-analyzer analyze ./SceneGraph.toml ./script.ts
 ```
 
+## Unity MCP（GitHub Copilot Agent mode 連携）
+
+Unity CLI に組み込まれた MCP サーバーを使い、VS Code の GitHub Copilot Agent mode から起動中の Unity Editor のシーン情報を読み取れます。独自の MCP サーバーは実装していません。
+
+- 設定ファイル: [`.mcp.json`](.mcp.json)。`unity mcp` を起動し、`packages/unity-semantic-graph/Samples~` を対象にします。VS Code、Copilot CLI など対応クライアントが読む共通形式で、絶対パスやユーザー固有の値は含めません。
+- 必要なもの: Windows、VS Code 1.141 以降（GitHub Copilot Chat は同梱）、Unity CLI（`winget install --id Unity.CLI --exact`）、Unity 6000.2.6f2、GitHub Copilot のサインイン。
+- 導入手順、設定方針、動作確認、トラブルシューティング: [docs/unity-mcp-setup.md](docs/unity-mcp-setup.md)
+- AI エージェント向けの作業手順: [.github/skills/unity-mcp-setup/SKILL.md](.github/skills/unity-mcp-setup/SKILL.md)
+- 調査結果と SceneGraph との対応: [docs/unity-cli-mcp.md](docs/unity-cli-mcp.md)
+
+Unity MCP は、変更系のツールも公開します。初期段階では読み取り専用のツールだけを使い、MCP が使えなくても既存の静的解析は単独で実行できます。
+
 ## 設計資料
 
+- [Unity MCP セットアップ](docs/unity-mcp-setup.md)
+- [Unity CLI MCP 調査](docs/unity-cli-mcp.md)
 - [データフローと責務](docs/architecture/data-flow.md)
 - [SceneGraph TOML スキーマ](docs/schema/scene-graph-toml.md)
-- [ADR 0001: Unity exporter と analyzer の契約](docs/adr/0001-cross-package-contract.md)
+- [ADR 0001: Unity exporter と analyzer の共有仕様](docs/adr/0001-cross-package-contract.md)
 - [開発ロードマップ](docs/development-roadmap.md)
