@@ -11,6 +11,7 @@ Cluster Creator Kit の Unity シーンを `SceneGraph.toml` に出力し、Clus
 - `docs/`: データフロー、TOML スキーマ、ADR、開発ロードマップ
 
 詳しい案内は [docs/repository-guide.md](docs/repository-guide.md) を参照してください。
+リポジトリで使う用語は [用語集](docs/glossary.md) を参照してください。
 
 ## 基本フロー
 

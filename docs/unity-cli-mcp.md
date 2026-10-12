@@ -58,18 +58,40 @@ Editor を閉じた状態では、`unity` サーバーは `connected (ready)` �
 
 実サンプルのシーンで、`GlobalObjectId`、パス、型名を `Samples~/Assets/SceneGraph.toml`（`onGrab` と `onGrab/Cube`）と突き合わせた。
 
-| SceneGraph | MCP から取得できる値 | 対応状況 |
+| SceneGraph フィールド | MCP の取得元 | 対応と制約 |
 | --- | --- | --- |
-| GameObject `id` | `find_gameobjects` の `globalId` | **完全一致**。`GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1369298475-0`（`onGrab`）が TOML と同一。 |
-| Component `id` | `get_component_properties` の `component.globalId` | **完全一致**。`Item` の `...-1369298480-0` が TOML と同一。 |
-| GameObject `path` / `name` / `parent` | `get_scene_hierarchy` の `hierarchyPath`、`name`、入れ子構造 | 変換が必要。MCP は `/onGrab`、TOML は `onGrab`（先頭の `/` なし）。`parent` は階層から導出できる。 |
-| Component `type` | `get_scene_hierarchy` の `components`、`get_component_properties` の `type` | **不一致**。MCP は短縮名（`Item`、`Rigidbody`）、TOML は完全修飾名（`ClusterVR.CreatorKit.Item.Implements.Item`、`UnityEngine.Rigidbody`）。 |
-| Component `enabled` | — | **取得できない**。`get_component_properties` にも `get_serialized_fields` にも、Camera と CCK の `Item` で `enabled` / `m_Enabled` が含まれなかった。 |
-| Component `properties` | `get_component_properties`、`get_serialized_fields` | キー名が異なる。MCP はシリアライズ名（`itemName`、`m_Mass`）、TOML は表示名風のキー（`Item_Name`）。LayerMask 等は `unsupported` や `<unsupported:...>` で返る。`get_serialized_fields` は `propertyType` を付けて型を区別できる。 |
-| Scene | `list_open_scenes` | 取得できる。 |
-| Console | `console_status` | コンパイル失敗の有無、エラー・警告件数を取得できる。 |
+| root `project` | — | 同等の値は取得できない。既存 TOML の値を保持する。 |
+| GameObject `id` | `find_gameobjects.globalId` | **完全一致を確認**。応答の `globalId` を識別子としてそのまま使える。 |
+| GameObject `path` | `get_scene_hierarchy.hierarchyPath` | 変換が必要。確認した例では MCP は `/onGrab`、TOML は `onGrab`。先頭 `/` を除いて対応付ける。 |
+| GameObject `name` | `get_scene_hierarchy.name` | 直接対応する。 |
+| GameObject `parent` | `get_scene_hierarchy` の入れ子構造 | 直接の親から階層パスを導出できる。ルートは TOML の規則に合わせ空文字とする。 |
+| Component `id` | `get_component_properties.component.globalId` | **完全一致を確認**。対象 Component の応答が得られる場合は直接対応する。 |
+| Component `type` | `get_scene_hierarchy.components`、`get_component_properties.type` | **完全修飾型名を応答から取得できない**。MCP は `Item`、`Rigidbody` のような短縮名を返す。`find_gameobjects` の完全修飾型名フィルターは存在確認には使えるが、型名自体の取得には使えない。 |
+| Component `enabled` | — | **取得できない**。確認した Camera と CCK `Item` では、`get_component_properties` / `get_serialized_fields` に `enabled` / `m_Enabled` がなかった。 |
+| Component `properties` | `get_component_properties`、`get_serialized_fields` | 値の取得元にはできるが、そのまま移植できない。MCP はシリアライズ名（例: `itemName`、`m_Mass`）、TOML は表示名由来のキー（例: `Item_Name`）を使う。LayerMask 等は `unsupported` や `<unsupported:...>` となる。`get_serialized_fields` の `propertyType` は型の手掛かりだが、TOML側の値への変換規則は別途必要。 |
+
+用語の意味は[用語集](glossary.md)を参照。
 
 `find_gameobjects` の `type` フィルターは完全修飾名を受け付ける。`ClusterVR.CreatorKit.Item.Implements.Item` を指定すると、`get_scene_hierarchy` で `Item` を持つ 6 個の GameObject と同数（6 件）が返った。応答に完全修飾名は含まれないが、`find_gameobjects(type=<完全修飾名>, hierarchy_path=<対象>)` で、特定の GameObject が特定の型の Component を持つかを判定できる。
+
+### SceneGraph への対応方針
+
+MCP の応答から新しい `SceneGraph.toml` を直接生成するのではなく、既存 exporter の TOML を analyzer の正規入力として維持する。MCP は `GlobalObjectId` を使った照合・追加確認に限って利用し、MCP にない情報を既定値で埋めない。
+
+- `id` は一致する MCP 値がある場合に限り直接対応付ける。パスは確認済みの先頭 `/` の違いを正規化し、`parent` は階層から導出する。
+- 完全修飾型名が応答に含まれない限り、短縮名から `type` を推測しない。完全修飾型名のフィルターは特定 GameObject 上の型の有無の確認に使えるが、完全な SceneGraph component record の代わりにはならない。
+- `enabled` や取得不能な `properties` は未知のままとし、`true` や空値へ置き換えない。プロパティ値も、キー名・型・unsupported 表現を確認してから個別に対応させる。
+- `project` は既存 TOML の値を保つ。MCP 応答のシーン名をプロジェクト識別名として流用しない。
+
+この方針ならば、MCP から識別・検査できた事実だけを利用し、既存 `SceneGraphParser` の入力契約を推測値で汚染しない。
+
+### 識別子の取得不能・重複名・曖昧な対象
+
+- 対象の特定は `GlobalObjectId`（`globalId`）を優先する。同名の GameObject や Component があっても、ID が一致すれば同一対象として扱える。
+- `globalId` を取得できない対象は、階層パスや名前だけで SceneGraph の対象に対応付けない。対応付け不能として扱い、`SceneGraph.toml` を更新・補完しない。
+- 同じ階層パスや名前が複数の GameObject に一致する場合、先頭の一致を採用しない。曖昧として扱い、ID で再確認できるまで照合結果にしない。analyzer 側も `ComponentRequirementValidator` が複数候補を `ambiguous`、対象不明を `unverified` として返す（[データフロー](architecture/data-flow.md)）。
+- 同一 GameObject に同じ型の Component が複数あるときは、短縮名では区別できない。`component.globalId` で区別する。
+- 実行時にしか存在しない値や、MCP が `unsupported` と返した値は、`properties` に出力しない。「値がない」ことと「取得できなかった」ことを区別する。
 
 ### 結論
 

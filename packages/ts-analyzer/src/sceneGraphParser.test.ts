@@ -42,6 +42,27 @@ type = "UnityEngine.Rigidbody"
 enabled = true
 `;
 
+const propertyValuesToml = String.raw`
+project = "TestProject"
+
+[[gameObjects]]
+id = "object-1"
+path = "Root/Item"
+name = "Item \"quoted\""
+parent = "Root"
+
+[[gameObjects.components]]
+id = "component-1"
+type = "UnityEngine.BoxCollider"
+enabled = true
+
+[gameObjects.components.properties]
+Label = "quote: \"x\"; path: \"C:\\Scene\"; line1\nline2"
+Mass = 1.25
+Vector = [1.25, -2.5, 3.75]
+Bounds = [[1.25, 2.5, 3.75], [4.5, 5.5, 6.5]]
+`;
+
 describe("SceneGraphParser", () => {
   it("parses a simple SceneGraph TOML", () => {
     const sceneGraph = SceneGraphParser.parse(sampleToml);
@@ -50,6 +71,23 @@ describe("SceneGraphParser", () => {
     const firstGameObject = sceneGraph.gameObjects[0]!;
     const firstComponent = firstGameObject.components[0]!;
     expect(firstComponent.type).toBe("UnityEngine.Rigidbody");
+  });
+
+  it("parses escaped strings, invariant decimal values, and nested property arrays", () => {
+    const sceneGraph = SceneGraphParser.parse(propertyValuesToml);
+    const gameObject = sceneGraph.gameObjects[0]!;
+    const component = gameObject.components[0]!;
+
+    expect(gameObject.name).toBe('Item "quoted"');
+    expect(component.properties?.Label).toBe(
+      'quote: "x"; path: "C:\\Scene"; line1\nline2',
+    );
+    expect(component.properties?.Mass).toBe(1.25);
+    expect(component.properties?.Vector).toEqual([1.25, -2.5, 3.75]);
+    expect(component.properties?.Bounds).toEqual([
+      [1.25, 2.5, 3.75],
+      [4.5, 5.5, 6.5],
+    ]);
   });
 
   it("finds game objects by component", () => {

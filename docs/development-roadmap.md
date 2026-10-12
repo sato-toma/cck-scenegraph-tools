@@ -11,7 +11,7 @@
 
 - [ ] TOML の version/schemaVersion を追加する。
 - [ ] `path` / `parent` / `id` の意味を一つに決める。
-- [ ] ComponentProperty を配列、ベクトル、参照などを表せる型に拡張する。
+- [ ] ComponentProperty に Unity オブジェクト参照の識別情報を保持できる形式を追加する（現在は配列・入れ子配列まで対応し、参照は名前文字列）。
 - [ ] Unity exporter の TOML 出力を Edit Mode テストで検証する。
 - [ ] 差分更新でコンポーネントとプロパティが失われないようにする。
 
