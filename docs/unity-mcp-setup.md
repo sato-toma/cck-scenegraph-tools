@@ -35,9 +35,8 @@ Unity CLI は実験的機能です。コマンドや仕様が変わる可能性�
 
 ## 構成ファイル
 
-Unity MCP の接続は、ルートの `.mcp.json` だけで定義し、コミットします。`mcpServers` を使うポータブル形式で、VS Code や Copilot CLI など対応クライアントが読み込みます。VS Code 形式の `.vscode/mcp.json` は、同じ定義の重複になり、VS Code の公式資料でも非推奨とされているため、使いません。
+Unity MCP の接続は、ルートの `.mcp.json` だけで定義し、コミットします。`mcpServers` を使うポータブル形式で、VS Code や Copilot CLI など対応クライアントが読み込みます。
 
-`.vscode/mcp.json` のみの状態では、`code chat --mode agent` の Agent セッションに `unity` が登録されないことを確認しました。`.mcp.json` のみにすると、`unity` が接続され、ツールが検出され、呼び出し要求まで進みました。
 
 ### `.mcp.json`
 
@@ -67,7 +66,6 @@ Unity MCP の接続は、ルートの `.mcp.json` だけで定義し、コミッ
   unity mcp configure --list
   ```
   クライアント識別子（`vscode`、`vscode-insiders`、`copilot-cli` など）は CLI のバージョンで変わり得る。他のクライアントを追加する場合は、`--dry-run` で書き込み内容を確認し、絶対パスを含めない形に書き換えてからコミットする。
-- **`.gitignore` の扱い。** `.vscode/` は個人設定のため、ディレクトリごと無視する。MCP の設定は `.vscode/` に置かない。
 
 ## セットアップ手順
 

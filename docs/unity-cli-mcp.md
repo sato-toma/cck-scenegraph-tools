@@ -88,7 +88,6 @@ Editor を閉じた状態では、`unity` サーバーは `connected (ready)` �
 
 ## 未解決の事項
 
-- `enabled` と完全修飾型名を取得する手段（`eval` による読み取り専用の式評価、Editor 拡張、既存 exporter の併用）の検討。`eval` は任意のコードを実行できるため、読み取り専用に制限できるかを先に調べる。
 - ツール呼び出しの結果までを `.mcp.json` のみの構成で確認する。現状は、`unity-list_open_scenes` の実行要求が VS Code 側の承認待ちになっている。
 - Prefab とシーンインスタンスの関係の取得方法。
 - Unity Pipeline package の導入が `Samples~/Packages/manifest.json` を変更する点の扱い（現状はコミットしない運用）。
