@@ -20,10 +20,10 @@ Human-readable procedure: `docs/unity-mcp-setup.md`. Investigation results and S
 
 1. Check prerequisites: `unity --version`, `unity mcp configure --list`, `unity editors list --json` (needs 6000.2.6f2), `code --version`.
 2. If `unity` is missing, install with `winget install --id Unity.CLI --exact` and tell the user to reopen the terminal. Do not sign in on the user's behalf.
-3. Install Pipeline into the sample: `unity pipeline install --project-path packages/unity-semantic-graph/Samples~`. This edits `Samples~/Packages/manifest.json` and `packages-lock.json`.
+3. For a task that needs Unity MCP, check for Pipeline before the first MCP call and install it at task start when absent: `unity pipeline install --project-path packages/unity-semantic-graph/Samples~`. The verified `0.8.0-exp.1` package is experimental and is not a dependency for ordinary exporter/analyzer use. See `docs/adr/0003-unity-pipeline-package-lifecycle.md`. A future stable release with verified Editor compatibility may be preinstalled before MCP tasks without waiting for a connection failure; this does not make it a tracked sample dependency.
 4. Open the Editor with `unity open packages/unity-semantic-graph/Samples~ --editor-version 6000.2.6f2`, then poll `unity pipeline list --json` until the project's `pipelineServer.isReachable` is `true`. Ask before opening the real sample if the user may already have it open.
 5. Verify in order and report each level separately: CLI (`unity pipeline list`), MCP protocol (initialize, `tools/list`, one read-only call; use UTF-8 for subprocess pipes), then Agent mode (`code chat --mode agent` with a read-only prompt; confirm `MCP server 'unity' connected (ready)` and `Tool started: unity-<tool>` in `%APPDATA%\Code\logs\<session>\agenthost.log`).
-6. After verification, close the Editor you opened (stop it by its specific PID after checking its path) and revert the two Samples~ files with `git restore`.
+6. After verification, close the Editor you opened (stop it by its specific PID after checking its path). Restore Pipeline-induced changes to both Samples~ package files, but only if they had no pre-existing modifications before installation; preserve pre-existing work and ask if safe cleanup is unclear.
 
 ## Rules
 

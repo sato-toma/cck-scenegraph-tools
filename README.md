@@ -95,5 +95,6 @@ Unity MCP は、変更系のツールも公開します。Component 追加は承
 - [SceneGraph TOML スキーマ](docs/schema/scene-graph-toml.md)
 - [ADR 0001: Unity exporter と analyzer の共有仕様](docs/adr/0001-cross-package-contract.md)
 - [ADR 0002: MCP のシーン情報の照合](docs/adr/0002-mcp-scene-data-reconciliation.md)
+- [ADR 0003: Unity Pipeline package の作業時導入と復元](docs/adr/0003-unity-pipeline-package-lifecycle.md)
 
 今後の開発項目は、GitHub Issue [#50](https://github.com/sato-toma/cck-scenegraph-tools/issues/50)（開発基盤・解析精度・運用）と [#29](https://github.com/sato-toma/cck-scenegraph-tools/issues/29)（MCP 連携）で管理します。

@@ -94,7 +94,13 @@ Unity Hub などで Unity 6000.2.6f2 をインストールします。`unity edi
 unity pipeline install --project-path packages/unity-semantic-graph/Samples~
 ```
 
-このコマンドは `Samples~/Packages/manifest.json` に `com.unity.pipeline` を追加し、`packages-lock.json` を更新します。Unity Pipeline は実験的パッケージであり、サンプルプロジェクトの配布物を変えないため、**この 2 ファイルの変更はコミットしません**。作業後は次で元に戻します。
+このコマンドは `Samples~/Packages/manifest.json` に `com.unity.pipeline` を追加し、`packages-lock.json` を更新します。Unity Pipeline は実験的パッケージであり、サンプルプロジェクトの配布物を変えないため、**この 2 ファイルの変更はコミットしません**。作業開始前に2ファイルに差分がないことを確認できた場合は、Editorを閉じた後、次で作業後に元に戻します。
+
+Unity MCPを使う作業では、AIエージェントが作業開始時にPipelineの有無を確認し、必要ならMCP呼び出しより前に導入して構いません。これはMCP利用時だけ必要な依存で、Exporter / analyzer の通常利用者には追加しない方針です。現行 `0.8.0-exp.1` は実験的バージョンで、将来互換性が変わる可能性がありますが、2026-10-12時点で特定の破壊的変更予定は確認されていません。
+
+安定版になり対象Editorとの互換性が検証された後は、MCPを使う作業の前に事前導入して構いません。安定版になっただけでサンプルの必須依存やコミット対象にはしません。標準依存に昇格する場合は、CIまたは手動検証・対応バージョン・更新とロールバック条件を別途決定します（[ADR 0003](adr/0003-unity-pipeline-package-lifecycle.md)）。
+
+作業開始前に2ファイルに既存差分がないことを確認してください。既存差分がある場合は、以下の `git restore` を実行してユーザーの変更を消さず、Pipeline導入分だけを安全に除去できなければ確認を求めます。
 
 ```powershell
 git restore -- "packages/unity-semantic-graph/Samples~/Packages/manifest.json" "packages/unity-semantic-graph/Samples~/Packages/packages-lock.json"
@@ -198,4 +204,4 @@ Tool started: unity-list_open_scenes
 | `Profile '<名前>' not found.` | `code --list-extensions --profile` は存在しないプロファイルを作らない。Profiles 画面で作成する。 |
 | スクリプトで `UnicodeDecodeError: 'cp932'` | MCP の出力は UTF-8。`subprocess` に `encoding="utf-8"` を指定する。 |
 | `unity mcp configure` が別のディレクトリに書き込もうとする | 書き込み先は作業ディレクトリ基準。対象リポジトリのルートに移動してから、`--dry-run` で確認する。 |
-| `Samples~/Packages/manifest.json` に差分が出る | `unity pipeline install` が追加した `com.unity.pipeline`。コミットせず `git restore` で戻す。 |
+| `Samples~/Packages/manifest.json` に差分が出る | [ADR 0003](adr/0003-unity-pipeline-package-lifecycle.md) に従い、Pipeline導入による `manifest.json` / `packages-lock.json` の差分はコミットしない。作業前に既存差分がないことを確認し、作業後にPipeline導入分だけを復元する。 |
