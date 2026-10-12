@@ -43,7 +43,7 @@ enabled = true
 type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
 enabled = true
 [gameObjects.components.properties]
-Source_Code_Asset = "onGrabScript"
+Source_Code_Asset = "sample.ts"
 
 [[gameObjects]]
 id = "other-object"
@@ -57,6 +57,34 @@ parent = ""
     const result = analyzer.analyzeTypeScriptFile(tsFilePath);
 
     expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests).toMatchObject([
+      {
+        api: "$.onGrab",
+        componentTypes: [
+          "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+        ],
+        target: {
+          resolution: "resolved",
+          gameObjectId: "item-object",
+          gameObjectPath: "Item",
+        },
+        verificationStatus: "satisfied",
+        validation: {
+          presentComponentTypes: [
+            "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+          ],
+          missingComponentTypes: [],
+          matchedComponents: [
+            {
+              gameObjectId: "item-object",
+              gameObjectPath: "Item",
+              componentType:
+                "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+            },
+          ],
+        },
+      },
+    ]);
   });
 
   it("requires MovableItem for setPosition and setRotation", () => {
@@ -141,6 +169,10 @@ name = "setRotation"
 parent = ""
 
 [[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.MovableItem"
+enabled = false
+
+[[gameObjects.components]]
 type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
 enabled = true
 [gameObjects.components.properties]
@@ -156,6 +188,116 @@ Source_Code_Asset = "setRotationScript"
     expect(result.issues[0]?.requiredComponents).toEqual([
       "ClusterVR.CreatorKit.Item.Implements.MovableItem",
     ]);
+    expect(result.componentRequests).toMatchObject([
+      {
+        api: "$.setRotation",
+        target: {
+          resolution: "resolved",
+          gameObjectId: "rotation-object",
+          gameObjectPath: "setRotation",
+        },
+        verificationStatus: "missing",
+        validation: {
+          presentComponentTypes: [],
+          missingComponentTypes: [
+            "ClusterVR.CreatorKit.Item.Implements.MovableItem",
+          ],
+          matchedComponents: [],
+        },
+      },
+    ]);
+  });
+
+  it("marks a request ambiguous when one script is attached to multiple objects", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(tsFilePath, "$.onGrab(() => {});\n");
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "first-object"
+path = "First"
+name = "First"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.GrabbableItem"
+enabled = true
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+
+[[gameObjects]]
+id = "second-object"
+path = "Second"
+name = "Second"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.componentRequests[0]).toMatchObject({
+      target: { resolution: "ambiguous" },
+      verificationStatus: "ambiguous",
+    });
+  });
+
+  it("does not treat a literal component lookup as a mandatory requirement", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(
+      tsFilePath,
+      '$.getUnityComponent("UnityEngine.Rigidbody");\n',
+    );
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests[0]).toMatchObject({
+      api: "$.getUnityComponent",
+      componentTypes: ["UnityEngine.Rigidbody"],
+      target: { resolution: "resolved", gameObjectId: "item-object" },
+      verificationStatus: "unverified",
+      verificationReason:
+        "A component lookup does not establish that the component is required.",
+    });
   });
 
   it("requires a Collider for onInteract", () => {
@@ -234,6 +376,17 @@ Source_Code_Asset = "onInteractScript"
     const result = analyzer.analyzeTypeScriptFile(tsFilePath);
 
     expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests[0]).toMatchObject({
+      api: "$.onInteract",
+      target: {
+        resolution: "resolved",
+        gameObjectId: "item-object",
+      },
+      verificationStatus: "satisfied",
+      validation: {
+        presentComponentTypes: ["UnityEngine.SphereCollider"],
+      },
+    });
   });
 
   it("resolves a nested script from Source_Code_Asset by basename", () => {

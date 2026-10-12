@@ -74,11 +74,59 @@ export interface ClusterScriptDefinition {
 export interface AnalysisResult {
   filePath: string;
   issues: ValidationIssue[];
+  componentRequests: ComponentRequirementRequest[];
   summary: {
     totalIssues: number;
     errorCount: number;
     warningCount: number;
   };
+}
+
+export interface ComponentRequirementRequest {
+  id: string;
+  api: string;
+  componentTypes: string[];
+  componentMatch: "all" | "any" | "unknown";
+  target: {
+    kind: "current-scriptable-item";
+    resolution: "resolved" | "ambiguous" | "unresolved";
+    gameObjectId?: string;
+    gameObjectPath?: string;
+  };
+  verificationStatus:
+    | "satisfied"
+    | "missing"
+    | "ambiguous"
+    | "unsupported"
+    | "unverified";
+  verificationReason?: string;
+  validation: {
+    presentComponentTypes: string[];
+    missingComponentTypes: string[];
+    matchedComponents: MatchedSceneComponent[];
+  };
+  occurrences: ComponentRequirementOccurrence[];
+}
+
+export interface MatchedSceneComponent {
+  gameObjectId: string;
+  gameObjectPath: string;
+  componentId: string;
+  componentType: string;
+}
+
+export interface ComponentRequirementOccurrence {
+  source: {
+    filePath: string;
+    line: number;
+    column: number;
+  };
+  condition: {
+    kind: "unconditional" | "conditional" | "unknown";
+    expression?: string;
+  };
+  evidence: string;
+  confidence: "high" | "low";
 }
 
 export interface ValidationIssue {

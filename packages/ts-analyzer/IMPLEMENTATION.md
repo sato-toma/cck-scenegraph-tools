@@ -289,6 +289,32 @@ interface ComponentConstraint {
       availableComponents: ["UnityEngine.MeshFilter"]
     }
   ],
+  componentRequests: [
+    {
+      id: "cr-<stable-hash>",
+      api: "$.addForce",
+      componentTypes: ["UnityEngine.Rigidbody"],
+      componentMatch: "all",
+      target: {
+        kind: "current-scriptable-item",
+        resolution: "unresolved"
+      },
+      verificationStatus: "unverified",
+      validation: {
+        presentComponentTypes: [],
+        missingComponentTypes: [],
+        matchedComponents: []
+      },
+      occurrences: [
+        {
+          source: { filePath: "script.ts", line: 45, column: 10 },
+          condition: { kind: "unconditional" },
+          evidence: "ClusterScript API constraint for $.addForce",
+          confidence: "high"
+        }
+      ]
+    }
+  ],
   summary: {
     totalIssues: 1,
     errorCount: 1,
@@ -296,6 +322,12 @@ interface ComponentConstraint {
   }
 }
 ```
+
+`ComponentRequirementRequest` は要求内容を表すデータで、判定器そのものではありません。解析時には `ComponentRequirementValidator` が `Source_Code_Asset` から対象 GameObject を解決し、`ConstraintValidator` を使って SceneGraph の Component と照合します。結果は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unverified` のいずれかで、`verificationReason` が付く場合は判定できない理由を示します。`matchedComponents` には照合に使った SceneGraph 上の GameObject ID / path と Component 型が含まれます。
+
+`$.getUnityComponent("UnityEngine.Rigidbody")` のようなリテラル参照は対象型を抽出しますが、それだけではスクリプトがその Component を必須としているとは限らないため `unverified` とします。required 制約が定義された API 呼び出しだけを SceneGraph 上の必須 Component として判定します。
+
+照合結果は `componentRequests` から取得できます。既存の `issues`、レポート形式、終了コードは維持します。Unity CLI MCP からのシーン取得はこのローカル SceneGraph 照合とは別の後続フェーズです。
 
 ## パフォーマンス考慮事項
 

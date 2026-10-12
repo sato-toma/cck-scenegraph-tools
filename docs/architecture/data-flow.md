@@ -11,8 +11,13 @@ Unity Scene
 ClusterScript TypeScript
   -> TypeScriptCodeParser
   -> 検出した API / state mutation
+  -> ComponentRequirementExtractor
+  -> 構造化されたコンポーネント要求
+  -> ScriptableItem / Source_Code_Asset による対象 GameObject の解決
+  -> ComponentRequirementValidator
+  -> 対象 GameObject に対する照合結果
 
-SceneGraph + 検出結果 + ClusterScriptDefinitions
+SceneGraph + 構造化された要求 + ClusterScriptDefinitions
   -> ConstraintValidator
   -> ClusterScriptAnalyzer
   -> CLI report / CI 結果
@@ -38,6 +43,18 @@ SceneGraph + 検出結果 + ClusterScriptDefinitions
 - 現在は文字列パターンから `$.method()`、プロパティアクセス、`$.state` の直接変更を検出する。
 - コメント、別名、複雑な式、改行を含むコードでは誤検出や見逃しがあり得る。
 - Compiler API へ移行するまでは、検出できる構文をテストで明示する。
+- `ComponentRequirementExtractor` は、既知 API の required 制約と文字列リテラルの `$.getUnityComponent(...)` を構造化する。動的な引数は `unsupported` とする。
+- 同一 API・同一型条件の要求は集約し、全ての出現位置・条件・根拠を残す。条件抽出は単純な `if` ブロックに限定し、解釈できない条件は `unknown` とする。
+- `ComponentRequirementValidator` は `Source_Code_Asset` とソースファイルを対応付け、対象 GameObject が一意なら `ConstraintValidator` でそのオブジェクトの階層内にある有効な Component と照合する。結果には照合した Component の所有 GameObject ID / path も含める。対象不明・複数候補・未対応引数は、それぞれ `unverified`・`ambiguous`・`unsupported` として返す。
+- 照合結果は `AnalysisResult.componentRequests` で取得できる。既存の `issues`、CLI レポート、終了コードは変更しない。
+
+### 要求モデルとバリデータ
+
+- `ComponentRequirementRequest` は「どの API 呼び出しが、どの Component 型を、どのソース位置で要求したか」を表すデータであり、それ自体は SceneGraph との判定結果ではない。
+- `ComponentRequirementValidator` は要求を `Source_Code_Asset` に紐づく対象 GameObject に対応付け、照合結果を要求に付与する。
+- `ConstraintValidator` は一つの GameObject と Component 制約を比較する低レベルの判定器。対象解決や解析レポート全体の生成は担当しない。
+- `$.getUnityComponent("...")` は Component の参照であり、必須条件とは限らないため、型を抽出しても既定では `unverified` とする。
+- この経路は現在の SceneGraph TOML を使う。Unity CLI MCP のシーン情報を同じ SceneGraph モデルに接続する作業は別フェーズとする。
 
 ### Constraint validator
 

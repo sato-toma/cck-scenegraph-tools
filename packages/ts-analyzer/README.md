@@ -141,11 +141,53 @@ class ClusterScriptAnalyzer {
 interface AnalysisResult {
   filePath: string;
   issues: ValidationIssue[];
+  componentRequests: ComponentRequirementRequest[];
   summary: {
     totalIssues: number;
     errorCount: number;
     warningCount: number;
   };
+}
+
+interface ComponentRequirementRequest {
+  id: string;
+  api: string;
+  componentTypes: string[];
+  componentMatch: "all" | "any" | "unknown";
+  target: {
+    kind: "current-scriptable-item";
+    resolution: "resolved" | "ambiguous" | "unresolved";
+    gameObjectId?: string;
+    gameObjectPath?: string;
+  };
+  verificationStatus:
+    | "satisfied"
+    | "missing"
+    | "ambiguous"
+    | "unsupported"
+    | "unverified";
+  verificationReason?: string;
+  validation: {
+    presentComponentTypes: string[];
+    missingComponentTypes: string[];
+    matchedComponents: Array<{
+      gameObjectId: string;
+      gameObjectPath: string;
+      componentId: string;
+      componentType: string;
+    }>;
+  };
+  occurrences: ComponentRequirementOccurrence[];
+}
+
+interface ComponentRequirementOccurrence {
+  source: { filePath: string; line: number; column: number };
+  condition: {
+    kind: "unconditional" | "conditional" | "unknown";
+    expression?: string;
+  };
+  evidence: string;
+  confidence: "high" | "low";
 }
 
 interface ValidationIssue {
@@ -159,6 +201,17 @@ interface ValidationIssue {
   availableComponents: string[];
 }
 ```
+
+SceneGraph を読み込まずに抽出する場合は、`ComponentRequirementExtractor` を利用できます。
+
+```typescript
+import { ComponentRequirementExtractor } from "ts-analyzer";
+
+const requests =
+  ComponentRequirementExtractor.extractFromFile("./script.ts");
+```
+
+`ClusterScriptAnalyzer.analyzeTypeScriptFile()` は、抽出した要求を SceneGraph 上の ScriptableItem に対応付け、対象が一意な既知の required 制約を照合します。結果の `verificationStatus` は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unverified` で、既存の `issues` と CLI レポートは従来どおりです。
 
 ## サポートされている ClusterScript API
 
