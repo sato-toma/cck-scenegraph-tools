@@ -6,6 +6,7 @@ export { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
 export { ClusterScriptAnalyzer } from "./analyzer";
 export { ComponentRequirementExtractor } from "./componentRequirementExtractor";
 export { ComponentRequirementValidator } from "./componentRequirementValidator";
+export { WorldUploadValidator } from "./worldUploadValidator";
 export {
   McpSceneAdapter,
   McpSceneAdapterError,

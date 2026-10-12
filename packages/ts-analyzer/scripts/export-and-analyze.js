@@ -3,6 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
+const { randomUUID } = require("crypto");
 
 const repositoryRoot = path.resolve(__dirname, "../../..");
 const defaultProjectPath = path.join(
@@ -112,6 +113,10 @@ function runUnity(options) {
     options.outputPath || path.join("Temp", "SceneGraph.generated.toml"),
     projectPath,
   );
+  const temporaryOutputPath = path.join(
+    path.dirname(outputPath),
+    `.${path.basename(outputPath)}.${randomUUID()}.tmp`,
+  );
   const logPath = resolvePath(
     options.logPath || path.join("Temp", "scenegraph-export.log"),
     projectPath,
@@ -121,6 +126,18 @@ function runUnity(options) {
   if (!fs.existsSync(projectPath)) {
     throw new Error(`Unity project not found: ${projectPath}`);
   }
+  const parserModulePath = path.join(__dirname, "..", "dist", "sceneGraphParser.js");
+  const validatorModulePath = path.join(
+    __dirname,
+    "..",
+    "dist",
+    "worldUploadValidator.js",
+  );
+  if (!fs.existsSync(parserModulePath) || !fs.existsSync(validatorModulePath)) {
+    throw new Error("Analyzer build not found. Run npm run build in packages/ts-analyzer first.");
+  }
+  const { SceneGraphParser } = require(parserModulePath);
+  const { WorldUploadValidator } = require(validatorModulePath);
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.mkdirSync(path.dirname(logPath), { recursive: true });
@@ -136,7 +153,7 @@ function runUnity(options) {
     "-scenePath",
     scenePath,
     "-outputPath",
-    outputPath,
+    temporaryOutputPath,
     "-logFile",
     logPath,
   ];
@@ -146,24 +163,51 @@ function runUnity(options) {
   console.log(`SceneGraph output: ${outputPath}`);
   console.log(`Unity log: ${logPath}`);
 
-  const isPowerShellScript = path.extname(unityPath).toLowerCase() === ".ps1";
-  const command = isPowerShellScript
-    ? process.platform === "win32"
-      ? "powershell.exe"
-      : "pwsh"
-    : unityPath;
-  const commandArguments = isPowerShellScript
-    ? ["-NoProfile", "-File", unityPath, ...unityArguments]
-    : unityArguments;
-  const result = spawnSync(command, commandArguments, { stdio: "inherit" });
-  if (result.error) {
-    throw new Error(`Failed to start Unity: ${result.error.message}`);
-  }
-  if (result.status !== 0) {
-    throw new Error(`Unity export failed with exit code ${result.status}`);
-  }
-  if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
-    throw new Error(`Unity did not create a non-empty SceneGraph file: ${outputPath}`);
+  try {
+    const isPowerShellScript = path.extname(unityPath).toLowerCase() === ".ps1";
+    const command = isPowerShellScript
+      ? process.platform === "win32"
+        ? "powershell.exe"
+        : "pwsh"
+      : unityPath;
+    const commandArguments = isPowerShellScript
+      ? ["-NoProfile", "-File", unityPath, ...unityArguments]
+      : unityArguments;
+    const result = spawnSync(command, commandArguments, { stdio: "inherit" });
+    if (result.error) {
+      throw new Error(`Failed to start Unity: ${result.error.message}`);
+    }
+    if (result.status !== 0) {
+      throw new Error(`Unity export failed with exit code ${result.status}`);
+    }
+    if (
+      !fs.existsSync(temporaryOutputPath) ||
+      fs.statSync(temporaryOutputPath).size === 0
+    ) {
+      throw new Error(
+        `Unity did not create a non-empty SceneGraph file: ${temporaryOutputPath}`,
+      );
+    }
+
+    let sceneGraph;
+    try {
+      sceneGraph = SceneGraphParser.parseFile(temporaryOutputPath);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`Unity produced an invalid SceneGraph TOML: ${message}`);
+    }
+    const uploadIssues = WorldUploadValidator.validate(sceneGraph);
+    if (uploadIssues.length > 0) {
+      throw new Error(
+        `SceneGraph does not meet Cluster world upload requirements:\n- ${uploadIssues.join("\n- ")}`,
+      );
+    }
+
+    fs.renameSync(temporaryOutputPath, outputPath);
+  } finally {
+    if (fs.existsSync(temporaryOutputPath)) {
+      fs.unlinkSync(temporaryOutputPath);
+    }
   }
 
   return { projectPath, outputPath };

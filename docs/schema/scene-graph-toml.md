@@ -44,10 +44,21 @@ exporter は文字列内の引用符、バックスラッシュ、改行を TOML
 
 - 既存キーを削除しない。削除が必要な場合は ADR を作成し、移行手順を記録する。
 - 新しいキーは parser が無視しても安全な形で追加する。
+- parser は `project` を要求し、存在する GameObject の `id`・`path`・`name`・`parent`、Component の `type`・`enabled`、シリアライズ済みプロパティ値を検証する。不完全なデータを既定値で補って解析成功として扱わない。空の SceneGraph は TOML として解析できるが、ワールドアップロード要件の検証では不適合になる。
 - `type` の比較は、まず完全一致を基本とする。短縮名や別名を導入する場合は明示的な正規化表を用意する。
 - 数値、真偽値、文字列、配列を混同しない。Unity の値型を配列で表す場合も、その配列構造を保持する。
 - TOML のエスケープ、キー名、カルチャ依存の数値表現をテストする。
 - 差分更新は既存コンポーネントを失わないことを保証する。保証できない間は、全体出力を推奨する。
+
+## Cluster ワールドのアップロード要件
+
+`export-and-analyze` は生成した全体 SceneGraph に対して、[公式のワールド作成とアップロード要件](https://docs.cluster.mu/creatorkit/world/upload/)を検証する。
+
+- 有効な `ClusterVR.CreatorKit.World.Implements.SpawnPoints.SpawnPoint` が1つ以上あり、`properties.Spawn_Type` が `Entrance` であること。
+- `ClusterVR.CreatorKit.World.Implements.DespawnHeights.DespawnHeight` がちょうど1つあり、有効であること。
+- 足場用 Collider の有無は検証しない。
+
+Spawn Point と Despawn Height は、SceneGraph 上の完全修飾型名・`enabled`・シリアライズ済み `Spawn_Type` で判定する。Hierarchy や短縮型名だけから SceneGraph を補完しない。
 
 ## 変更時の確認項目
 
