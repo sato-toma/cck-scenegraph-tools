@@ -11,7 +11,7 @@ description: "Use when changing Unity SceneGraph TOML export, parsing, component
 4. Add a focused fixture or test for the changed behavior. Include a negative case when the change affects static analysis.
 5. For exporter changes, verify full export and selected/delta export separately.
 6. For analyzer changes, run `npm run verify` in `packages/ts-analyzer`.
-7. Update the schema document, roadmap, or ADR when behavior or compatibility changes.
+7. Update the schema document or ADR when behavior or compatibility changes, and update the related GitHub issue.
 8. Report the changed contract, tests run, and any Unity-only validation that was unavailable.
 
 ## Local re-export and analysis check

@@ -8,7 +8,7 @@ Cluster Creator Kit の Unity シーンを `SceneGraph.toml` に出力し、Clus
 - `packages/unity-semantic-graph/Samples~/`: サンプル Unity プロジェクトと `SceneGraph.toml`
 - `packages/ts-analyzer/`: TOML parser、ClusterScript parser、制約 validator、CLI
 - `packages/ts-analyzer/src/rules/`: 物理、インタラクション、移動、state変更のルール
-- `docs/`: データフロー、TOML スキーマ、ADR、開発ロードマップ
+- `docs/`: データフロー、TOML スキーマ、ADR、設計資料
 
 詳しい案内は [docs/repository-guide.md](docs/repository-guide.md) を参照してください。
 リポジトリで使う用語は [用語集](docs/glossary.md) を参照してください。
@@ -95,4 +95,5 @@ Unity MCP は、変更系のツールも公開します。初期段階では読�
 - [SceneGraph TOML スキーマ](docs/schema/scene-graph-toml.md)
 - [ADR 0001: Unity exporter と analyzer の共有仕様](docs/adr/0001-cross-package-contract.md)
 - [ADR 0002: MCP のシーン情報の照合](docs/adr/0002-mcp-scene-data-reconciliation.md)
-- [開発ロードマップ](docs/development-roadmap.md)
+
+今後の開発項目は、GitHub Issue [#50](https://github.com/sato-toma/cck-scenegraph-tools/issues/50)（開発基盤・解析精度・運用）と [#29](https://github.com/sato-toma/cck-scenegraph-tools/issues/29)（MCP 連携）で管理します。
