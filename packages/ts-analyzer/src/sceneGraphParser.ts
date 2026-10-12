@@ -108,19 +108,20 @@ export class SceneGraphParser {
     sceneGraph: SceneGraph,
     gameObject: GameObject,
   ): Component[] {
-    const components = [...gameObject.components];
+    return this.getGameObjectsInHierarchy(sceneGraph, gameObject)
+      .flatMap((item) => item.components)
+      .filter((component) => component.enabled);
+  }
 
-    // include ancestor components
-    for (const ancestor of this.getGameObjectAncestors(sceneGraph, gameObject)) {
-      components.push(...ancestor.components);
-    }
-
-    // include descendant components (children and deeper)
-    for (const descendant of this.getGameObjectDescendants(sceneGraph, gameObject)) {
-      components.push(...descendant.components);
-    }
-
-    return components.filter((comp) => comp.enabled);
+  static getGameObjectsInHierarchy(
+    sceneGraph: SceneGraph,
+    gameObject: GameObject,
+  ): GameObject[] {
+    return [
+      gameObject,
+      ...this.getGameObjectAncestors(sceneGraph, gameObject),
+      ...this.getGameObjectDescendants(sceneGraph, gameObject),
+    ];
   }
 
   /**
@@ -222,6 +223,63 @@ export class SceneGraphParser {
     }
 
     return null;
+  }
+
+  static findGameObjectsForSourceFile(
+    sceneGraphPath: string,
+    sceneGraph: SceneGraph,
+    sourceFilePath: string,
+  ): GameObject[] {
+    const normalizedTargetPath = path.resolve(sourceFilePath);
+    const scriptableObjects = this.getGameObjectsWithScriptableItem(sceneGraph);
+    const resolvedPathMatches = scriptableObjects.filter((gameObject) => {
+      const resolvedPath = this.resolveScriptableItemSourcePath(
+        sceneGraphPath,
+        gameObject,
+      );
+      return (
+        resolvedPath !== null &&
+        path.resolve(resolvedPath) === normalizedTargetPath
+      );
+    });
+    if (resolvedPathMatches.length > 0) {
+      return resolvedPathMatches;
+    }
+
+    const targetBaseName = path.basename(normalizedTargetPath);
+    const resolvedBaseNameMatches = scriptableObjects.filter((gameObject) => {
+      const resolvedPath = this.resolveScriptableItemSourcePath(
+        sceneGraphPath,
+        gameObject,
+      );
+      return (
+        resolvedPath !== null &&
+        path.basename(path.resolve(resolvedPath)) === targetBaseName
+      );
+    });
+    if (resolvedBaseNameMatches.length > 0) {
+      return resolvedBaseNameMatches;
+    }
+
+    const targetNameWithoutExtension = path.basename(
+      targetBaseName,
+      path.extname(targetBaseName),
+    );
+    return scriptableObjects.filter((gameObject) => {
+      const sourceCodeAsset = gameObject.components.find(
+        (component) =>
+          component.type ===
+            "ClusterVR.CreatorKit.Item.Implements.ScriptableItem" &&
+          component.enabled,
+      )?.properties?.Source_Code_Asset;
+
+      return (
+        typeof sourceCodeAsset === "string" &&
+        sourceCodeAsset.length > 0 &&
+        path.basename(sourceCodeAsset, path.extname(sourceCodeAsset)) ===
+          targetNameWithoutExtension
+      );
+    });
   }
 
   /**

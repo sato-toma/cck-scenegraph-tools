@@ -9,6 +9,8 @@ import { SceneGraphParser } from "./sceneGraphParser";
 import { TypeScriptCodeParser } from "./typeScriptParser";
 import { ConstraintValidator } from "./constraintValidator";
 import { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
+import { ComponentRequirementExtractor } from "./componentRequirementExtractor";
+import { ComponentRequirementValidator } from "./componentRequirementValidator";
 import * as path from "path";
 
 const ANSI = {
@@ -141,9 +143,19 @@ export class ClusterScriptAnalyzer {
       });
     }
 
+    const extractedComponentRequests =
+      ComponentRequirementExtractor.extractFromFile(resolvedTsFilePath);
+    const componentRequests = ComponentRequirementValidator.validate(
+      extractedComponentRequests,
+      this.sceneGraphPath,
+      this.sceneGraph,
+      resolvedTsFilePath,
+    );
+
     return {
       filePath: resolvedTsFilePath,
       issues,
+      componentRequests,
       summary: {
         totalIssues: issues.length,
         errorCount: issues.filter((i) => i.severity === "error").length,
