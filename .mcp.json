@@ -1,12 +1,12 @@
 {
-  "servers": {
+  "mcpServers": {
     "unity": {
       "type": "stdio",
       "command": "unity",
       "args": [
         "mcp",
         "--project-path",
-        "${workspaceFolder}\\packages\\unity-semantic-graph\\Samples~"
+        "packages/unity-semantic-graph/Samples~"
       ]
     }
   }
