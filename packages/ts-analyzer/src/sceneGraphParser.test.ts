@@ -90,6 +90,53 @@ describe("SceneGraphParser", () => {
     ]);
   });
 
+  it("leaves upload-readiness checks to the world validator", () => {
+    expect(SceneGraphParser.parse('project = "TestProject"').gameObjects).toEqual(
+      [],
+    );
+  });
+
+  it("rejects malformed TOML and component records without enabled state", () => {
+    expect(() => SceneGraphParser.parse('project = "unterminated')).toThrow();
+    expect(() =>
+      SceneGraphParser.parse(`
+project = "TestProject"
+
+[[gameObjects]]
+id = "object-1"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "UnityEngine.Rigidbody"
+`),
+    ).toThrow("SceneGraph.gameObjects[0].components[0].enabled must be a boolean");
+  });
+
+  it("rejects unsupported serialized property values", () => {
+    expect(() =>
+      SceneGraphParser.parse(`
+project = "TestProject"
+
+[[gameObjects]]
+id = "object-1"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "UnityEngine.Rigidbody"
+enabled = true
+
+[gameObjects.components.properties]
+Unsupported = 1979-05-27T07:32:00Z
+`),
+    ).toThrow(
+      "SceneGraph.gameObjects[0].components[0].properties.Unsupported contains an unsupported TOML value",
+    );
+  });
+
   it("finds game objects by component", () => {
     const sceneGraph = SceneGraphParser.parse(sampleToml);
     const rigidbodies = SceneGraphParser.getGameObjectsWithComponent(

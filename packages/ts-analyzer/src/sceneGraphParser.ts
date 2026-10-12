@@ -1,7 +1,65 @@
 import { parse as parseToml } from "@iarna/toml";
 import * as fs from "fs";
 import * as path from "path";
-import { SceneGraph, GameObject, Component } from "./types";
+import {
+  SceneGraph,
+  GameObject,
+  Component,
+  ComponentPropertyValue,
+} from "./types";
+
+type TomlRecord = Record<string, unknown>;
+
+function isTomlRecord(value: unknown): value is TomlRecord {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !(value instanceof Date)
+  );
+}
+
+function requireTomlRecord(value: unknown, location: string): TomlRecord {
+  if (!isTomlRecord(value)) {
+    throw new Error(`${location} must be a TOML table`);
+  }
+  return value;
+}
+
+function requireString(
+  record: TomlRecord,
+  key: string,
+  location: string,
+  allowEmpty = false,
+): string {
+  const value = record[key];
+  if (
+    typeof value !== "string" ||
+    (!allowEmpty && value.trim().length === 0)
+  ) {
+    throw new Error(`${location}.${key} must be a non-empty string`);
+  }
+  return value;
+}
+
+function parsePropertyValue(
+  value: unknown,
+  location: string,
+): ComponentPropertyValue {
+  if (
+    typeof value === "string" ||
+    typeof value === "boolean" ||
+    (typeof value === "number" && Number.isFinite(value))
+  ) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item, index) =>
+      parsePropertyValue(item, `${location}[${index}]`),
+    );
+  }
+  throw new Error(`${location} contains an unsupported TOML value`);
+}
 
 /**
  * SceneGraph.toml ファイルを解析
@@ -19,11 +77,19 @@ export class SceneGraphParser {
    * TOML文字列をパース
    */
   static parse(content: string): SceneGraph {
-    const parsed = parseToml(content) as any;
+    const parsed = requireTomlRecord(
+      parseToml(content) as unknown,
+      "SceneGraph",
+    );
+    const project = requireString(parsed, "project", "SceneGraph");
+    const rawGameObjects = parsed.gameObjects ?? [];
+    if (!Array.isArray(rawGameObjects)) {
+      throw new Error("SceneGraph.gameObjects must be an array");
+    }
 
     const sceneGraph: SceneGraph = {
-      project: parsed.project || "Unknown",
-      gameObjects: this.parseGameObjects(parsed.gameObjects || []),
+      project,
+      gameObjects: this.parseGameObjects(rawGameObjects),
     };
 
     return sceneGraph;
@@ -32,26 +98,63 @@ export class SceneGraphParser {
   /**
    * GameObjectsを抽出・変換
    */
-  private static parseGameObjects(rawObjects: any[]): GameObject[] {
-    return rawObjects.map((obj) => ({
-      id: obj.id || "",
-      path: obj.path || "",
-      name: obj.name || "",
-      parent: obj.parent || "",
-      components: this.parseComponents(obj.components || []),
-    }));
+  private static parseGameObjects(rawObjects: unknown[]): GameObject[] {
+    return rawObjects.map((rawObject, index) => {
+      const location = `SceneGraph.gameObjects[${index}]`;
+      const obj = requireTomlRecord(rawObject, location);
+      const rawComponents = obj.components ?? [];
+      if (!Array.isArray(rawComponents)) {
+        throw new Error(`${location}.components must be an array`);
+      }
+
+      return {
+        id: requireString(obj, "id", location),
+        path: requireString(obj, "path", location),
+        name: requireString(obj, "name", location),
+        parent: requireString(obj, "parent", location, true),
+        components: this.parseComponents(rawComponents, location),
+      };
+    });
   }
 
   /**
    * Componentsを抽出・変換
    */
-  private static parseComponents(rawComponents: any[]): Component[] {
-    return rawComponents.map((comp) => ({
-      id: comp.id || "",
-      type: comp.type || "",
-      enabled: comp.enabled !== false,
-      properties: comp.properties || {},
-    }));
+  private static parseComponents(
+    rawComponents: unknown[],
+    gameObjectLocation: string,
+  ): Component[] {
+    return rawComponents.map((rawComponent, index) => {
+      const location = `${gameObjectLocation}.components[${index}]`;
+      const comp = requireTomlRecord(rawComponent, location);
+      const id = comp.id;
+      if (id !== undefined && typeof id !== "string") {
+        throw new Error(`${location}.id must be a string`);
+      }
+
+      const rawProperties = comp.properties ?? {};
+      const propertiesRecord = requireTomlRecord(
+        rawProperties,
+        `${location}.properties`,
+      );
+      const properties = Object.fromEntries(
+        Object.entries(propertiesRecord).map(([key, value]) => [
+          key,
+          parsePropertyValue(value, `${location}.properties.${key}`),
+        ]),
+      );
+
+      if (typeof comp.enabled !== "boolean") {
+        throw new Error(`${location}.enabled must be a boolean`);
+      }
+
+      return {
+        id: id ?? "",
+        type: requireString(comp, "type", location),
+        enabled: comp.enabled,
+        properties,
+      };
+    });
   }
 
   /**
