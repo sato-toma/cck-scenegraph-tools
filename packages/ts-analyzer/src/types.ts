@@ -2,8 +2,14 @@
  * SceneGraph TOML型定義
  */
 
+export type ComponentPropertyValue =
+  | string
+  | number
+  | boolean
+  | ComponentPropertyValue[];
+
 export interface ComponentProperty {
-  [key: string]: string | number | boolean;
+  [key: string]: ComponentPropertyValue;
 }
 
 export interface Component {

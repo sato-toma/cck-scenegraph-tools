@@ -24,4 +24,5 @@ export type {
   ValidationIssue,
   ComponentAnalysisCache,
   ComponentProperty,
+  ComponentPropertyValue,
 } from "./types";
