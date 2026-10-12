@@ -46,4 +46,22 @@ enabled = true
 id = "ci-rigidbody"
 type = "UnityEngine.Rigidbody"
 enabled = true
+
+[[gameObjects]]
+id = "ci-world-system"
+path = "System"
+name = "System"
+parent = ""
+
+[[gameObjects.components]]
+id = "ci-despawn-height"
+type = "ClusterVR.CreatorKit.World.Implements.DespawnHeights.DespawnHeight"
+enabled = true
+
+[[gameObjects.components]]
+id = "ci-spawn-point"
+type = "ClusterVR.CreatorKit.World.Implements.SpawnPoints.SpawnPoint"
+enabled = true
+[gameObjects.components.properties]
+Spawn_Type = "Entrance"
 EOF
