@@ -164,6 +164,8 @@ const complexity = TypeScriptCodeParser.calculateCodeComplexity(code);
 
 解析結果には、通常のコンポーネント制約違反に加えて、`INVALID_STATE_MUTATION` というコードで state の直接変更違反も含めます。これにより、ClusterScript の仕様に沿った書き方を静的に検出できます。
 
+解析器は入力の解決と各解析処理を統合します。人向けテキストの書式は `src/reporting/analysisReportFormatter.ts` に分離し、`ClusterScriptAnalyzer` のレポートメソッドは既存 API として formatter に委譲します。出力形式を変更する場合は formatter のテストと CLI の出力確認を更新してください。
+
 ```typescript
 const analyzer = new ClusterScriptAnalyzer("SceneGraph.toml");
 

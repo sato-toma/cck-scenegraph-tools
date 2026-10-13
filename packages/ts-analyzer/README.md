@@ -17,6 +17,13 @@ TypeScript で実装した ClusterScript コードを、SceneGraph.toml で定�
 - **state 変更の静的検出** - `$.state.items.push(...)` や `$.state.profile.name = ...` のような直接変更を検出し、再代入が必要であることを警告します
 - **GrabbableItem などのコンポーネント依存ルール** - `onGrab()` / `onUse()` などの検証ルールを独立して追加・編集できます
 
+## ソース構成
+
+- `src/analyzer.ts`: SceneGraph と TypeScript の解析を統合する公開 API
+- `src/reporting/`: 解析結果・SceneGraph・API 利用状況のテキストレポート整形
+- `src/rules/`: ClusterScript API のカテゴリ別制約
+- `src/*.test.ts`: parser、validator、統合経路のテスト
+
 ## インストール
 
 ```bash

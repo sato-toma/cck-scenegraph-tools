@@ -7,6 +7,8 @@ Cluster Creator Kit の Unity シーンを `SceneGraph.toml` に出力し、Clus
 - `packages/unity-semantic-graph/`: Unity Package と Editor の TOML exporter
 - `packages/unity-semantic-graph/Samples~/`: サンプル Unity プロジェクトと `SceneGraph.toml`
 - `packages/ts-analyzer/`: TOML parser、ClusterScript parser、制約 validator、CLI
+- `packages/ts-analyzer/src/analyzer.ts`: 解析フローを束ねる公開 API
+- `packages/ts-analyzer/src/reporting/`: テキストレポートの整形
 - `packages/ts-analyzer/src/rules/`: 物理、インタラクション、移動、state変更のルール
 - `docs/`: データフロー、TOML スキーマ、ADR、設計資料
 

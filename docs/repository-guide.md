@@ -15,7 +15,8 @@
 
 - `packages/ts-analyzer/`
   - TypeScript 製の解析ライブラリと CLI
-  - `src/analyzer.ts`: TOML と TypeScript を結び付ける統合解析
+  - `src/analyzer.ts`: TOML と TypeScript を結び付ける解析フロー / 公開 API
+  - `src/reporting/analysisReportFormatter.ts`: 解析結果、SceneGraph、API 利用状況のテキスト整形
   - `src/sceneGraphParser.ts`: `SceneGraph.toml` の読み込みと検索
   - `src/mcpSceneAdapter.ts`: Unity CLI MCP の読み取り応答を別形式のスナップショットへ正規化
   - `src/typeScriptParser.ts`: ClusterScript API の検出
@@ -24,6 +25,7 @@
   - `src/rules/`: 物理、インタラクション、移動、state変更のルール
   - `src/*.test.ts`: Vitest による単体テスト
   - `src/fixtures/`: MCP 応答などの変換テスト用fixture
+  - `src/reporting/`: レポート表示ロジック。解析・照合ロジックから分離
   - `examples/`: CLI の実行例
   - `IMPLEMENTATION.md`: 現在の実装ガイド
 - `packages/unity-semantic-graph/`
