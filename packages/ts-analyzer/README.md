@@ -106,7 +106,12 @@ const analyzer = new ClusterScriptAnalyzer("./SceneGraph.toml");
 const result = analyzer.analyzeTypeScriptFile("./script.ts");
 
 console.log(result.summary);
-// { totalIssues: 2, errorCount: 2, warningCount: 0 }
+// {
+//   totalIssues: 2, errorCount: 2, warningCount: 0,
+//   componentRequestCounts: {
+//     satisfied: 1, missing: 1, ambiguous: 0, unsupported: 0, unverified: 0
+//   }
+// }
 
 // 詳細レポート生成
 console.log(analyzer.generateReport(new Map().set("script.ts", result)));
@@ -146,6 +151,10 @@ interface AnalysisResult {
     totalIssues: number;
     errorCount: number;
     warningCount: number;
+    componentRequestCounts: Record<
+      "satisfied" | "missing" | "ambiguous" | "unsupported" | "unverified",
+      number
+    >;
   };
 }
 
@@ -217,7 +226,9 @@ const requests =
   ComponentRequirementExtractor.extractFromFile("./script.ts");
 ```
 
-`ClusterScriptAnalyzer.analyzeTypeScriptFile()` は、抽出した要求を SceneGraph 上の ScriptableItem に対応付け、対象が一意な既知の required 制約を照合します。結果の `verificationStatus` は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unverified` で、既存の `issues` と CLI レポートは従来どおりです。
+`ClusterScriptAnalyzer.analyzeTypeScriptFile()` は、抽出した要求を SceneGraph 上の ScriptableItem に対応付け、対象が一意な既知の required 制約を照合します。結果の `verificationStatus` は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unverified` で、`summary.componentRequestCounts` に状態別件数を含みます。CLI レポートも状態別件数を表示し、未確定結果があるときは「問題なし」と誤表示しません。
+
+Export and Analyze 一括実行では、`--fail-on-issues` が既存の analyzer issues と確定した `missing` 要求で終了コード 1 を返します。`--fail-on-unverified` は `ambiguous` / `unsupported` / `unverified` のいずれかがあると終了コード 1 を返す厳格オプションです。すべての必須要求を確認したい CI では、両方を指定してください。
 
 ## サポートされている ClusterScript API
 

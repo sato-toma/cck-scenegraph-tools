@@ -6,6 +6,13 @@ export { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
 export { ClusterScriptAnalyzer } from "./analyzer";
 export { ComponentRequirementExtractor } from "./componentRequirementExtractor";
 export { ComponentRequirementValidator } from "./componentRequirementValidator";
+export {
+  COMPONENT_REQUIREMENT_STATUSES,
+  formatComponentRequirementStatusCounts,
+  hasMissingComponentRequirements,
+  hasUnverifiedComponentRequirements,
+  summarizeComponentRequirements,
+} from "./componentRequirementSummary";
 export { WorldUploadValidator } from "./worldUploadValidator";
 export {
   McpSceneAdapter,
@@ -31,6 +38,8 @@ export type {
   ClusterScriptDefinition,
   AnalysisResult,
   ComponentRequirementRequest,
+  ComponentRequirementVerificationStatus,
+  ComponentRequirementStatusCounts,
   ComponentRequirementOccurrence,
   MatchedSceneComponent,
   ValidationIssue,

@@ -11,6 +11,11 @@ import { ConstraintValidator } from "./constraintValidator";
 import { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
 import { ComponentRequirementExtractor } from "./componentRequirementExtractor";
 import { ComponentRequirementValidator } from "./componentRequirementValidator";
+import {
+  COMPONENT_REQUIREMENT_STATUSES,
+  formatComponentRequirementStatusCounts,
+  summarizeComponentRequirements,
+} from "./componentRequirementSummary";
 import * as path from "path";
 
 const ANSI = {
@@ -127,6 +132,8 @@ export class ClusterScriptAnalyzer {
       this.sceneGraph,
       resolvedTsFilePath,
     );
+    const componentRequestCounts =
+      summarizeComponentRequirements(componentRequests);
 
     return {
       filePath: resolvedTsFilePath,
@@ -136,6 +143,7 @@ export class ClusterScriptAnalyzer {
         totalIssues: issues.length,
         errorCount: issues.filter((i) => i.severity === "error").length,
         warningCount: issues.filter((i) => i.severity === "warning").length,
+        componentRequestCounts,
       },
     };
   }
@@ -202,6 +210,7 @@ export class ClusterScriptAnalyzer {
     let totalIssues = 0;
     let totalErrors = 0;
     let totalWarnings = 0;
+    const totalComponentRequestCounts = summarizeComponentRequirements([]);
 
     for (const [filePath, result] of results) {
       if (result.issues.length > 0 || result.componentRequests.length > 0) {
@@ -210,7 +219,10 @@ export class ClusterScriptAnalyzer {
         lines.push(`   Errors: ${result.summary.errorCount}`);
         lines.push(`   Warnings: ${result.summary.warningCount}`);
 
-        if (result.issues.length === 0) {
+        if (
+          result.issues.length === 0 &&
+          result.componentRequests.length === 0
+        ) {
           lines.push("   No validation issues.");
         }
 
@@ -244,6 +256,10 @@ export class ClusterScriptAnalyzer {
         totalIssues += result.summary.totalIssues;
         totalErrors += result.summary.errorCount;
         totalWarnings += result.summary.warningCount;
+        for (const status of COMPONENT_REQUIREMENT_STATUSES) {
+          totalComponentRequestCounts[status] +=
+            result.summary.componentRequestCounts[status];
+        }
       }
     }
 
@@ -251,9 +267,24 @@ export class ClusterScriptAnalyzer {
     lines.push(`Total Issues: ${totalIssues}`);
     lines.push(`${colorize("Total Errors", ANSI.red)}: ${totalErrors}`);
     lines.push(`${colorize("Total Warnings", ANSI.yellow)}: ${totalWarnings}`);
+    lines.push(
+      formatComponentRequirementStatusCounts(totalComponentRequestCounts),
+    );
 
-    if (totalIssues === 0) {
+    const needsRequirementReview =
+      totalComponentRequestCounts.missing > 0 ||
+      totalComponentRequestCounts.ambiguous > 0 ||
+      totalComponentRequestCounts.unsupported > 0 ||
+      totalComponentRequestCounts.unverified > 0;
+    if (totalIssues === 0 && !needsRequirementReview) {
       lines.push(colorize("✅ No issues found!", ANSI.green));
+    } else if (totalIssues === 0) {
+      lines.push(
+        colorize(
+          "⚠️ No confirmed validation issues; component requirements need review.",
+          ANSI.yellow,
+        ),
+      );
     }
 
     return lines.join("\n");

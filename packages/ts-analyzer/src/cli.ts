@@ -6,6 +6,7 @@ import { ClusterScriptAnalyzer } from "./analyzer";
 import { SceneGraphParser } from "./sceneGraphParser";
 import { TypeScriptCodeParser } from "./typeScriptParser";
 import { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
+import { formatComponentRequirementStatusCounts } from "./componentRequirementSummary";
 import type { AnalysisResult } from "./types";
 
 /**
@@ -104,6 +105,13 @@ function analyzeCommand(args: string[]) {
       console.log(
         `${colorize("Warnings", ANSI.yellow)}: ${result.summary.warningCount}\n`,
       );
+      if (result.componentRequests.length > 0) {
+        console.log(
+          formatComponentRequirementStatusCounts(
+            result.summary.componentRequestCounts,
+          ),
+        );
+      }
 
       if (result.issues.length > 0) {
         console.log(colorize("Issues:", ANSI.bold));
@@ -129,8 +137,20 @@ function analyzeCommand(args: string[]) {
             `    ${colorize("Available:", severityColor)} ${colorize(issue.availableComponents.join(", ") || "none", severityColor)}\n`,
           );
         }
-      } else {
+      } else if (
+        result.summary.componentRequestCounts.missing === 0 &&
+        result.summary.componentRequestCounts.ambiguous === 0 &&
+        result.summary.componentRequestCounts.unsupported === 0 &&
+        result.summary.componentRequestCounts.unverified === 0
+      ) {
         console.log(colorize("✅ No issues found!", ANSI.green));
+      } else {
+        console.log(
+          colorize(
+            "⚠️ No confirmed validation issues; component requirements need review.",
+            ANSI.yellow,
+          ),
+        );
       }
       if (result.componentRequests.length > 0) {
         console.log(analyzer.generateComponentRequirementReport(result));

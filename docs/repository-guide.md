@@ -73,7 +73,7 @@ Unity.exe -batchmode -quit `
 - Linux/macOS: `scripts/export-and-analyze.sh`
 - npm: `cd packages/ts-analyzer && npm run scenegraph:analyze -- ...`
 
-共通オプションは`--project-path`、`--scene-path`、`--script-path`、`--output-path`、`--unity-path`です。`--fail-on-issues`を付けると、解析結果に問題がある場合に終了コード1を返します。Unityの場所は`UNITY_PATH`環境変数でも指定できます。
+共通オプションは`--project-path`、`--scene-path`、`--script-path`、`--output-path`、`--unity-path`です。`--fail-on-issues`を付けると、analyzer issue または確定した Component 要求の不足で終了コード1を返します。`--fail-on-unverified`を付けると、曖昧・未対応・未検証の要求でも終了コード1を返します。すべての要求を確認済みにする CI では両方を指定してください。Unityの場所は`UNITY_PATH`環境変数でも指定できます。
 
 ## 変更の境界
 

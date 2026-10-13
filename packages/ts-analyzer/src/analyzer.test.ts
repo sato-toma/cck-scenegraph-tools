@@ -130,6 +130,13 @@ Source_Code_Asset = "sample.ts"
     expect(result.issues[0]?.requiredComponents).toEqual([
       "ClusterVR.CreatorKit.Item.Implements.MovableItem",
     ]);
+    expect(result.summary.componentRequestCounts).toEqual({
+      satisfied: 0,
+      missing: 2,
+      ambiguous: 0,
+      unsupported: 0,
+      unverified: 0,
+    });
   });
 
   it("validates the specific ScriptableItem that matches the analyzed file", () => {
@@ -275,6 +282,9 @@ Source_Code_Asset = "sample.ts"
     expect(report).toContain("[AMBIGUOUS] $.onGrab");
     expect(report).toContain("Root/Duplicate-1 (first-object)");
     expect(report).toContain("Root/Duplicate-2 (second-object)");
+    expect(report).toContain("ambiguous: 1");
+    expect(report).not.toContain("No issues found!");
+    expect(report).toContain("component requirements need review");
   });
 
   it("does not infer missing components when the source target is unresolved", () => {
