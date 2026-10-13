@@ -50,7 +50,8 @@ jobs:
             --script-path "$GITHUB_WORKSPACE/packages/unity-semantic-graph/Samples~/Assets/Script/src/onGrabScript.ts" \
             --output-path SceneGraph.generated.toml \
             --log-path scenegraph-export.log \
-            --fail-on-issues
+            --fail-on-issues \
+            --fail-on-unverified
 
   powershell-wrapper:
     runs-on: windows-latest
@@ -85,4 +86,5 @@ jobs:
             --script-path "$env:GITHUB_WORKSPACE\packages\unity-semantic-graph\Samples~\Assets\Script\src\onGrabScript.ts" `
             --output-path SceneGraph.generated.toml `
             --log-path scenegraph-export.log `
-            --fail-on-issues
+            --fail-on-issues `
+            --fail-on-unverified

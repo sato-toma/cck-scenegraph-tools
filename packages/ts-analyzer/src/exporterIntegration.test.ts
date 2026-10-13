@@ -12,6 +12,25 @@ const fixturePath = path.join(
   "scene-graph-export.toml",
 );
 
+function analyzeExporterFixture(
+  source: string,
+  fileName = "onGrabSceneGraphContract.ts",
+  transformGraph: (graph: string) => string = (graph) => graph,
+) {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "scenegraph-export-"));
+  const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+  const scriptPath = path.join(tempDir, fileName);
+  const fixture = fs.readFileSync(fixturePath, "utf8");
+  fs.writeFileSync(sceneGraphPath, transformGraph(fixture));
+  fs.writeFileSync(scriptPath, source);
+
+  const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+  return {
+    analyzer,
+    result: analyzer.analyzeTypeScriptFile(scriptPath),
+  };
+}
+
 describe("SceneGraph exporter integration", () => {
   it("parses exporter-shaped TOML and analyzes the mapped ClusterScript", () => {
     const sceneGraph = SceneGraphParser.parseFile(fixturePath);
@@ -71,5 +90,79 @@ describe("SceneGraph exporter integration", () => {
     expect(
       result.componentRequests[0]?.validation.missingComponentTypes,
     ).toContain("ClusterVR.CreatorKit.Item.Implements.GrabbableItem");
+  });
+
+  it("distinguishes verified, missing, ambiguous, unsupported, and unverified requests", () => {
+    const satisfied = analyzeExporterFixture("$.onGrab(() => {});\n");
+    const missing = analyzeExporterFixture(
+      "if (canGrab) {\n  $.onGrab(() => {});\n}\n",
+      "onGrabSceneGraphContract.ts",
+      (graph) =>
+        graph.replace(
+          /(type = "ClusterVR\.CreatorKit\.Item\.Implements\.GrabbableItem"\r?\nenabled = )true/,
+          "$1false",
+        ),
+    );
+    const ambiguous = analyzeExporterFixture(
+      "$.onGrab(() => {});\n",
+      "onGrabSceneGraphContract.ts",
+      (graph) => `${graph}
+
+[[gameObjects]]
+id = "GlobalObjectId_V1-0-duplicate"
+path = "Root/Item Copy"
+name = "Item"
+parent = "Root"
+
+[[gameObjects.components]]
+id = "duplicate-scriptable-item"
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+
+[gameObjects.components.properties]
+Source_Code_Asset = "onGrabSceneGraphContract"
+`,
+    );
+    const unsupported = analyzeExporterFixture(
+      "$.getUnityComponent(componentType);\n",
+    );
+    const unverified = analyzeExporterFixture(
+      '$.getUnityComponent("UnityEngine.Rigidbody");\n',
+    );
+    const unresolved = analyzeExporterFixture(
+      "$.setPosition(position);\n",
+      "unattached.ts",
+    );
+
+    expect(satisfied.result.componentRequests[0]?.verificationStatus).toBe(
+      "satisfied",
+    );
+    expect(missing.result.componentRequests[0]).toMatchObject({
+      verificationStatus: "missing",
+      occurrences: [
+        { condition: { kind: "conditional", expression: "canGrab" } },
+      ],
+    });
+    expect(ambiguous.result.componentRequests[0]).toMatchObject({
+      verificationStatus: "ambiguous",
+      target: {
+        resolution: "ambiguous",
+        candidates: expect.arrayContaining([
+          expect.objectContaining({ gameObjectPath: "Root/Item" }),
+          expect.objectContaining({ gameObjectPath: "Root/Item Copy" }),
+        ]),
+      },
+    });
+    expect(unsupported.result.componentRequests[0]?.verificationStatus).toBe(
+      "unsupported",
+    );
+    expect(unverified.result.componentRequests[0]?.verificationStatus).toBe(
+      "unverified",
+    );
+    expect(unresolved.result.componentRequests[0]).toMatchObject({
+      verificationStatus: "unverified",
+      target: { resolution: "unresolved" },
+    });
+    expect(ambiguous.result.issues).toHaveLength(0);
   });
 });

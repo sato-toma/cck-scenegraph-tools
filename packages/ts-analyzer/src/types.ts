@@ -85,8 +85,21 @@ export interface AnalysisResult {
     totalIssues: number;
     errorCount: number;
     warningCount: number;
+    componentRequestCounts: ComponentRequirementStatusCounts;
   };
 }
+
+export type ComponentRequirementVerificationStatus =
+  | "satisfied"
+  | "missing"
+  | "ambiguous"
+  | "unsupported"
+  | "unverified";
+
+export type ComponentRequirementStatusCounts = Record<
+  ComponentRequirementVerificationStatus,
+  number
+>;
 
 export interface ComponentRequirementRequest {
   id: string;
@@ -94,12 +107,7 @@ export interface ComponentRequirementRequest {
   componentTypes: string[];
   componentMatch: "all" | "any" | "unknown";
   target: ComponentRequirementTarget;
-  verificationStatus:
-    | "satisfied"
-    | "missing"
-    | "ambiguous"
-    | "unsupported"
-    | "unverified";
+  verificationStatus: ComponentRequirementVerificationStatus;
   verificationReason?: string;
   validation: {
     presentComponentTypes: string[];

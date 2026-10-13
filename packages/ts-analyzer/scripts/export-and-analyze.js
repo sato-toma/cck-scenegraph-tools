@@ -32,12 +32,13 @@ Options:
   --output-path <path>      SceneGraph TOML path, relative to the Unity project or absolute
   --log-path <path>         Unity log path, relative to the Unity project or absolute
   --fail-on-issues          Exit with code 1 when analyzer issues are found
+  --fail-on-unverified      Exit with code 1 for ambiguous, unsupported, or unverified requirements
   --help                    Show this help
 `);
 }
 
 function parseArguments(args) {
-  const options = { failOnIssues: false };
+  const options = { failOnIssues: false, failOnUnverified: false };
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
@@ -47,6 +48,10 @@ function parseArguments(args) {
     }
     if (argument === "--fail-on-issues") {
       options.failOnIssues = true;
+      continue;
+    }
+    if (argument === "--fail-on-unverified") {
+      options.failOnUnverified = true;
       continue;
     }
     if (!argument.startsWith("--")) {
@@ -213,7 +218,7 @@ function runUnity(options) {
   return { projectPath, outputPath };
 }
 
-function runAnalyzer(outputPath, scriptPath, failOnIssues) {
+function runAnalyzer(outputPath, scriptPath, options) {
   const resolvedScriptPath = resolvePath(scriptPath || defaultScriptPath, process.cwd());
   if (!fs.existsSync(resolvedScriptPath)) {
     throw new Error(`TypeScript file not found: ${resolvedScriptPath}`);
@@ -225,11 +230,34 @@ function runAnalyzer(outputPath, scriptPath, failOnIssues) {
   }
 
   const { ClusterScriptAnalyzer } = require(analyzerModulePath);
+  const {
+    hasMissingComponentRequirements,
+    hasUnverifiedComponentRequirements,
+  } = require(path.join(__dirname, "..", "dist", "componentRequirementSummary.js"));
   const analyzer = new ClusterScriptAnalyzer(outputPath);
   const result = analyzer.analyzeTypeScriptFile(resolvedScriptPath);
   console.log(analyzer.generateReport(new Map([[resolvedScriptPath, result]])));
 
-  if (failOnIssues && result.summary.totalIssues > 0) {
+  const hasMissingRequirements = hasMissingComponentRequirements(
+    result.componentRequests,
+  );
+  const hasUnverifiedRequirements = hasUnverifiedComponentRequirements(
+    result.componentRequests,
+  );
+
+  if (
+    options.failOnIssues &&
+    (result.summary.totalIssues > 0 || hasMissingRequirements)
+  ) {
+    console.error(
+      "Error: Analyzer found validation issues or missing component requirements.",
+    );
+    process.exitCode = 1;
+  }
+  if (options.failOnUnverified && hasUnverifiedRequirements) {
+    console.error(
+      "Error: Component requirements include ambiguous, unsupported, or unverified results.",
+    );
     process.exitCode = 1;
   }
 }
@@ -243,7 +271,7 @@ function main() {
     }
 
     const exportResult = runUnity(options);
-    runAnalyzer(exportResult.outputPath, options.scriptPath, options.failOnIssues);
+    runAnalyzer(exportResult.outputPath, options.scriptPath, options);
   } catch (error) {
     console.error(`Error: ${error.message}`);
     process.exitCode = 1;

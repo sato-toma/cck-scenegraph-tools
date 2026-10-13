@@ -15,7 +15,8 @@
 
 - `packages/ts-analyzer/`
   - TypeScript 製の解析ライブラリと CLI
-  - `src/analyzer.ts`: TOML と TypeScript を結び付ける統合解析
+  - `src/analyzer.ts`: TOML と TypeScript を結び付ける解析フロー / 公開 API
+  - `src/reporting/analysisReportFormatter.ts`: 解析結果、SceneGraph、API 利用状況のテキスト整形
   - `src/sceneGraphParser.ts`: `SceneGraph.toml` の読み込みと検索
   - `src/mcpSceneAdapter.ts`: Unity CLI MCP の読み取り応答を別形式のスナップショットへ正規化
   - `src/typeScriptParser.ts`: ClusterScript API の検出
@@ -24,6 +25,7 @@
   - `src/rules/`: 物理、インタラクション、移動、state変更のルール
   - `src/*.test.ts`: Vitest による単体テスト
   - `src/fixtures/`: MCP 応答などの変換テスト用fixture
+  - `src/reporting/`: レポート表示ロジック。解析・照合ロジックから分離
   - `examples/`: CLI の実行例
   - `IMPLEMENTATION.md`: 現在の実装ガイド
 - `packages/unity-semantic-graph/`
@@ -73,7 +75,7 @@ Unity.exe -batchmode -quit `
 - Linux/macOS: `scripts/export-and-analyze.sh`
 - npm: `cd packages/ts-analyzer && npm run scenegraph:analyze -- ...`
 
-共通オプションは`--project-path`、`--scene-path`、`--script-path`、`--output-path`、`--unity-path`です。`--fail-on-issues`を付けると、解析結果に問題がある場合に終了コード1を返します。Unityの場所は`UNITY_PATH`環境変数でも指定できます。
+共通オプションは`--project-path`、`--scene-path`、`--script-path`、`--output-path`、`--unity-path`です。`--fail-on-issues`を付けると、analyzer issue または確定した Component 要求の不足で終了コード1を返します。`--fail-on-unverified`を付けると、曖昧・未対応・未検証の要求でも終了コード1を返します。すべての要求を確認済みにする CI では両方を指定してください。Unityの場所は`UNITY_PATH`環境変数でも指定できます。
 
 ## 変更の境界
 

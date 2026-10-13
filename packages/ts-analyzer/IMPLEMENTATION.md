@@ -164,6 +164,8 @@ const complexity = TypeScriptCodeParser.calculateCodeComplexity(code);
 
 解析結果には、通常のコンポーネント制約違反に加えて、`INVALID_STATE_MUTATION` というコードで state の直接変更違反も含めます。これにより、ClusterScript の仕様に沿った書き方を静的に検出できます。
 
+解析器は入力の解決と各解析処理を統合します。人向けテキストの書式は `src/reporting/analysisReportFormatter.ts` に分離し、`ClusterScriptAnalyzer` のレポートメソッドは既存 API として formatter に委譲します。出力形式を変更する場合は formatter のテストと CLI の出力確認を更新してください。
+
 ```typescript
 const analyzer = new ClusterScriptAnalyzer("SceneGraph.toml");
 
@@ -318,7 +320,14 @@ interface ComponentConstraint {
   summary: {
     totalIssues: 1,
     errorCount: 1,
-    warningCount: 0
+    warningCount: 0,
+    componentRequestCounts: {
+      satisfied: 0,
+      missing: 0,
+      ambiguous: 0,
+      unsupported: 0,
+      unverified: 1
+    }
   }
 }
 ```
@@ -327,7 +336,7 @@ interface ComponentConstraint {
 
 `$.getUnityComponent("UnityEngine.Rigidbody")` のようなリテラル参照は対象型を抽出しますが、それだけではスクリプトがその Component を必須としているとは限らないため `unverified` とします。required 制約が定義された API 呼び出しだけを SceneGraph 上の必須 Component として判定します。
 
-照合結果は `componentRequests` から取得できます。既存の `issues`、レポート形式、終了コードは維持します。Unity CLI MCP からのシーン取得はこのローカル SceneGraph 照合とは別の後続フェーズです。
+照合結果は `componentRequests` と `summary.componentRequestCounts` から取得できます。レポートは状態別件数を表示し、未確定要求を「問題なし」と表示しません。Export and Analyze の `--fail-on-issues` は analyzer issue と確定した `missing` 要求で失敗し、`--fail-on-unverified` は `ambiguous` / `unsupported` / `unverified` がある場合に失敗します。CI で全要求を確認済みにするには両方を指定します。Unity CLI MCP からのシーン取得はこのローカル SceneGraph 照合とは別の後続フェーズです。
 
 ## パフォーマンス考慮事項
 
