@@ -93,12 +93,7 @@ export interface ComponentRequirementRequest {
   api: string;
   componentTypes: string[];
   componentMatch: "all" | "any" | "unknown";
-  target: {
-    kind: "current-scriptable-item";
-    resolution: "resolved" | "ambiguous" | "unresolved";
-    gameObjectId?: string;
-    gameObjectPath?: string;
-  };
+  target: ComponentRequirementTarget;
   verificationStatus:
     | "satisfied"
     | "missing"
@@ -112,6 +107,17 @@ export interface ComponentRequirementRequest {
     matchedComponents: MatchedSceneComponent[];
   };
   occurrences: ComponentRequirementOccurrence[];
+}
+
+export interface ComponentRequirementTarget {
+  kind: "current-scriptable-item";
+  resolution: "resolved" | "ambiguous" | "unresolved";
+  gameObjectId?: string;
+  gameObjectPath?: string;
+  candidates?: Array<{
+    gameObjectId: string;
+    gameObjectPath: string;
+  }>;
 }
 
 export interface MatchedSceneComponent {
