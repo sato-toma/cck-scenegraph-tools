@@ -115,7 +115,7 @@ enabled = true
 type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
 enabled = true
 [gameObjects.components.properties]
-Source_Code_Asset = "onGrabScript"
+Source_Code_Asset = "sample.ts"
 `,
     );
 
@@ -221,13 +221,9 @@ project = "TestProject"
 
 [[gameObjects]]
 id = "first-object"
-path = "First"
-name = "First"
-parent = ""
-
-[[gameObjects.components]]
-type = "ClusterVR.CreatorKit.Item.Implements.GrabbableItem"
-enabled = true
+path = "Root/Duplicate-1"
+name = "Duplicate"
+parent = "Root"
 
 [[gameObjects.components]]
 type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
@@ -237,9 +233,13 @@ Source_Code_Asset = "sample.ts"
 
 [[gameObjects]]
 id = "second-object"
-path = "Second"
-name = "Second"
-parent = ""
+path = "Root/Duplicate-2"
+name = "Duplicate"
+parent = "Root"
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.GrabbableItem"
+enabled = true
 
 [[gameObjects.components]]
 type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
@@ -253,9 +253,109 @@ Source_Code_Asset = "sample.ts"
     const result = analyzer.analyzeTypeScriptFile(tsFilePath);
 
     expect(result.componentRequests[0]).toMatchObject({
-      target: { resolution: "ambiguous" },
       verificationStatus: "ambiguous",
+      target: {
+        resolution: "ambiguous",
+        candidates: [
+          {
+            gameObjectId: "first-object",
+            gameObjectPath: "Root/Duplicate-1",
+          },
+          {
+            gameObjectId: "second-object",
+            gameObjectPath: "Root/Duplicate-2",
+          },
+        ],
+      },
     });
+    expect(result.issues).toHaveLength(0);
+    const report = analyzer.generateReport(
+      new Map([[tsFilePath, result]]),
+    );
+    expect(report).toContain("[AMBIGUOUS] $.onGrab");
+    expect(report).toContain("Root/Duplicate-1 (first-object)");
+    expect(report).toContain("Root/Duplicate-2 (second-object)");
+  });
+
+  it("does not infer missing components when the source target is unresolved", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "unattached.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(tsFilePath, "$.setPosition(position);\n");
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "other-object"
+path = "Other"
+name = "Other"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "other.ts"
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests[0]).toMatchObject({
+      target: { resolution: "unresolved" },
+      verificationStatus: "unverified",
+      verificationReason:
+        "No ScriptableItem GameObject could be mapped to this source file.",
+    });
+  });
+
+  it("reports conditional component requests with their source condition", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(
+      tsFilePath,
+      "if (canMove) {\n  $.setPosition(position);\n}\n",
+    );
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile(tsFilePath);
+    const report = analyzer.generateReport(
+      new Map([[tsFilePath, result]]),
+    );
+
+    expect(result.componentRequests[0]).toMatchObject({
+      verificationStatus: "missing",
+      occurrences: [
+        { condition: { kind: "conditional", expression: "canMove" } },
+      ],
+    });
+    expect(report).toContain("[MISSING] $.setPosition at 2:2 when (canMove)");
+    expect(report).toContain("Missing: ClusterVR.CreatorKit.Item.Implements.MovableItem");
   });
 
   it("does not treat a literal component lookup as a mandatory requirement", () => {

@@ -44,23 +44,12 @@ export class ClusterScriptAnalyzer {
   }
 
   private getCandidateGameObjects(tsFilePath: string = ""): GameObject[] {
-    const specificGameObject = SceneGraphParser.findGameObjectForSourceFile(
+    const matchingGameObjects = SceneGraphParser.findGameObjectsForSourceFile(
       this.sceneGraphPath,
       this.sceneGraph,
       tsFilePath,
     );
-
-    if (specificGameObject) {
-      return [specificGameObject];
-    }
-
-    const scriptableObjects = SceneGraphParser.getGameObjectsWithScriptableItem(
-      this.sceneGraph,
-    );
-
-    return scriptableObjects.length > 0
-      ? scriptableObjects
-      : this.sceneGraph.gameObjects;
+    return matchingGameObjects.length === 1 ? matchingGameObjects : [];
   }
 
   analyzeTypeScriptFile(tsFilePath: string = ""): AnalysisResult {
@@ -81,23 +70,10 @@ export class ClusterScriptAnalyzer {
 
       const candidateGameObjects =
         this.getCandidateGameObjects(resolvedTsFilePath);
-      const fallbackGameObject =
-        candidateGameObjects[0] ?? this.sceneGraph.gameObjects[0];
-
-      if (!fallbackGameObject) {
+      const gameObject = candidateGameObjects[0];
+      if (!gameObject) {
         continue;
       }
-
-      const matchingGameObject = candidateGameObjects.find((candidate) => {
-        const validation = ConstraintValidator.validateGameObject(
-          candidate,
-          constraints,
-          this.sceneGraph,
-        );
-        return validation.isValid;
-      });
-
-      const gameObject = matchingGameObject ?? fallbackGameObject;
 
       // 制約を検証
       const validation = ConstraintValidator.validateGameObject(
@@ -228,11 +204,15 @@ export class ClusterScriptAnalyzer {
     let totalWarnings = 0;
 
     for (const [filePath, result] of results) {
-      if (result.issues.length > 0) {
+      if (result.issues.length > 0 || result.componentRequests.length > 0) {
         lines.push(`\n📄 File: ${filePath}`);
         lines.push(`   Issues: ${result.summary.totalIssues}`);
         lines.push(`   Errors: ${result.summary.errorCount}`);
         lines.push(`   Warnings: ${result.summary.warningCount}`);
+
+        if (result.issues.length === 0) {
+          lines.push("   No validation issues.");
+        }
 
         for (const issue of result.issues) {
           const severityColor =
@@ -257,6 +237,10 @@ export class ClusterScriptAnalyzer {
           );
         }
 
+        if (result.componentRequests.length > 0) {
+          lines.push(this.generateComponentRequirementReport(result));
+        }
+
         totalIssues += result.summary.totalIssues;
         totalErrors += result.summary.errorCount;
         totalWarnings += result.summary.warningCount;
@@ -270,6 +254,75 @@ export class ClusterScriptAnalyzer {
 
     if (totalIssues === 0) {
       lines.push(colorize("✅ No issues found!", ANSI.green));
+    }
+
+    return lines.join("\n");
+  }
+
+  generateComponentRequirementReport(result: AnalysisResult): string {
+    const lines = ["   Component requirements:"];
+
+    if (result.componentRequests.length === 0) {
+      lines.push("     (No component requirements)");
+      return lines.join("\n");
+    }
+
+    for (const request of result.componentRequests) {
+      const componentTypes =
+        request.componentMatch === "any"
+          ? `one of ${request.componentTypes.join(" | ")}`
+          : request.componentTypes.join(", ") || "(component type unknown)";
+      const locations = request.occurrences
+        .map(({ source, condition }) => {
+          const when =
+            condition.kind === "conditional"
+              ? ` when (${condition.expression})`
+              : condition.kind === "unknown"
+                ? " under an unknown condition"
+                : "";
+          return `${source.line}:${source.column}${when}`;
+        })
+        .join(", ");
+
+      lines.push(
+        `     [${request.verificationStatus.toUpperCase()}] ${request.api} at ${locations}: ${componentTypes}`,
+      );
+      if (request.target.resolution === "resolved") {
+        lines.push(
+          `       Target: ${request.target.gameObjectPath} (${request.target.gameObjectId})`,
+        );
+      } else if (request.target.resolution === "ambiguous") {
+        lines.push("       Target: ambiguous among:");
+        for (const candidate of request.target.candidates ?? []) {
+          lines.push(
+            `         - ${candidate.gameObjectPath} (${candidate.gameObjectId})`,
+          );
+        }
+      } else {
+        lines.push("       Target: unresolved");
+      }
+
+      if (request.validation.presentComponentTypes.length > 0) {
+        lines.push(
+          `       Present: ${request.validation.presentComponentTypes.join(", ")}`,
+        );
+      }
+      if (request.validation.missingComponentTypes.length > 0) {
+        lines.push(
+          `       Missing: ${request.validation.missingComponentTypes.join(", ")}`,
+        );
+      }
+      for (const matched of request.validation.matchedComponents) {
+        lines.push(
+          `       Evidence: ${matched.componentType} on ${matched.gameObjectPath} (${matched.gameObjectId})`,
+        );
+      }
+      if (request.verificationReason) {
+        lines.push(`       Reason: ${request.verificationReason}`);
+      }
+      for (const occurrence of request.occurrences) {
+        lines.push(`       Source: ${occurrence.evidence}`);
+      }
     }
 
     return lines.join("\n");

@@ -50,8 +50,8 @@ Unity CLI MCP の読み取り応答
 - Compiler API へ移行するまでは、検出できる構文をテストで明示する。
 - `ComponentRequirementExtractor` は、既知 API の required 制約と文字列リテラルの `$.getUnityComponent(...)` を構造化する。動的な引数は `unsupported` とする。
 - 同一 API・同一型条件の要求は集約し、全ての出現位置・条件・根拠を残す。条件抽出は単純な `if` ブロックに限定し、解釈できない条件は `unknown` とする。
-- `ComponentRequirementValidator` は `Source_Code_Asset` とソースファイルを対応付け、対象 GameObject が一意なら `ConstraintValidator` でそのオブジェクトの階層内にある有効な Component と照合する。結果には照合した Component の所有 GameObject ID / path も含める。対象不明・複数候補・未対応引数は、それぞれ `unverified`・`ambiguous`・`unsupported` として返す。
-- 照合結果は `AnalysisResult.componentRequests` で取得できる。既存の `issues`、CLI レポート、終了コードは変更しない。
+- `ComponentRequirementValidator` は `Source_Code_Asset` とソースファイルを対応付け、対象 GameObject が一意なら `ConstraintValidator` でそのオブジェクトの階層内にある有効な Component と照合する。結果には照合した Component の所有 GameObject ID / path も含める。対象不明・複数候補・未対応引数は、それぞれ `unverified`・`ambiguous`・`unsupported` として返す。曖昧な候補は ID / path を含め、任意の候補を選んだ欠落判定は行わない。
+- 照合結果は `AnalysisResult.componentRequests` と `analyze` / `report` の出力で確認できる。条件付き要求は、実行された場合に必要な Component として照合し、各出現位置の条件式をレポートする。対象が一意に解決できない場合は `MISSING_COMPONENT` を出さず、要求状態を `ambiguous` / `unverified` として報告する。これは曖昧・未解決対象を欠落と誤断定していたケースの終了コードを修正する。
 - `McpSceneAdapter` は Unity CLI MCP の `get_scene_hierarchy` / `find_gameobjects` 応答を純粋関数で正規化する。`instanceId` は応答間の結合にだけ使い、GlobalObjectId が得られない対象は診断に記録してスナップショットから除外する。Component の `enabled` は MCP から取得できないため `unsupported` とし、SceneGraph や analyzer の入力に変換しない。
 
 ### 要求モデルとバリデータ

@@ -3,6 +3,7 @@ import { SceneGraphParser } from "./sceneGraphParser";
 import {
   ComponentConstraint,
   ComponentRequirementRequest,
+  ComponentRequirementTarget,
   SceneGraph,
 } from "./types";
 
@@ -30,7 +31,7 @@ export class ComponentRequirementValidator {
               : "ambiguous";
         const verificationReason =
           verificationStatus === "ambiguous"
-            ? "Multiple ScriptableItem GameObjects reference this source file."
+            ? "Multiple ScriptableItem GameObjects reference this source file; the target cannot be determined."
             : request.occurrences[0]?.evidence;
         return this.withStatus(
           request,
@@ -38,6 +39,10 @@ export class ComponentRequirementValidator {
           {
             kind: "current-scriptable-item",
             resolution: "ambiguous",
+            candidates: targets.map(({ id, path }) => ({
+              gameObjectId: id,
+              gameObjectPath: path,
+            })),
           },
           verificationReason,
         );
@@ -60,7 +65,7 @@ export class ComponentRequirementValidator {
         );
       }
 
-      const resolvedTarget = {
+      const resolvedTarget: ComponentRequirementTarget = {
         kind: "current-scriptable-item" as const,
         resolution: "resolved" as const,
         gameObjectId: target.id,
@@ -165,7 +170,7 @@ export class ComponentRequirementValidator {
   private static withStatus(
     request: ComponentRequirementRequest,
     verificationStatus: ComponentRequirementRequest["verificationStatus"],
-    target: ComponentRequirementRequest["target"],
+    target: ComponentRequirementTarget,
     verificationReason?: string,
   ): ComponentRequirementRequest {
     const result: ComponentRequirementRequest = {

@@ -159,6 +159,10 @@ interface ComponentRequirementRequest {
     resolution: "resolved" | "ambiguous" | "unresolved";
     gameObjectId?: string;
     gameObjectPath?: string;
+    candidates?: Array<{
+      gameObjectId: string;
+      gameObjectPath: string;
+    }>;
   };
   verificationStatus:
     | "satisfied"
@@ -201,6 +205,8 @@ interface ValidationIssue {
   availableComponents: string[];
 }
 ```
+
+`analyze` / `report` は、各要求の照合状態・対象・根拠・ソース上の条件も表示します。対象が一意に解決できない場合は `ambiguous` / `unverified` として報告し、任意の GameObject を選んだ `MISSING_COMPONENT` 判定は行いません。条件付き API 呼び出しも、実行された場合に必要な制約として SceneGraph と照合し、条件式を根拠に併記します。
 
 SceneGraph を読み込まずに抽出する場合は、`ComponentRequirementExtractor` を利用できます。
 

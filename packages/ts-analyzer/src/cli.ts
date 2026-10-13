@@ -132,6 +132,9 @@ function analyzeCommand(args: string[]) {
       } else {
         console.log(colorize("✅ No issues found!", ANSI.green));
       }
+      if (result.componentRequests.length > 0) {
+        console.log(analyzer.generateComponentRequirementReport(result));
+      }
     }
   } catch (error) {
     console.error("Error during analysis:", error);
