@@ -2,12 +2,13 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { describe, expect, it } from "vitest";
-import { ClusterScriptAnalyzer } from "./analyzer";
-import { SceneGraphParser } from "./sceneGraphParser";
-import { WorldUploadValidator } from "./worldUploadValidator";
+import { ClusterScriptAnalyzer } from "../analysis/analyzer";
+import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
+import { WorldUploadValidator } from "../validation/worldUploadValidator";
 
 const fixturePath = path.join(
   __dirname,
+  "..",
   "fixtures",
   "scene-graph-export.toml",
 );

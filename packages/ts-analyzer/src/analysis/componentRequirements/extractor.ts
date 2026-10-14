@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import * as fs from "node:fs";
-import { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
-import { TypeScriptCodeParser } from "./typeScriptParser";
+import { ClusterScriptDefinitions } from "../../rules/clusterScriptDefinitions";
+import { TypeScriptCodeParser } from "../typeScriptParser";
 import {
   ComponentRequirementOccurrence,
   ComponentRequirementRequest,
-} from "./types";
+} from "../../domain/types";
 
 interface ExtractedOccurrence {
   api: string;

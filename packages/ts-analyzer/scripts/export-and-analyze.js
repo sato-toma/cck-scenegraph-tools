@@ -131,18 +131,11 @@ function runUnity(options) {
   if (!fs.existsSync(projectPath)) {
     throw new Error(`Unity project not found: ${projectPath}`);
   }
-  const parserModulePath = path.join(__dirname, "..", "dist", "sceneGraphParser.js");
-  const validatorModulePath = path.join(
-    __dirname,
-    "..",
-    "dist",
-    "worldUploadValidator.js",
-  );
-  if (!fs.existsSync(parserModulePath) || !fs.existsSync(validatorModulePath)) {
+  const analyzerModulePath = path.join(__dirname, "..", "dist", "index.js");
+  if (!fs.existsSync(analyzerModulePath)) {
     throw new Error("Analyzer build not found. Run npm run build in packages/ts-analyzer first.");
   }
-  const { SceneGraphParser } = require(parserModulePath);
-  const { WorldUploadValidator } = require(validatorModulePath);
+  const { SceneGraphParser, WorldUploadValidator } = require(analyzerModulePath);
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.mkdirSync(path.dirname(logPath), { recursive: true });
@@ -224,16 +217,11 @@ function runAnalyzer(outputPath, scriptPath, options) {
     throw new Error(`TypeScript file not found: ${resolvedScriptPath}`);
   }
 
-  const analyzerModulePath = path.join(__dirname, "..", "dist", "analyzer.js");
-  if (!fs.existsSync(analyzerModulePath)) {
-    throw new Error("Analyzer build not found. Run npm run build in packages/ts-analyzer first.");
-  }
-
-  const { ClusterScriptAnalyzer } = require(analyzerModulePath);
   const {
+    ClusterScriptAnalyzer,
     hasMissingComponentRequirements,
     hasUnverifiedComponentRequirements,
-  } = require(path.join(__dirname, "..", "dist", "componentRequirementSummary.js"));
+  } = require(analyzerModulePath);
   const analyzer = new ClusterScriptAnalyzer(outputPath);
   const result = analyzer.analyzeTypeScriptFile(resolvedScriptPath);
   console.log(analyzer.generateReport(new Map([[resolvedScriptPath, result]])));

@@ -1,8 +1,9 @@
+import * as path from "path";
 import { describe, expect, it } from "vitest";
-import { SceneGraphParser } from "./sceneGraphParser";
+import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
 import { WorldUploadValidator } from "./worldUploadValidator";
 
-const fixturePath = `${__dirname}/fixtures/scene-graph-export.toml`;
+const fixturePath = path.join(__dirname, "..", "fixtures", "scene-graph-export.toml");
 
 describe("WorldUploadValidator", () => {
   it("accepts one Entrance SpawnPoint and exactly one enabled DespawnHeight", () => {

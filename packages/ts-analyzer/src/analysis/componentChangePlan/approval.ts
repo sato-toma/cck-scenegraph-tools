@@ -3,12 +3,12 @@ import {
   ApprovedComponentChangePlan,
   ComponentChangePlan,
   ComponentChangePlanApprovalConfirmation,
-} from "./componentChangePlan";
-import { ComponentProperty } from "./types";
+} from "./index";
+import { ComponentProperty } from "../../domain/types";
 import {
   getComponentChangePlanStatus,
   hasUnresolvedComponentChangeInput,
-} from "./componentChangePlanStatus";
+} from "./status";
 
 function planDigest(plan: ComponentChangePlan): string {
   const { status: _status, approval: _approval, ...content } = plan;

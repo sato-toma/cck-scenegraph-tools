@@ -3,24 +3,24 @@ import {
   AnalysisResult,
   ValidationIssue,
   GameObject,
-} from "./types";
+} from "../domain/types";
 import * as fs from "fs";
-import { SceneGraphParser } from "./sceneGraphParser";
+import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
 import { TypeScriptCodeParser } from "./typeScriptParser";
-import { ConstraintValidator } from "./constraintValidator";
-import { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
-import { ComponentRequirementExtractor } from "./componentRequirementExtractor";
-import { ComponentRequirementValidator } from "./componentRequirementValidator";
+import { ConstraintValidator } from "../validation/constraintValidator";
+import { ClusterScriptDefinitions } from "../rules/clusterScriptDefinitions";
+import { ComponentRequirementExtractor } from "./componentRequirements/extractor";
+import { ComponentRequirementValidator } from "./componentRequirements/validator";
 import {
   summarizeComponentRequirements,
-} from "./componentRequirementSummary";
+} from "./componentRequirements/summary";
 import * as path from "path";
-import { AnalysisReportFormatter } from "./reporting/analysisReportFormatter";
+import { AnalysisReportFormatter } from "../reporting/analysisReportFormatter";
 import {
   ComponentChangePlan,
   createComponentChangePlan,
 } from "./componentChangePlan";
-import { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
+import { formatComponentChangePlan } from "../reporting/componentChangePlanFormatter";
 
 /**
  * 統合的なTypeScript静的解析エンジン

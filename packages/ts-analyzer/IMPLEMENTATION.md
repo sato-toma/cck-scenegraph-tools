@@ -28,7 +28,7 @@
 
 ## モジュール構成
 
-### 1. types.ts
+### 1. domain/types.ts
 **型定義とインターフェース**
 
 - `SceneGraph`: TOML解析結果を保持
@@ -38,7 +38,7 @@
 - `AnalysisResult`: 解析結果
 - `ValidationIssue`: 検出された問題
 
-### 2. sceneGraphParser.ts
+### 2. sceneGraph/sceneGraphParser.ts
 **SceneGraph.toml の解析**
 
 ```typescript
@@ -65,7 +65,7 @@ console.log(SceneGraphParser.visualizeHierarchy(sceneGraph));
 - 構造の可視化
 - コンポーネント統計
 
-### 3. clusterScriptDefinitions.ts
+### 3. rules/clusterScriptDefinitions.ts
 **ClusterScript API と制約定義**
 
 ルール定義は [src/rules](src/rules) 配下に分離されており、以下のようにカテゴリ単位で管理しています。
@@ -94,7 +94,7 @@ const methods = ClusterScriptDefinitions.getAllMethodNames();
 | `onRide()` | RidableItem | 乗られた時 |
 | `onCollide()` | Rigidbody + Collider | 衝突時 |
 
-### 4. constraintValidator.ts
+### 4. validation/constraintValidator.ts
 **制約検証エンジン**
 
 ```typescript
@@ -122,7 +122,7 @@ const results = ConstraintValidator.batchValidateMethods(
 - 互換性チェック
 - 一括検証
 
-### 5. typeScriptParser.ts
+### 5. analysis/typeScriptParser.ts
 **TypeScript コード解析**
 
 このモジュールでは、正規表現ベースで以下を抽出します。
@@ -159,7 +159,7 @@ const complexity = TypeScriptCodeParser.calculateCodeComplexity(code);
 
 **注**: 完全な AST 解析ではないため、複雑なケースでは TypeScript Compiler API の使用を推奨します。
 
-### 6. analyzer.ts
+### 6. analysis/analyzer.ts
 **統合解析エンジン**
 
 解析結果には、通常のコンポーネント制約違反に加えて、`INVALID_STATE_MUTATION` というコードで state の直接変更違反も含めます。これにより、ClusterScript の仕様に沿った書き方を静的に検出できます。
@@ -184,7 +184,7 @@ console.log(analyzer.generateRecommendedComponents("script.ts"));
 
 ### Component 修正計画と承認
 
-`createComponentChangePlan()` は解析結果から、対象が一意で `missing` と判定された必須 Component の追加計画を作ります。曖昧・未対応・未検証の要求や `any` 条件はレビュー項目となり、自動的な追加候補にはなりません。設定値は analyzer からは分からないため、計画ごとに具体値または「追加設定なし」を明示的に確定しない限り承認できません。
+`analysis/componentChangePlan/` は計画生成と承認状態管理を担当します。`createComponentChangePlan()` は解析結果から、対象が一意で `missing` と判定された必須 Component の追加計画を作ります。曖昧・未対応・未検証の要求や `any` 条件はレビュー項目となり、自動的な追加候補にはなりません。設定値は analyzer からは分からないため、計画ごとに具体値または「追加設定なし」を明示的に確定しない限り承認できません。
 
 ```typescript
 import {
@@ -362,7 +362,7 @@ interface ComponentConstraint {
 }
 ```
 
-`ComponentRequirementRequest` は要求内容を表すデータで、判定器そのものではありません。解析時には `ComponentRequirementValidator` が `Source_Code_Asset` から対象 GameObject を解決し、`ConstraintValidator` を使って SceneGraph の Component と照合します。結果は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unverified` のいずれかで、`verificationReason` が付く場合は判定できない理由を示します。`matchedComponents` には照合に使った SceneGraph 上の GameObject ID / path と Component 型が含まれます。
+`ComponentRequirementRequest` は要求内容を表すデータで、判定器そのものではありません。解析時には `analysis/componentRequirements/validator.ts` の `ComponentRequirementValidator` が `Source_Code_Asset` から対象 GameObject を解決し、`validation/constraintValidator.ts` の `ConstraintValidator` を使って SceneGraph の Component と照合します。結果は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unverified` のいずれかで、`verificationReason` が付く場合は判定できない理由を示します。`matchedComponents` には照合に使った SceneGraph 上の GameObject ID / path と Component 型が含まれます。
 
 `$.getUnityComponent("UnityEngine.Rigidbody")` のようなリテラル参照は対象型を抽出しますが、それだけではスクリプトがその Component を必須としているとは限らないため `unverified` とします。required 制約が定義された API 呼び出しだけを SceneGraph 上の必須 Component として判定します。
 

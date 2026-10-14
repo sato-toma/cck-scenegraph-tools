@@ -2,12 +2,12 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { ClusterScriptAnalyzer } from "./analyzer";
-import { SceneGraphParser } from "./sceneGraphParser";
-import { TypeScriptCodeParser } from "./typeScriptParser";
-import { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
-import { formatComponentRequirementStatusCounts } from "./componentRequirementSummary";
-import type { AnalysisResult } from "./types";
+import { ClusterScriptAnalyzer } from "./analysis/analyzer";
+import { SceneGraphParser } from "./sceneGraph/sceneGraphParser";
+import { TypeScriptCodeParser } from "./analysis/typeScriptParser";
+import { ClusterScriptDefinitions } from "./rules/clusterScriptDefinitions";
+import { formatComponentRequirementStatusCounts } from "./analysis/componentRequirements/summary";
+import type { AnalysisResult } from "./domain/types";
 import { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
 
 /**

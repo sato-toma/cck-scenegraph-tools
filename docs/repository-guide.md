@@ -15,18 +15,15 @@
 
 - `packages/ts-analyzer/`
   - TypeScript 製の解析ライブラリと CLI
-  - `src/analyzer.ts`: TOML と TypeScript を結び付ける解析フロー / 公開 API
-  - `src/componentChangePlan.ts`: 追加専用計画、確認状態、承認ゲート
-  - `src/reporting/analysisReportFormatter.ts`: 解析結果、SceneGraph、API 利用状況のテキスト整形
-  - `src/sceneGraphParser.ts`: `SceneGraph.toml` の読み込みと検索
-  - `src/mcpSceneAdapter.ts`: Unity CLI MCP の読み取り応答を別形式のスナップショットへ正規化
-  - `src/typeScriptParser.ts`: ClusterScript API の検出
-  - `src/constraintValidator.ts`: コンポーネント制約の判定
-  - `src/clusterScriptDefinitions.ts`: API と制約の公開定義
-  - `src/rules/`: 物理、インタラクション、移動、state変更のルール
-  - `src/*.test.ts`: Vitest による単体テスト
+  - `src/index.ts` と `src/cli.ts`: ライブラリと CLI のエントリポイント
+  - `src/analysis/`: 解析、Component 要求、変更計画
+  - `src/sceneGraph/`: SceneGraph TOML と MCP 応答の読み取り
+  - `src/validation/`: Component 制約とアップロード条件の検証
+  - `src/domain/`: 解析・SceneGraph の共有型
+  - `src/rules/`: API 制約と物理、インタラクション、移動、state変更のルール
+  - `src/reporting/`: 解析結果や計画のテキスト整形
+  - `src/integration/`: Exporter 出力との統合テスト
   - `src/fixtures/`: MCP 応答などの変換テスト用fixture
-  - `src/reporting/`: レポート表示ロジック。解析・照合ロジックから分離
   - `examples/`: CLI の実行例
   - `IMPLEMENTATION.md`: 現在の実装ガイド
 - `packages/unity-semantic-graph/`

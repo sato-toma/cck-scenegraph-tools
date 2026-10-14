@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import { describe, expect, it } from "vitest";
 import { ClusterScriptAnalyzer } from "./analyzer";
-import { SceneGraphParser } from "./sceneGraphParser";
+import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
 
 describe("ClusterScriptAnalyzer", () => {
   it("validates scriptable item behavior against the matching scene object", () => {

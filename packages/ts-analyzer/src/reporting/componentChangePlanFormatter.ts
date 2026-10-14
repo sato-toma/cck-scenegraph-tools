@@ -1,5 +1,5 @@
-import { ComponentChangePlan } from "../componentChangePlan";
-import { ComponentRequirementOccurrence } from "../types";
+import { ComponentChangePlan } from "../analysis/componentChangePlan";
+import { ComponentRequirementOccurrence } from "../domain/types";
 
 function formatOccurrenceEvidence(
   occurrence: ComponentRequirementOccurrence,

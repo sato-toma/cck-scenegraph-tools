@@ -1,16 +1,16 @@
-import { ClusterScriptDefinitions } from "../clusterScriptDefinitions";
-import { ConstraintValidator } from "../constraintValidator";
+import { ClusterScriptDefinitions } from "../rules/clusterScriptDefinitions";
+import { ConstraintValidator } from "../validation/constraintValidator";
 import {
   COMPONENT_REQUIREMENT_STATUSES,
   formatComponentRequirementStatusCounts,
   summarizeComponentRequirements,
-} from "../componentRequirementSummary";
-import { SceneGraphParser } from "../sceneGraphParser";
-import { TypeScriptCodeParser } from "../typeScriptParser";
+} from "../analysis/componentRequirements/summary";
+import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
+import { TypeScriptCodeParser } from "../analysis/typeScriptParser";
 import {
   AnalysisResult,
   SceneGraph,
-} from "../types";
+} from "../domain/types";
 
 const ANSI = {
   reset: "\u001b[0m",

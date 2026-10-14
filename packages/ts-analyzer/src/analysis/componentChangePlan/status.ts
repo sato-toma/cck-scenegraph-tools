@@ -2,7 +2,7 @@ import {
   ComponentChangeAction,
   ComponentChangePlanStatus,
   ComponentChangeReviewItem,
-} from "./componentChangePlan";
+} from "./index";
 
 export function hasUnresolvedComponentChangeInput(
   actions: ComponentChangeAction[],

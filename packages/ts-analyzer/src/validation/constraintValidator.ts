@@ -3,9 +3,9 @@ import {
   ComponentConstraint,
   GameObject,
   SceneGraph,
-} from "./types";
-import { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
-import { SceneGraphParser } from "./sceneGraphParser";
+} from "../domain/types";
+import { ClusterScriptDefinitions } from "../rules/clusterScriptDefinitions";
+import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
 
 /**
  * コンポーネント制約の検証エンジン

@@ -6,8 +6,8 @@ import {
   ComponentRequirementRequest,
   ComponentRequirementVerificationStatus,
   SceneGraph,
-} from "./types";
-import { getComponentChangePlanStatus } from "./componentChangePlanStatus";
+} from "../../domain/types";
+import { getComponentChangePlanStatus } from "./status";
 
 export type ComponentChangePlanStatus =
   | "needs-user-input"
@@ -291,4 +291,4 @@ export {
   getApprovedComponentChanges,
   rejectComponentChangePlan,
   resolveComponentChangeSettings,
-} from "./componentChangePlanApproval";
+} from "./approval";

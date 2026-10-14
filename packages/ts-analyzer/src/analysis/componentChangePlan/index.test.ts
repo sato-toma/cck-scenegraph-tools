@@ -6,13 +6,13 @@ import {
   getApprovedComponentChanges,
   rejectComponentChangePlan,
   resolveComponentChangeSettings,
-} from "./componentChangePlan";
-import { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
+} from ".";
+import { formatComponentChangePlan } from "../../reporting/componentChangePlanFormatter";
 import {
   AnalysisResult,
   ComponentRequirementRequest,
   SceneGraph,
-} from "./types";
+} from "../../domain/types";
 
 const sceneGraph: SceneGraph = {
   project: "TestProject",
