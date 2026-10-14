@@ -6,6 +6,7 @@ const { spawnSync } = require("child_process");
 const { randomUUID } = require("crypto");
 
 const repositoryRoot = path.resolve(__dirname, "../../..");
+const analyzerModulePath = path.join(__dirname, "..", "dist", "index.js");
 const defaultProjectPath = path.join(
   repositoryRoot,
   "packages",
@@ -73,6 +74,13 @@ function resolvePath(value, basePath) {
   return path.resolve(basePath, value);
 }
 
+function loadAnalyzerModule() {
+  if (!fs.existsSync(analyzerModulePath)) {
+    throw new Error("Analyzer build not found. Run npm run build in packages/ts-analyzer first.");
+  }
+  return require(analyzerModulePath);
+}
+
 function resolveUnityPath(explicitPath, projectPath) {
   const configuredPath = explicitPath || process.env.UNITY_PATH;
   if (configuredPath) {
@@ -131,11 +139,7 @@ function runUnity(options) {
   if (!fs.existsSync(projectPath)) {
     throw new Error(`Unity project not found: ${projectPath}`);
   }
-  const analyzerModulePath = path.join(__dirname, "..", "dist", "index.js");
-  if (!fs.existsSync(analyzerModulePath)) {
-    throw new Error("Analyzer build not found. Run npm run build in packages/ts-analyzer first.");
-  }
-  const { SceneGraphParser, WorldUploadValidator } = require(analyzerModulePath);
+  const { SceneGraphParser, WorldUploadValidator } = loadAnalyzerModule();
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.mkdirSync(path.dirname(logPath), { recursive: true });
@@ -221,7 +225,7 @@ function runAnalyzer(outputPath, scriptPath, options) {
     ClusterScriptAnalyzer,
     hasMissingComponentRequirements,
     hasUnverifiedComponentRequirements,
-  } = require(analyzerModulePath);
+  } = loadAnalyzerModule();
   const analyzer = new ClusterScriptAnalyzer(outputPath);
   const result = analyzer.analyzeTypeScriptFile(resolvedScriptPath);
   console.log(analyzer.generateReport(new Map([[resolvedScriptPath, result]])));
