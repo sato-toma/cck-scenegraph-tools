@@ -182,6 +182,35 @@ console.log(analyzer.generateApiCoverageReport("script.ts"));
 console.log(analyzer.generateRecommendedComponents("script.ts"));
 ```
 
+### Component 修正計画と承認
+
+`createComponentChangePlan()` は解析結果から、対象が一意で `missing` と判定された必須 Component の追加計画を作ります。曖昧・未対応・未検証の要求や `any` 条件はレビュー項目となり、自動的な追加候補にはなりません。設定値は analyzer からは分からないため、計画ごとに具体値または「追加設定なし」を明示的に確定しない限り承認できません。
+
+```typescript
+import {
+  approveComponentChangePlan,
+  getApprovedComponentChanges,
+  resolveComponentChangeSettings,
+} from "ts-analyzer";
+
+const plan = analyzer.createComponentChangePlan(
+  [result],
+  "Assets/Scenes/Main.unity",
+);
+const withSettings = resolveComponentChangeSettings(
+  plan,
+  plan.actions[0]!.id,
+  {}, // Explicitly confirm that no additional settings are required.
+);
+const approved = approveComponentChangePlan(withSettings, {
+  planId: withSettings.id,
+  confirmed: true, // Call only after the user explicitly approves this plan.
+});
+const applicationRequest = getApprovedComponentChanges(approved);
+```
+
+`getApprovedComponentChanges()` は承認状態と承認時の計画内容を検証してから適用用データを返します。この package はシーンを書き換えません。MCP の適用側は、ユーザーが Copilot Agent の会話で明示承認した後にだけ承認 API を呼び出す必要があります。
+
 ### 7. cli.ts
 **コマンドラインインターフェース**
 
@@ -190,6 +219,7 @@ ts-analyzer analyze ./SceneGraph.toml ./script.ts
 ts-analyzer report ./SceneGraph.toml ./script.ts
 ts-analyzer coverage ./SceneGraph.toml ./script.ts
 ts-analyzer recommend ./SceneGraph.toml ./script.ts
+ts-analyzer plan ./SceneGraph.toml ./script.ts
 ts-analyzer scene-graph ./SceneGraph.toml
 ts-analyzer list-apis
 ```

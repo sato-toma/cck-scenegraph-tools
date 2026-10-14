@@ -16,6 +16,11 @@ import {
 } from "./componentRequirementSummary";
 import * as path from "path";
 import { AnalysisReportFormatter } from "./reporting/analysisReportFormatter";
+import {
+  ComponentChangePlan,
+  createComponentChangePlan,
+} from "./componentChangePlan";
+import { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
 
 /**
  * 統合的なTypeScript静的解析エンジン
@@ -212,6 +217,27 @@ export class ClusterScriptAnalyzer {
    */
   generateRecommendedComponents(tsFilePath: string): string {
     return this.reportFormatter.generateRecommendedComponents(tsFilePath);
+  }
+
+  createComponentChangePlan(
+    results: AnalysisResult[],
+    scenePath: string,
+  ): ComponentChangePlan {
+    return createComponentChangePlan(
+      this.sceneGraph,
+      results,
+      scenePath,
+      this.sceneGraphPath,
+    );
+  }
+
+  generateComponentChangePlanReport(
+    results: AnalysisResult[],
+    scenePath: string,
+  ): string {
+    return formatComponentChangePlan(
+      this.createComponentChangePlan(results, scenePath),
+    );
   }
 
   /**

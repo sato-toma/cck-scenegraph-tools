@@ -7,6 +7,15 @@ export { ClusterScriptAnalyzer } from "./analyzer";
 export { ComponentRequirementExtractor } from "./componentRequirementExtractor";
 export { ComponentRequirementValidator } from "./componentRequirementValidator";
 export {
+  approveComponentChangePlan,
+  createComponentChangePlan,
+  excludeComponentChangeReviewItem,
+  getApprovedComponentChanges,
+  rejectComponentChangePlan,
+  resolveComponentChangeSettings,
+} from "./componentChangePlan";
+export { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
+export {
   COMPONENT_REQUIREMENT_STATUSES,
   formatComponentRequirementStatusCounts,
   hasMissingComponentRequirements,
@@ -28,6 +37,15 @@ export type {
   McpSceneDiagnostic,
   McpSceneSnapshot,
 } from "./mcpSceneAdapter";
+export type {
+  ApprovedComponentChangePlan,
+  ComponentChangeAction,
+  ComponentChangePlan,
+  ComponentChangePlanApprovalConfirmation,
+  ComponentChangePlanStatus,
+  ComponentChangeReviewItem,
+  ComponentChangeReviewReason,
+} from "./componentChangePlan";
 export type {
   SceneGraph,
   GameObject,
