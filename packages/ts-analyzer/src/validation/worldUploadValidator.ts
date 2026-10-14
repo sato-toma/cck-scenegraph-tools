@@ -1,4 +1,4 @@
-import { SceneGraph } from "./types";
+import { SceneGraph } from "../domain/types";
 
 const SPAWN_POINT_TYPE =
   "ClusterVR.CreatorKit.World.Implements.SpawnPoints.SpawnPoint";

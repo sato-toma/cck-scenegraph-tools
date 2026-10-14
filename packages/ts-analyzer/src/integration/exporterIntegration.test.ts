@@ -2,12 +2,13 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { describe, expect, it } from "vitest";
-import { ClusterScriptAnalyzer } from "./analyzer";
-import { SceneGraphParser } from "./sceneGraphParser";
-import { WorldUploadValidator } from "./worldUploadValidator";
+import { ClusterScriptAnalyzer } from "../analysis/analyzer";
+import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
+import { WorldUploadValidator } from "../validation/worldUploadValidator";
 
 const fixturePath = path.join(
   __dirname,
+  "..",
   "fixtures",
   "scene-graph-export.toml",
 );
@@ -164,5 +165,41 @@ Source_Code_Asset = "onGrabSceneGraphContract"
       target: { resolution: "unresolved" },
     });
     expect(ambiguous.result.issues).toHaveLength(0);
+  });
+
+  it("creates a non-mutating plan from a missing requirement in exporter data", () => {
+    const { analyzer, result } = analyzeExporterFixture(
+      "$.onGrab(() => {});\n",
+      "onGrabSceneGraphContract.ts",
+      (graph) =>
+        graph.replace(
+          /(type = "ClusterVR\.CreatorKit\.Item\.Implements\.GrabbableItem"\r?\nenabled = )true/,
+          "$1false",
+        ),
+    );
+
+    const plan = analyzer.createComponentChangePlan(
+      [result],
+      "Assets/Scenes/Main.unity",
+    );
+
+    expect(plan).toMatchObject({
+      project: "UnitySemanticGraph",
+      scenePath: "Assets/Scenes/Main.unity",
+      status: "needs-user-input",
+      actions: [
+        {
+          target: {
+            gameObjectId:
+              "GlobalObjectId_V1-0-00000000000000000000000000000002-0",
+            gameObjectPath: "Root/Item",
+          },
+          componentType:
+            "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+          settings: { resolution: "needs-user-input", values: {} },
+        },
+      ],
+    });
+    expect(plan.sceneGraphPath).toMatch(/SceneGraph\.toml$/);
   });
 });

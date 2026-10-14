@@ -1,23 +1,32 @@
 // Core exports
-export { SceneGraphParser } from "./sceneGraphParser";
-export { TypeScriptCodeParser } from "./typeScriptParser";
-export { ConstraintValidator } from "./constraintValidator";
-export { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
-export { ClusterScriptAnalyzer } from "./analyzer";
-export { ComponentRequirementExtractor } from "./componentRequirementExtractor";
-export { ComponentRequirementValidator } from "./componentRequirementValidator";
+export { SceneGraphParser } from "./sceneGraph/sceneGraphParser";
+export { TypeScriptCodeParser } from "./analysis/typeScriptParser";
+export { ConstraintValidator } from "./validation/constraintValidator";
+export { ClusterScriptDefinitions } from "./rules/clusterScriptDefinitions";
+export { ClusterScriptAnalyzer } from "./analysis/analyzer";
+export { ComponentRequirementExtractor } from "./analysis/componentRequirements/extractor";
+export { ComponentRequirementValidator } from "./analysis/componentRequirements/validator";
+export {
+  approveComponentChangePlan,
+  createComponentChangePlan,
+  excludeComponentChangeReviewItem,
+  getApprovedComponentChanges,
+  rejectComponentChangePlan,
+  resolveComponentChangeSettings,
+} from "./analysis/componentChangePlan";
+export { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
 export {
   COMPONENT_REQUIREMENT_STATUSES,
   formatComponentRequirementStatusCounts,
   hasMissingComponentRequirements,
   hasUnverifiedComponentRequirements,
   summarizeComponentRequirements,
-} from "./componentRequirementSummary";
-export { WorldUploadValidator } from "./worldUploadValidator";
+} from "./analysis/componentRequirements/summary";
+export { WorldUploadValidator } from "./validation/worldUploadValidator";
 export {
   McpSceneAdapter,
   McpSceneAdapterError,
-} from "./mcpSceneAdapter";
+} from "./sceneGraph/mcpSceneAdapter";
 export { ruleSets, stateMutationRuleSets } from "./rules";
 
 // Type exports
@@ -27,7 +36,16 @@ export type {
   McpSceneAdapterResult,
   McpSceneDiagnostic,
   McpSceneSnapshot,
-} from "./mcpSceneAdapter";
+} from "./sceneGraph/mcpSceneAdapter";
+export type {
+  ApprovedComponentChangePlan,
+  ComponentChangeAction,
+  ComponentChangePlan,
+  ComponentChangePlanApprovalConfirmation,
+  ComponentChangePlanStatus,
+  ComponentChangeReviewItem,
+  ComponentChangeReviewReason,
+} from "./analysis/componentChangePlan";
 export type {
   SceneGraph,
   GameObject,
@@ -46,4 +64,4 @@ export type {
   ComponentAnalysisCache,
   ComponentProperty,
   ComponentPropertyValue,
-} from "./types";
+} from "./domain/types";

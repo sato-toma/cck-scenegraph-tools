@@ -19,7 +19,7 @@ Unity CLI MCP から取得できる情報は、SceneGraph TOML の一部にと�
 MCP のデータから `SceneGraph.toml` / `SceneGraph` を生成しない。既存 exporter が出力した `SceneGraph` を正とし、MCP のスナップショットとの**照合（reconciliation）**だけを行う。
 
 - 変換の出力は `SceneGraph` ではなく、照合結果（`McpReconciliationReport`）とする。
-- `SceneGraph`、`types.ts` の `Component`、`SceneGraphParser` の入力契約は変更しない。
+- `SceneGraph`、`domain/types.ts` の `Component`、`SceneGraphParser` の入力契約は変更しない。
 - MCP から得た値で、TOML の値を上書き・補完しない。
 
 ### 却下した案
@@ -117,7 +117,7 @@ interface McpReconciliationReport {
 
 ### 変更しないもの
 
-- `SceneGraph.toml` のキー、`types.ts` の `Component` / `GameObject`、`SceneGraphParser` の公開 API
+- `SceneGraph.toml` のキー、`domain/types.ts` の `Component` / `GameObject`、`SceneGraphParser` の公開 API
 - analyzer の終了コード、CLI のレポート形式
 - MCP の変更系ツールの呼び出し（照合は読み取りツールのみを使う）
 

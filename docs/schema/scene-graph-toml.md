@@ -38,7 +38,7 @@ Mass = 1.0
 
 `properties` の値は TOML の文字列、数値、真偽値、またはそれらを含む配列です。Unity の Vector、Rect、Quaternion は数値配列、Bounds は二重配列として保存されます。オブジェクト参照は参照先の名前を文字列で保存し、参照 ID は保存しません。analyzer の `ComponentPropertyValue` は、この入れ子配列を含む値を表します。
 
-exporter は文字列内の引用符、バックスラッシュ、改行を TOML 用にエスケープし、浮動小数点数を `InvariantCulture` で出力します。そのため小数点は常に `.` です。エスケープやロケールに関する試験用 TOML は [SceneGraphParser のテスト](../../packages/ts-analyzer/src/sceneGraphParser.test.ts) にあります。
+exporter は文字列内の引用符、バックスラッシュ、改行を TOML 用にエスケープし、浮動小数点数を `InvariantCulture` で出力します。そのため小数点は常に `.` です。エスケープやロケールに関する試験用 TOML は [SceneGraphParser のテスト](../../packages/ts-analyzer/src/sceneGraph/sceneGraphParser.test.ts) にあります。
 
 ## 互換性ルール
 
@@ -64,6 +64,6 @@ Spawn Point と Despawn Height は、SceneGraph 上の完全修飾型名・`enab
 
 - Unity exporter の出力例を更新したか。
 - `SceneGraphParser` の parser test を追加したか。
-- `types.ts` の型が実データを表せるか。
+- `domain/types.ts` の型が実データを表せるか。
 - 既存のサンプルスクリプトの解析結果が変わっていないか。
 - 全体出力と選択範囲更新の両方を確認したか。

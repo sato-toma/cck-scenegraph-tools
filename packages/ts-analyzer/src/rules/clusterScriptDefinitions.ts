@@ -3,8 +3,8 @@ import {
   ApiProperty,
   ClusterScriptDefinition,
   ComponentConstraint,
-} from "./types";
-import { ruleSets } from "./rules";
+} from "../domain/types";
+import { ruleSets } from "./index";
 
 /**
  * ClusterScript APIの定義と制約を管理

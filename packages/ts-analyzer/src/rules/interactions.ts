@@ -1,4 +1,4 @@
-import { ApiMethod } from "../types";
+import { ApiMethod } from "../domain/types";
 
 export const interactionMethodRules: ApiMethod[] = [
   {

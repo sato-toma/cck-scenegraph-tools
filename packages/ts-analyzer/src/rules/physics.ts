@@ -1,4 +1,4 @@
-import { ApiMethod, ApiProperty } from "../types";
+import { ApiMethod, ApiProperty } from "../domain/types";
 
 export const physicsMethodRules: ApiMethod[] = [];
 

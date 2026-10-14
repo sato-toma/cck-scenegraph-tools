@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import liveResponseFixture from "./fixtures/mcp-on-grab-scene.json";
+import liveResponseFixture from "../fixtures/mcp-on-grab-scene.json";
 import { McpSceneAdapter, McpSceneAdapterError } from "./mcpSceneAdapter";
 
 describe("McpSceneAdapter", () => {

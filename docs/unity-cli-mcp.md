@@ -76,7 +76,7 @@ Editor を閉じた状態では、`unity` サーバーは `connected (ready)` �
 
 2026-10-12 に `Assets/test.unity` で読み取りツールを実行したところ、`get_scene_hierarchy` は 18 GameObject の階層を返し、各ノードに `instanceId`、`hierarchyPath`、`name`、`activeSelf`、Component 短縮名を含んだ。`find_gameobjects` をフィルターなしで呼ぶと同数の 18 件が返り、各 GameObject の `instanceId` と `globalId` を確認できた。`McpSceneAdapter` は一時的な `instanceId` とパスの一致を両方確認して応答を結合し、安定した `globalId` と階層情報を `McpSceneSnapshot` に正規化する。不一致や GlobalObjectId の欠落は診断として返し、名前やパスだけで補完しない。
 
-`get_component_properties` を `/onGrab` の `Item` に対して実行し、Component 自身の `globalId` は取得できることも確認した。一方、Component `enabled` は応答の `component` / `properties` に含まれず、`get_serialized_fields` にも存在しなかったため、正規化結果では `unsupported` とする。実応答から採取した `/onGrab` と `/onGrab/Cube` のfixtureおよびオフライン変換テストは [mcpSceneAdapter.test.ts](../packages/ts-analyzer/src/mcpSceneAdapter.test.ts) にある。
+`get_component_properties` を `/onGrab` の `Item` に対して実行し、Component 自身の `globalId` は取得できることも確認した。一方、Component `enabled` は応答の `component` / `properties` に含まれず、`get_serialized_fields` にも存在しなかったため、正規化結果では `unsupported` とする。実応答から採取した `/onGrab` と `/onGrab/Cube` のfixtureおよびオフライン変換テストは [mcpSceneAdapter.test.ts](../packages/ts-analyzer/src/sceneGraph/mcpSceneAdapter.test.ts) にある。
 
 `McpSceneAdapter` は MCP クライアントを起動せず、Agent Host から得た `get_scene_hierarchy` / `find_gameobjects` の応答を受け取る純粋な境界である。Editor や MCP がない環境でもfixtureで正規化をテストできる。既存 `SceneGraph` への変換や不足Component判定には使用しない。
 

@@ -4,7 +4,7 @@ import {
   hasMissingComponentRequirements,
   hasUnverifiedComponentRequirements,
   summarizeComponentRequirements,
-} from "./componentRequirementSummary";
+} from "./summary";
 
 describe("component requirement summary", () => {
   it("counts every verification status and formats the summary", () => {

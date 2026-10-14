@@ -6,7 +6,7 @@ import {
   GameObject,
   Component,
   ComponentPropertyValue,
-} from "./types";
+} from "../domain/types";
 
 type TomlRecord = Record<string, unknown>;
 

@@ -1,7 +1,7 @@
 import {
   ComponentRequirementRequest,
   ComponentRequirementStatusCounts,
-} from "./types";
+} from "../../domain/types";
 
 export const COMPONENT_REQUIREMENT_STATUSES = [
   "satisfied",

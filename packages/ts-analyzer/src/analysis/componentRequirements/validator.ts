@@ -1,11 +1,11 @@
-import { ConstraintValidator } from "./constraintValidator";
-import { SceneGraphParser } from "./sceneGraphParser";
+import { ConstraintValidator } from "../../validation/constraintValidator";
+import { SceneGraphParser } from "../../sceneGraph/sceneGraphParser";
 import {
   ComponentConstraint,
   ComponentRequirementRequest,
   ComponentRequirementTarget,
   SceneGraph,
-} from "./types";
+} from "../../domain/types";
 
 /** Resolves a request to its owning ScriptableItem and validates it. */
 export class ComponentRequirementValidator {

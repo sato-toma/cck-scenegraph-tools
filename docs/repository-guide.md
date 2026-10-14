@@ -15,17 +15,15 @@
 
 - `packages/ts-analyzer/`
   - TypeScript 製の解析ライブラリと CLI
-  - `src/analyzer.ts`: TOML と TypeScript を結び付ける解析フロー / 公開 API
-  - `src/reporting/analysisReportFormatter.ts`: 解析結果、SceneGraph、API 利用状況のテキスト整形
-  - `src/sceneGraphParser.ts`: `SceneGraph.toml` の読み込みと検索
-  - `src/mcpSceneAdapter.ts`: Unity CLI MCP の読み取り応答を別形式のスナップショットへ正規化
-  - `src/typeScriptParser.ts`: ClusterScript API の検出
-  - `src/constraintValidator.ts`: コンポーネント制約の判定
-  - `src/clusterScriptDefinitions.ts`: API と制約の公開定義
-  - `src/rules/`: 物理、インタラクション、移動、state変更のルール
-  - `src/*.test.ts`: Vitest による単体テスト
+  - `src/index.ts` と `src/cli.ts`: ライブラリと CLI のエントリポイント
+  - `src/analysis/`: 解析、Component 要求、変更計画
+  - `src/sceneGraph/`: SceneGraph TOML と MCP 応答の読み取り
+  - `src/validation/`: Component 制約とアップロード条件の検証
+  - `src/domain/`: 解析・SceneGraph の共有型
+  - `src/rules/`: API 制約と物理、インタラクション、移動、state変更のルール
+  - `src/reporting/`: 解析結果や計画のテキスト整形
+  - `src/integration/`: Exporter 出力との統合テスト
   - `src/fixtures/`: MCP 応答などの変換テスト用fixture
-  - `src/reporting/`: レポート表示ロジック。解析・照合ロジックから分離
   - `examples/`: CLI の実行例
   - `IMPLEMENTATION.md`: 現在の実装ガイド
 - `packages/unity-semantic-graph/`
@@ -43,15 +41,13 @@
 - `.github/skills/`
   - Unity 出力、TOML スキーマ、TypeScript 解析をまたぐ作業手順
 
-## 開発時の基本フロー
+## 基本的な利用手順
 
 1. Unity の対象シーンを開く。
 2. `SemanticGraph/Export All Component Graph to TOML` で全体を出力する。
 3. 必要なら `SemanticGraph/Update Selected Component Graph to TOML` で選択範囲を更新する。
 4. TypeScript analyzer で `SceneGraph.toml` と ClusterScript を解析する。
-5. 解析結果に合わせて Unity コンポーネントまたは ClusterScript を修正する。
-6. `packages/ts-analyzer` で `npm run verify` を実行する。
-7. TOML の形式や解釈を変更した場合は、schema のサンプルとテストを同じ変更で更新する。
+5. Component の不足を修正する場合は `ts-analyzer plan <SceneGraph.toml> <Unity-scene-path> [script.ts]` で追加候補を確認する。このコマンドは計画を表示するだけで、シーンは変更しない。必要な変更は Unity で行い、再出力して解析する。
 
 ### Unity CLIでの全体出力
 

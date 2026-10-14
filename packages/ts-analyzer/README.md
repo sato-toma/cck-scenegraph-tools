@@ -15,6 +15,7 @@ npm run build
 
 ```bash
 node dist/cli.js analyze <SceneGraph.toml> <script.ts>
+node dist/cli.js plan <SceneGraph.toml> <Unity-scene-path> [script.ts]
 ```
 
 主なコマンド:
@@ -24,11 +25,20 @@ analyze       設定漏れや解析上の問題を表示
 report        要求 Component と照合根拠を含むレポートを表示
 coverage      ClusterScript API の利用状況を表示
 recommend     推奨 Component を表示
+plan          変更前の Component 修正計画を表示
 scene-graph   SceneGraph の構造を表示
 list-apis     対応 API を表示
 ```
 
 Unity Exporter の実行から解析までをまとめて行う場合は、リポジトリルートの [export-and-analyze スクリプト](../../scripts/export-and-analyze.ps1) を利用してください。
+
+## 修正計画と承認
+
+`plan` はシーンを変更せず、利用者が指定した Unity シーンパス、確定した不足 Component の追加候補、対象 GameObject、根拠、設定の未確定状態を表示します。SceneGraph TOML にシーンパスは含まれないため、パスは明示指定が必要です。計画の生成に Unity MCP の読み取りは必要ありません。曖昧・未検証の要求や複数候補のうち一つを選ぶ必要がある要求は、自動で変更候補にしません。
+
+ライブラリからは `createComponentChangePlan()` で計画を作り、設定値を確定した後にユーザーの明示承認を反映します。設定が不要な場合も、空の設定を明示的に確定する必要があります。`getApprovedComponentChanges()` は未承認、未解決、または承認後に変更された計画を拒否します。ユーザーが計画を承認した後に限り `approveComponentChangePlan()` を呼び出してください。
+
+このパッケージは計画表示と承認ゲートまでを担当し、Unity MCP の書き込みや Component の追加は行いません。適用は後続の承認済み変更処理でのみ行います。
 
 ## 判定と CI
 

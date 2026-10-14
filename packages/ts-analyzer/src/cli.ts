@@ -2,12 +2,13 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { ClusterScriptAnalyzer } from "./analyzer";
-import { SceneGraphParser } from "./sceneGraphParser";
-import { TypeScriptCodeParser } from "./typeScriptParser";
-import { ClusterScriptDefinitions } from "./clusterScriptDefinitions";
-import { formatComponentRequirementStatusCounts } from "./componentRequirementSummary";
-import type { AnalysisResult } from "./types";
+import { ClusterScriptAnalyzer } from "./analysis/analyzer";
+import { SceneGraphParser } from "./sceneGraph/sceneGraphParser";
+import { TypeScriptCodeParser } from "./analysis/typeScriptParser";
+import { ClusterScriptDefinitions } from "./rules/clusterScriptDefinitions";
+import { formatComponentRequirementStatusCounts } from "./analysis/componentRequirements/summary";
+import type { AnalysisResult } from "./domain/types";
+import { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
 
 /**
  * CLI ツール - ClusterScript静的解析
@@ -45,6 +46,9 @@ Commands:
 
   recommend <sceneGraphPath> [tsFilePath]
     Show recommended components for TypeScript file
+
+  plan <sceneGraphPath> <unityScenePath> [tsFilePath]
+    Create a non-mutating component change plan for review
 
   scene-graph <sceneGraphPath>
     Display scene graph structure
@@ -273,6 +277,48 @@ function recommendCommand(args: string[]) {
   }
 }
 
+function planCommand(args: string[]) {
+  if (args.length < 2) {
+    console.error("Error: Missing argument");
+    printUsage();
+    process.exit(1);
+  }
+
+  const sceneGraphPath = args[0]!;
+  const scenePath = args[1]!;
+  const tsFilePath = args[2];
+
+  if (!fs.existsSync(sceneGraphPath)) {
+    console.error(`Error: SceneGraph file not found: ${sceneGraphPath}`);
+    process.exit(1);
+  }
+
+  try {
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const targetFiles = tsFilePath
+      ? [tsFilePath]
+      : analyzer.getScriptableItemSourceFiles();
+    const results: AnalysisResult[] = [];
+
+    for (const targetFile of targetFiles) {
+      if (!fs.existsSync(targetFile)) {
+        console.error(`Error: TypeScript file not found: ${targetFile}`);
+        continue;
+      }
+      results.push(analyzer.analyzeTypeScriptFile(targetFile));
+    }
+
+    console.log(
+      formatComponentChangePlan(
+        analyzer.createComponentChangePlan(results, scenePath),
+      ),
+    );
+  } catch (error) {
+    console.error("Error creating component change plan:", error);
+    process.exit(1);
+  }
+}
+
 function sceneGraphCommand(args: string[]) {
   if (args.length < 1) {
     console.error("Error: Missing sceneGraphPath");
@@ -344,6 +390,9 @@ switch (command) {
     break;
   case "recommend":
     recommendCommand(commandArgs);
+    break;
+  case "plan":
+    planCommand(commandArgs);
     break;
   case "scene-graph":
     sceneGraphCommand(commandArgs);
