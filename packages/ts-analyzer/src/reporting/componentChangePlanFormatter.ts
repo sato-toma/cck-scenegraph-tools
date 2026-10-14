@@ -1,15 +1,19 @@
 import { ComponentChangePlan } from "../componentChangePlan";
+import { ComponentRequirementOccurrence } from "../types";
 
-function formatEvidence(
-  filePath: string,
-  line: number,
-  column: number,
-  condition: string,
-  evidence: string,
+function formatOccurrenceEvidence(
+  occurrence: ComponentRequirementOccurrence,
 ): string {
+  const condition =
+    occurrence.condition.kind === "conditional"
+      ? occurrence.condition.expression ?? "conditional"
+      : occurrence.condition.kind === "unknown"
+        ? "unknown"
+        : "";
   const conditional =
     condition.length > 0 ? ` (condition: ${condition})` : "";
-  return `${filePath}:${line}:${column}${conditional} — ${evidence}`;
+  const { filePath, line, column } = occurrence.source;
+  return `${filePath}:${line}:${column}${conditional} — ${occurrence.evidence}`;
 }
 
 export function formatComponentChangePlan(
@@ -40,21 +44,7 @@ export function formatComponentChangePlan(
       `     Settings: ${action.settings.resolution === "resolved" ? JSON.stringify(action.settings.values) : "not resolved; confirm values or explicitly confirm no additional settings"}`,
     );
     for (const occurrence of action.evidence) {
-      const condition =
-        occurrence.condition.kind === "conditional"
-          ? occurrence.condition.expression ?? "conditional"
-          : occurrence.condition.kind === "unknown"
-            ? "unknown"
-            : "";
-      lines.push(
-        `     Evidence: ${formatEvidence(
-          occurrence.source.filePath,
-          occurrence.source.line,
-          occurrence.source.column,
-          condition,
-          occurrence.evidence,
-        )}`,
-      );
+      lines.push(`     Evidence: ${formatOccurrenceEvidence(occurrence)}`);
     }
     lines.push(
       `     Expected result: ${action.expectedResult === "satisfied-after-reexport" ? "Exporter re-export confirms the listed requirement is satisfied." : action.expectedResult}`,
@@ -91,17 +81,7 @@ export function formatComponentChangePlan(
       }
       for (const occurrence of item.evidence) {
         lines.push(
-          `    Evidence: ${formatEvidence(
-            occurrence.source.filePath,
-            occurrence.source.line,
-            occurrence.source.column,
-            occurrence.condition.kind === "conditional"
-              ? occurrence.condition.expression ?? "conditional"
-              : occurrence.condition.kind === "unknown"
-                ? "unknown"
-                : "",
-            occurrence.evidence,
-          )}`,
+          `    Evidence: ${formatOccurrenceEvidence(occurrence)}`,
         );
       }
       if (item.disposition === "excluded") {
