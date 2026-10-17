@@ -110,11 +110,15 @@ MCP の応答から新しい `SceneGraph.toml` を直接生成するのではな
 
 ## 変更系ツールの扱い
 
-`tools/list` には、`add_component`、`create_gameobject`、`delete_gameobject`、`set_component_properties`、`save_scene`、`eval`、`run_script`、`write_text_file`、`quit` などの変更系ツールも含まれる。160 ツールのすべてで `readOnlyHint` 等の注釈が返らない。MCP に接続できても読み取り専用は保証されないため、初期段階では次の運用とする。
+`tools/list` には、`add_component`、`create_gameobject`、`delete_gameobject`、`set_component_properties`、`save_scene`、`eval`、`run_script`、`write_text_file`、`quit` などの変更系ツールも含まれる。160 ツールのすべてで `readOnlyHint` 等の注釈が返らない。MCP に接続できても読み取り専用は保証されないため、変更系ツールは承認済み Component 変更計画を適用する場合に限り、以下の制約で使う。
 
-- プロンプトで読み取り専用ツールだけを使うよう指定し、ツール実行の確認ダイアログで内容を確認する。
+- Component 変更計画を適用しない通常の調査では、読み取り専用ツールだけを使うよう指定する。変更時はツール実行の確認ダイアログで内容を確認する。
 - 実機で呼び出して確認した読み取りツールは `list_open_scenes`、`get_scene_hierarchy`、`find_gameobjects`、`get_component_properties`、`get_serialized_fields`、`console_status`。
-- 変更系は、修正計画とユーザーの承認の後に限る。
+- `add_component` は承認済み計画に含まれる完全修飾Component型を、計画対象のGlobalObjectIdにのみ追加する。専用Editor関数による追加は使わない。
+- 適用直前にGlobalObjectIdと階層パスを照合し、一意に一致しない場合は停止する。既に同じ型がある場合は重複追加しない。
+- `set_component_properties` を使う場合は計画に明記された値だけを設定する。計画外の値を補完・推測しない。
+- 変更前後の状態と各ツールの結果を記録する。エラーや対象不一致の後に次の変更へ進まない。
+- このリポジトリのTypeScript適用関数はMCPブリッジを受け取る境界であり、VS Codeの承認UIやUnity MCPへの直接接続を提供するものではない。呼び出し側は未承認計画を渡さないこと。
 
 ## 未解決の事項
 
