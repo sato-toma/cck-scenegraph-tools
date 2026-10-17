@@ -7,7 +7,9 @@ export { ClusterScriptAnalyzer } from "./analysis/analyzer";
 export { ComponentRequirementExtractor } from "./analysis/componentRequirements/extractor";
 export { ComponentRequirementValidator } from "./analysis/componentRequirements/validator";
 export {
+  applyApprovedComponentChangePlan,
   approveComponentChangePlan,
+  ComponentChangeApplicationError,
   createComponentChangePlan,
   excludeComponentChangeReviewItem,
   getApprovedComponentChanges,
@@ -38,6 +40,7 @@ export type {
   McpSceneSnapshot,
 } from "./sceneGraph/mcpSceneAdapter";
 export type {
+  ComponentChangeApplicationRecord,
   ApprovedComponentChangePlan,
   ComponentChangeAction,
   ComponentChangePlan,
@@ -45,6 +48,8 @@ export type {
   ComponentChangePlanStatus,
   ComponentChangeReviewItem,
   ComponentChangeReviewReason,
+  UnityComponentApplicationBridge,
+  UnityComponentApplicationTarget,
 } from "./analysis/componentChangePlan";
 export type {
   SceneGraph,

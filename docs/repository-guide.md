@@ -47,7 +47,9 @@
 2. `SemanticGraph/Export All Component Graph to TOML` で全体を出力する。
 3. 必要なら `SemanticGraph/Update Selected Component Graph to TOML` で選択範囲を更新する。
 4. TypeScript analyzer で `SceneGraph.toml` と ClusterScript を解析する。
-5. Component の不足を修正する場合は `ts-analyzer plan <SceneGraph.toml> <Unity-scene-path> [script.ts]` で追加候補を確認する。このコマンドは計画を表示するだけで、シーンは変更しない。必要な変更は Unity で行い、再出力して解析する。
+5. Component の不足を修正する場合は `ts-analyzer plan <SceneGraph.toml> <Unity-scene-path> [script.ts]` で追加候補を確認する。承認済み計画の適用では Unity CLI MCP の `add_component` を使い、各対象を適用直前に再確認する。未承認・対象不一致・曖昧な対象では適用しない。適用後の再出力と解析は別途実行する。
+
+TypeScript 側の `applyApprovedComponentChangePlan` は MCP 呼び出しを注入するブリッジを受け取る。Unity CLI MCP への直接接続やユーザー承認 UI は提供しないため、呼び出し側は承認済み `ComponentChangePlan` のみを渡し、失敗時の監査記録を明示する。
 
 ### Unity CLIでの全体出力
 

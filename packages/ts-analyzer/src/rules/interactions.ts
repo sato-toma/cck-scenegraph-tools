@@ -30,6 +30,17 @@ export const interactionMethodRules: ApiMethod[] = [
     description: "アイテムを掴む・手放すときに呼ばれるコールバック",
   },
   {
+    name: "onUse",
+    requiredComponents: [
+      {
+        componentType: "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+        requirement: "required",
+      },
+    ],
+    description:
+      "掴んでいるアイテムに「使う」動作をしたときのコールバック。UseItemTrigger がある場合はそちらの実行が優先されます。",
+  },
+  {
     name: "onCollide",
     requiredComponents: [
       {

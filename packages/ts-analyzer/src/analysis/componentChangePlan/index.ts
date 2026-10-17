@@ -292,3 +292,12 @@ export {
   rejectComponentChangePlan,
   resolveComponentChangeSettings,
 } from "./approval";
+export {
+  applyApprovedComponentChangePlan,
+  ComponentChangeApplicationError,
+} from "./application";
+export type {
+  ComponentChangeApplicationRecord,
+  UnityComponentApplicationBridge,
+  UnityComponentApplicationTarget,
+} from "./application";
