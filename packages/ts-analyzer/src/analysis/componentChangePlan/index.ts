@@ -296,6 +296,12 @@ export {
   applyApprovedComponentChangePlan,
   ComponentChangeApplicationError,
 } from "./application";
+export {
+  applyApprovedComponentChangePlanViaUnityCliMcp,
+} from "./unityCliMcp";
+export type {
+  UnityCliMcpApplicationOptions,
+} from "./unityCliMcp";
 export type {
   ComponentChangeApplicationRecord,
   UnityComponentApplicationBridge,

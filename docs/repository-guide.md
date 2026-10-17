@@ -49,7 +49,7 @@
 4. TypeScript analyzer で `SceneGraph.toml` と ClusterScript を解析する。
 5. Component の不足を修正する場合は `ts-analyzer plan <SceneGraph.toml> <Unity-scene-path> [script.ts]` で追加候補を確認する。承認済み計画の適用では Unity CLI MCP の `add_component` を使い、各対象を適用直前に再確認する。未承認・対象不一致・曖昧な対象では適用しない。適用後の再出力と解析は別途実行する。
 
-TypeScript 側の `applyApprovedComponentChangePlan` は MCP 呼び出しを注入するブリッジを受け取る。Unity CLI MCP への直接接続やユーザー承認 UI は提供しないため、呼び出し側は承認済み `ComponentChangePlan` のみを渡し、失敗時の監査記録を明示する。
+TypeScript 側の `applyApprovedComponentChangePlanViaUnityCliMcp` は `.mcp.json` の `unity` stdio サーバーを起動し、承認済み `ComponentChangePlan` を Unity CLI MCP に直接適用する。適用前に計画の承認状態を検証するため、呼び出し側はユーザーの明示承認後にのみ実行する。承認 UI は提供しない。変更前後の状態と失敗時の監査記録は戻り値または例外から確認する。
 
 ### Unity CLIでの全体出力
 

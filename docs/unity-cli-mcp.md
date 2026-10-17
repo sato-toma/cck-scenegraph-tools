@@ -118,7 +118,21 @@ MCP の応答から新しい `SceneGraph.toml` を直接生成するのではな
 - 適用直前にGlobalObjectIdと階層パスを照合し、一意に一致しない場合は停止する。既に同じ型がある場合は重複追加しない。
 - `set_component_properties` を使う場合は計画に明記された値だけを設定する。計画外の値を補完・推測しない。
 - 変更前後の状態と各ツールの結果を記録する。エラーや対象不一致の後に次の変更へ進まない。
-- このリポジトリのTypeScript適用関数はMCPブリッジを受け取る境界であり、VS Codeの承認UIやUnity MCPへの直接接続を提供するものではない。呼び出し側は未承認計画を渡さないこと。
+- `applyApprovedComponentChangePlanViaUnityCliMcp` は `.mcp.json` の `unity` stdio サーバーを起動し、MCP の `get_scene_hierarchy` / `find_gameobjects` で対象を再確認したうえで、承認済み計画に必要な `add_component` と `set_component_properties` だけを呼び出す。ツールの引数スキーマが必要な識別子・完全修飾型・設定値を表せない場合は、推測せずエラーで停止する。
+- この関数は承認済み状態を検証するが、ユーザー承認 UI は提供しない。呼び出し側は明示的なユーザー承認を得た後に実行すること。
+
+### TypeScript からの適用
+
+`plan` はユーザー確認後に `approveComponentChangePlan` で承認済みにしてから渡します。`.mcp.json` の相対引数は、その設定ファイルが置かれたディレクトリを基準に解決します。
+
+```ts
+const records = await applyApprovedComponentChangePlanViaUnityCliMcp(
+  approvedPlan,
+  { configPath: ".mcp.json" },
+);
+```
+
+承認されていない計画では MCP サーバーを起動せず、適用も行いません。stdio MCP プロトコルを通した統合テストは `packages/ts-analyzer/src/analysis/componentChangePlan/unityCliMcp.integration.test.ts` にあり、承認ゲート、追加、重複防止、失敗後の停止を確認します。Unity Editor を起動した実シーン上の確認は別途必要です。
 
 ## 未解決の事項
 
