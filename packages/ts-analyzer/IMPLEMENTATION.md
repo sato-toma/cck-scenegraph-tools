@@ -91,6 +91,7 @@ const methods = ClusterScriptDefinitions.getAllMethodNames();
 | `addForce()` | UnityEngine.Rigidbody | 力を加える |
 | `addImpulsiveForce()` | UnityEngine.Rigidbody | 撃力を加える |
 | `onGrab()` | GrabbableItem | 掴まれた時 |
+| `onUse()` | GrabbableItem | 掴んだアイテムを使用した時。UseItemTrigger があればそちらが優先 |
 | `onRide()` | RidableItem | 乗られた時 |
 | `onCollide()` | Rigidbody + Collider | 衝突時 |
 
