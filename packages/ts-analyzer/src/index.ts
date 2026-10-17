@@ -8,6 +8,7 @@ export { ComponentRequirementExtractor } from "./analysis/componentRequirements/
 export { ComponentRequirementValidator } from "./analysis/componentRequirements/validator";
 export {
   applyApprovedComponentChangePlan,
+  applyApprovedComponentChangePlanViaUnityCliMcp,
   approveComponentChangePlan,
   ComponentChangeApplicationError,
   createComponentChangePlan,
@@ -48,6 +49,7 @@ export type {
   ComponentChangePlanStatus,
   ComponentChangeReviewItem,
   ComponentChangeReviewReason,
+  UnityCliMcpApplicationOptions,
   UnityComponentApplicationBridge,
   UnityComponentApplicationTarget,
 } from "./analysis/componentChangePlan";
