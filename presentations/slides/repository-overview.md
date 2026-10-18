@@ -85,48 +85,76 @@ style: |
 
 ## 現在できること
 
-- Unity Package で `SceneGraph.toml` を全体・選択範囲から出力
-- CLI / batchmode で **export と analyze を連続実行**
-- 実装済みの検査例
-  - `setPosition` / `setRotation` -> `MovableItem`
-  - `onGrab` -> `GrabbableItem`
-  - `onCollide` -> `Rigidbody`
-  - `getOverlaps` -> `OverlapDetectorShape`
-- `$.state` の直接変更も検出し、再代入を促す
-- `npm run verify` で解析器のビルドとテストを再現可能に検証
+- Unity Package でシーン全体を出力、または選択範囲を更新
+- Exporter の `SceneGraph.toml` と ClusterScript を CLI で解析し、ローカルや CI で検査
+- スクリプトの割り当て先・階層も考慮し、Componentの不足・無効・対象不明などを根拠とともに報告
+- API と Component の制約を検査
+  - `setPosition` / `setRotation` → `MovableItem`
+  - `onInteract` → Collider、`onGrab` / `onUse` → `GrabbableItem`
+  - `onCollide` / `addForce` → `Rigidbody`
+  - `getOverlaps` → `OverlapDetectorShape`
+- `$.state` の直接変更や、Spawn Point / Despawn Height などワールドのアップロード要件も検査
+- 不足が確定した場合は、修正計画を作成して対象・根拠・設定値を事前確認
 
 <!--
-話すこと: まず頻度の高い移動・インタラクション・物理をルール化し、CLIまでつなげました。
+話すこと: シーン構造とスクリプトの対応を含めて検査し、曖昧な対象や未検証の内容は確定扱いしません。
+目安: 40秒
+-->
+
+---
+
+## 解析からUnity上の修正・再確認まで
+
+1. Exporter の `SceneGraph.toml` と ClusterScript を解析
+2. 追加候補と対象 GameObject、根拠、必要な設定値を変更計画で確認
+3. 利用者が内容を確認し、明示的に承認
+4. VS Code の Copilot Agent mode と Unity CLI MCP で承認済みのComponent変更を適用
+5. Exporter で再出力し、解析・変更結果を検証
+
+> MCPは変更計画の承認を省略せず、曖昧な対象を自動選択しない
+
+<!--
+話すこと: 指摘から修正までをつなぎますが、何をどこに加えるかを人が確認してから変更します。
 目安: 35秒
 -->
 
 ---
 
-## 今後の展望
+## Unity CLI / MCP の役割と安全策
 
-- **信頼性**: TOML schema/version、fixture、Unity Edit Mode テストを強化
-- **解析精度**: 正規表現ベースから TypeScript Compiler API (AST) へ移行
-- **対応範囲**: `onInteract`、`onUse`、物理・近傍検索 API を検証して追加
-- **開発体験**: watch、SARIF、GitHub Actions annotation、VS Code 連携
-- **運用**: PR ごとに schema 互換性とルールの回帰をチェック
-
-> 優先順位: 先に SceneGraph.toml の形式を安定化し、その上で解析範囲と開発体験を広げる
+- Unity Editor のシーンやComponentを確認し、承認済み計画のComponent追加・明示された設定変更を実行
+- GameObject は GlobalObjectId と階層パスで再確認し、一意に特定できない場合は停止
+- 承認されていない計画、計画外の変更、推測が必要な設定は適用しない
+- MCPの取得情報だけでは、Componentの完全修飾型名や有効状態をすべて得られない
+- そのため **解析の正規入力は引き続きExporterの `SceneGraph.toml`**。MCPは編集と確認の補助
+- 成功・失敗・未検証を区別して結果を報告
 
 <!--
-話すこと: 精度を急ぐ前に、Unityから出力する構造化ファイルの形式を安定させるのが最優先です。
-目安: 30秒
+話すこと: MCPのシーン読み取りは便利ですが、Exporterと同じ情報をすべて取れるわけではありません。編集範囲も承認済み計画に限定します。
+目安: 35秒
 -->
+
+---
+
+## 今後の改善テーマ
+
+- 対応するClusterScript API・Component制約の拡充
+- より多様なTypeScript構文に対する解析精度の向上
+- Unity CLI / Pipeline のバージョン差を含めた実環境での検証拡充
+- SceneGraph形式、Exporter、Analyzer、MCP変更フローの互換性テスト強化
+
+> 実行時の挙動を保証するものではなく、静的解析と承認済みの限定的なシーン変更を支援
 
 ---
 
 ## まとめ
 
-- Unity の設定情報を `SceneGraph.toml` として扱う
-- ClusterScript の利用 API とコンポーネント制約を自動照合する
-- 設定漏れを実行前に検出し、レビューと CI に持ち込む
-- 次はファイル形式の安定化、AST 化、CI/IDE 統合へ
+- UnityシーンとClusterScriptの依存を、Exporter・CLI・CIで事前に確認
+- 不足や対象の曖昧さを見える化し、修正候補を計画として提示
+- Unity CLI / MCPで人が承認したComponent変更を適用し、Exporterで再検証
+- 静的解析の範囲とMCPで取得できる情報には限界がある
 
 <!--
-話すこと: Unityの設定依存を、再現可能な静的解析の対象に変える取り組みです。
+話すこと: シーン設定とスクリプトをつないで、検出・承認・修正・確認を支援するツールです。
 目安: 15秒
 -->

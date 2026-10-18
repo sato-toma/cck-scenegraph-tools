@@ -6,3 +6,7 @@ flowchart LR
   parser --> validator
   rules[API Component Rules] --> validator
   validator --> report[CLI Report / CI]
+  report --> plan[Component Change Plan]
+  plan --> approval[User Review and Approval]
+  approval -->|approved only| mcp[Unity CLI MCP]
+  mcp -->|Scoped Component Changes| unity
