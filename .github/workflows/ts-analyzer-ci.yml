@@ -4,12 +4,16 @@ on:
   push:
     paths:
       - 'packages/ts-analyzer/**'
+      - '.vscode/tasks.json'
       - 'scripts/**'
+      - 'packages/ts-analyzer/.nvmrc'
       - '.github/workflows/ts-analyzer-ci.yml'
   pull_request:
     paths:
       - 'packages/ts-analyzer/**'
+      - '.vscode/tasks.json'
       - 'scripts/**'
+      - 'packages/ts-analyzer/.nvmrc'
       - '.github/workflows/ts-analyzer-ci.yml'
   workflow_dispatch:
 
@@ -23,7 +27,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
-          node-version: '24'
+          node-version-file: packages/ts-analyzer/.nvmrc
           cache: 'npm'
           cache-dependency-path: packages/ts-analyzer/package-lock.json
 
@@ -39,6 +43,19 @@ jobs:
         working-directory: packages/ts-analyzer
         run: npm run test
 
+      - name: Verify machine-readable analysis reports
+        working-directory: packages/ts-analyzer
+        run: |
+          node dist/cli.js analyze src/fixtures/scene-graph-export.toml examples/sample.ts --format json > "$RUNNER_TEMP/analysis-report.json"
+          node dist/cli.js analyze src/fixtures/scene-graph-export.toml examples/sample.ts --format sarif > "$RUNNER_TEMP/analysis-report.sarif"
+          node -e "const fs = require('fs'); const report = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); const requests = report.results?.[0]?.componentRequests ?? []; if (report.schemaVersion !== 1 || report.results?.length !== 1 || !requests.some((request) => request.verificationStatus === 'satisfied') || !requests.some((request) => request.verificationStatus === 'missing')) process.exit(1)" "$RUNNER_TEMP/analysis-report.json"
+          node -e "const fs = require('fs'); const report = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); const findings = report.runs?.[0]?.results ?? []; if (report.version !== '2.1.0' || report.\$schema !== 'https://json.schemastore.org/sarif-' + report.version + '.json' || !findings.some((finding) => finding.level === 'error')) process.exit(1)" "$RUNNER_TEMP/analysis-report.sarif"
+
+      - name: Render analyzer findings as GitHub Actions annotations
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: packages/ts-analyzer
+        run: node dist/cli.js analyze src/fixtures/scene-graph-export.toml examples/sample.ts --format github-actions
+
       - name: Test shell export wrapper
         run: |
           chmod +x scripts/ci/fake-unity.sh
@@ -52,6 +69,15 @@ jobs:
             --log-path scenegraph-export.log \
             --fail-on-issues \
             --fail-on-unverified
+          ./scripts/export-and-analyze.sh \
+            --unity-path "$GITHUB_WORKSPACE/scripts/ci/fake-unity.sh" \
+            --project-path "$RUNNER_TEMP/scenegraph-fixture" \
+            --script-path "$GITHUB_WORKSPACE/packages/unity-semantic-graph/Samples~/Assets/Script/src/onGrabScript.ts" \
+            --output-path SceneGraph.structured.toml \
+            --log-path scenegraph-structured-export.log \
+            --format json \
+            > "$RUNNER_TEMP/export-analysis-report.json"
+          node -e "const fs = require('fs'); const report = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); if (report.schemaVersion !== 1 || report.results[0].summary.componentRequestCounts.satisfied !== 1) process.exit(1)" "$RUNNER_TEMP/export-analysis-report.json"
 
   powershell-wrapper:
     runs-on: windows-latest
@@ -62,7 +88,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
-          node-version: '24'
+          node-version-file: packages/ts-analyzer/.nvmrc
           cache: 'npm'
           cache-dependency-path: packages/ts-analyzer/package-lock.json
 

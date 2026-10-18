@@ -9,6 +9,11 @@ import { ClusterScriptDefinitions } from "./rules/clusterScriptDefinitions";
 import { formatComponentRequirementStatusCounts } from "./analysis/componentRequirements/summary";
 import type { AnalysisResult } from "./domain/types";
 import { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
+import {
+  ANALYSIS_REPORT_FORMATS,
+  formatStructuredAnalysisReport,
+  type AnalysisReportFormat,
+} from "./reporting/structuredAnalysisFormatter";
 
 /**
  * CLI ツール - ClusterScript静的解析
@@ -37,6 +42,8 @@ Usage: ts-analyzer <command> [options]
 Commands:
   analyze <sceneGraphPath> [tsFilePath]
     Analyze TypeScript file(s) against SceneGraph constraints
+    --format <text|json|sarif|github-actions|vscode-problems> selects the output format
+    --watch re-analyzes when the SceneGraph or TypeScript file changes
 
   report <sceneGraphPath> [tsFilePath]
     Generate comprehensive analysis report
@@ -65,105 +72,285 @@ Examples:
 }
 
 function analyzeCommand(args: string[]) {
-  if (args.length < 1) {
+  let parsedArgs: {
+    positional: string[];
+    format: AnalysisReportFormat;
+    watch: boolean;
+  };
+  try {
+    parsedArgs = parseAnalyzeArguments(args);
+  } catch (error) {
+    console.error(
+      `Error: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    printUsage();
+    process.exit(1);
+  }
+
+  const [sceneGraphPath, tsFilePath] = parsedArgs.positional;
+  if (!sceneGraphPath) {
     console.error("Error: Missing argument");
     printUsage();
     process.exit(1);
   }
 
-  const sceneGraphPath = args[0];
-  const tsFilePath = args[1];
-  const sceneGraphPathNonNull = sceneGraphPath!;
-
-  if (!fs.existsSync(sceneGraphPathNonNull)) {
-    console.error(`Error: SceneGraph file not found: ${sceneGraphPathNonNull}`);
+  if (!fs.existsSync(sceneGraphPath)) {
+    console.error(`Error: SceneGraph file not found: ${sceneGraphPath}`);
     process.exit(1);
   }
 
   try {
-    const analyzer = new ClusterScriptAnalyzer(sceneGraphPathNonNull);
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
     const targetFiles = tsFilePath
       ? [tsFilePath]
       : analyzer.getScriptableItemSourceFiles();
 
-    if (targetFiles.length === 0) {
-      console.log(
-        colorize("No ScriptableItem source files found.", ANSI.yellow),
+    if (parsedArgs.watch) {
+      if (!tsFilePath) {
+        throw new Error("--watch requires an explicit TypeScript file path");
+      }
+      if (
+        parsedArgs.format !== "text" &&
+        parsedArgs.format !== "vscode-problems"
+      ) {
+        throw new Error(
+          "--watch supports only text and vscode-problems formats",
+        );
+      }
+      if (!fs.existsSync(tsFilePath)) {
+        throw new Error(`TypeScript file not found: ${tsFilePath}`);
+      }
+
+      const analyze = () =>
+        runAnalysis(sceneGraphPath, targetFiles, parsedArgs.format);
+      runAnalysisCycle(analyze, parsedArgs.format);
+      watchAnalysisFiles(
+        [sceneGraphPath, tsFilePath],
+        analyze,
+        parsedArgs.format,
       );
       return;
     }
 
-    for (const targetFile of targetFiles) {
-      if (!fs.existsSync(targetFile)) {
-        console.error(`Error: TypeScript file not found: ${targetFile}`);
-        continue;
-      }
-
-      const result = analyzer.analyzeTypeScriptFile(targetFile);
-      console.log(colorize(`\n=== Analysis Results ===\n`, ANSI.bold));
-      console.log(`File: ${targetFile}`);
-      console.log(`Issues: ${result.summary.totalIssues}`);
-      console.log(
-        `${colorize("Errors", ANSI.red)}: ${result.summary.errorCount}`,
-      );
-      console.log(
-        `${colorize("Warnings", ANSI.yellow)}: ${result.summary.warningCount}\n`,
-      );
-      if (result.componentRequests.length > 0) {
-        console.log(
-          formatComponentRequirementStatusCounts(
-            result.summary.componentRequestCounts,
-          ),
-        );
-      }
-
-      if (result.issues.length > 0) {
-        console.log(colorize("Issues:", ANSI.bold));
-        for (const issue of result.issues) {
-          const severityColor =
-            issue.severity === "error" ? ANSI.red : ANSI.yellow;
-          const severityLabel = colorize(
-            `[${issue.severity.toUpperCase()}]`,
-            severityColor,
-          );
-
-          console.log(`  ${severityLabel} Line ${issue.line}:${issue.column}`);
-          console.log(
-            `    ${colorize("API:", severityColor)} ${colorize(issue.apiCall, severityColor)}`,
-          );
-          console.log(
-            `    ${colorize("Message:", severityColor)} ${colorize(issue.message, severityColor)}`,
-          );
-          console.log(
-            `    ${colorize("Required:", severityColor)} ${colorize(issue.requiredComponents.join(", "), severityColor)}`,
-          );
-          console.log(
-            `    ${colorize("Available:", severityColor)} ${colorize(issue.availableComponents.join(", ") || "none", severityColor)}\n`,
-          );
-        }
-      } else if (
-        result.summary.componentRequestCounts.missing === 0 &&
-        result.summary.componentRequestCounts.ambiguous === 0 &&
-        result.summary.componentRequestCounts.unsupported === 0 &&
-        result.summary.componentRequestCounts.unverified === 0
-      ) {
-        console.log(colorize("✅ No issues found!", ANSI.green));
-      } else {
-        console.log(
-          colorize(
-            "⚠️ No confirmed validation issues; component requirements need review.",
-            ANSI.yellow,
-          ),
-        );
-      }
-      if (result.componentRequests.length > 0) {
-        console.log(analyzer.generateComponentRequirementReport(result));
-      }
-    }
+    runAnalysis(sceneGraphPath, targetFiles, parsedArgs.format);
   } catch (error) {
     console.error("Error during analysis:", error);
     process.exit(1);
   }
+}
+
+function runAnalysis(
+  sceneGraphPath: string,
+  targetFiles: string[],
+  format: AnalysisReportFormat,
+): void {
+  const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+  if (targetFiles.length === 0) {
+    if (format === "text") {
+      console.log(
+        colorize("No ScriptableItem source files found.", ANSI.yellow),
+      );
+    } else {
+      console.log(formatStructuredAnalysisReport(format, []));
+    }
+    return;
+  }
+
+  const results: AnalysisResult[] = [];
+  for (const targetFile of targetFiles) {
+    if (!fs.existsSync(targetFile)) {
+      console.error(`Error: TypeScript file not found: ${targetFile}`);
+      continue;
+    }
+
+    const result = analyzer.analyzeTypeScriptFile(targetFile);
+    results.push(result);
+    if (format === "text") {
+      printTextAnalysisResult(analyzer, targetFile, result);
+    }
+  }
+
+  if (format !== "text") {
+    console.log(formatStructuredAnalysisReport(format, results));
+  }
+}
+
+function printTextAnalysisResult(
+  analyzer: ClusterScriptAnalyzer,
+  targetFile: string,
+  result: AnalysisResult,
+): void {
+  console.log(colorize(`\n=== Analysis Results ===\n`, ANSI.bold));
+  console.log(`File: ${targetFile}`);
+  console.log(`Issues: ${result.summary.totalIssues}`);
+  console.log(
+    `${colorize("Errors", ANSI.red)}: ${result.summary.errorCount}`,
+  );
+  console.log(
+    `${colorize("Warnings", ANSI.yellow)}: ${result.summary.warningCount}\n`,
+  );
+  if (result.componentRequests.length > 0) {
+    console.log(
+      formatComponentRequirementStatusCounts(
+        result.summary.componentRequestCounts,
+      ),
+    );
+  }
+
+  if (result.issues.length > 0) {
+    console.log(colorize("Issues:", ANSI.bold));
+    for (const issue of result.issues) {
+      const severityColor =
+        issue.severity === "error" ? ANSI.red : ANSI.yellow;
+      const severityLabel = colorize(
+        `[${issue.severity.toUpperCase()}]`,
+        severityColor,
+      );
+
+      console.log(`  ${severityLabel} Line ${issue.line}:${issue.column}`);
+      console.log(
+        `    ${colorize("API:", severityColor)} ${colorize(issue.apiCall, severityColor)}`,
+      );
+      console.log(
+        `    ${colorize("Message:", severityColor)} ${colorize(issue.message, severityColor)}`,
+      );
+      console.log(
+        `    ${colorize("Required:", severityColor)} ${colorize(issue.requiredComponents.join(", "), severityColor)}`,
+      );
+      console.log(
+        `    ${colorize("Available:", severityColor)} ${colorize(issue.availableComponents.join(", ") || "none", severityColor)}\n`,
+      );
+    }
+  } else if (
+    result.summary.componentRequestCounts.missing === 0 &&
+    result.summary.componentRequestCounts.ambiguous === 0 &&
+    result.summary.componentRequestCounts.unsupported === 0 &&
+    result.summary.componentRequestCounts.unverified === 0
+  ) {
+    console.log(colorize("✅ No issues found!", ANSI.green));
+  } else {
+    console.log(
+      colorize(
+        "⚠️ No confirmed validation issues; component requirements need review.",
+        ANSI.yellow,
+      ),
+    );
+  }
+  if (result.componentRequests.length > 0) {
+    console.log(analyzer.generateComponentRequirementReport(result));
+  }
+}
+
+function parseAnalyzeArguments(args: string[]): {
+  positional: string[];
+  format: AnalysisReportFormat;
+  watch: boolean;
+} {
+  const positional: string[] = [];
+  let format = "text";
+  let watch = false;
+
+  for (let index = 0; index < args.length; index += 1) {
+    const argument = args[index]!;
+    if (argument === "--watch") {
+      watch = true;
+    } else if (argument === "--format") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("--")) {
+        throw new Error("Missing value for --format");
+      }
+      format = value;
+      index += 1;
+    } else if (argument.startsWith("--format=")) {
+      format = argument.slice("--format=".length);
+    } else {
+      positional.push(argument);
+    }
+  }
+
+  if (!isAnalysisReportFormat(format)) {
+    throw new Error(`Unsupported analysis format: ${format}`);
+  }
+  return { positional, format, watch };
+}
+
+function isAnalysisReportFormat(value: string): value is AnalysisReportFormat {
+  return ANALYSIS_REPORT_FORMATS.some((format) => format === value);
+}
+
+function runAnalysisCycle(
+  analyze: () => void,
+  format: AnalysisReportFormat,
+): void {
+  if (format === "vscode-problems") {
+    console.log("SCENEGRAPH_ANALYSIS_STARTED");
+  }
+  try {
+    analyze();
+  } finally {
+    if (format === "vscode-problems") {
+      console.log("SCENEGRAPH_ANALYSIS_FINISHED");
+    }
+  }
+}
+
+function watchAnalysisFiles(
+  files: string[],
+  analyze: () => void,
+  format: AnalysisReportFormat,
+): void {
+  const watchedFiles = Array.from(
+    new Set(files.map((file) => path.resolve(file))),
+  );
+  let debounceTimer: NodeJS.Timeout | undefined;
+  const listeners = new Map<
+    string,
+    (current: fs.Stats, previous: fs.Stats) => void
+  >();
+
+  const stopWatching = () => {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+    for (const [file, listener] of listeners) {
+      fs.unwatchFile(file, listener);
+    }
+    process.exit(0);
+  };
+
+  const scheduleAnalysis = () => {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+    debounceTimer = setTimeout(() => {
+      try {
+        runAnalysisCycle(analyze, format);
+      } catch (error) {
+        console.error(
+          `Error during watched analysis: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }, 300);
+  };
+
+  for (const file of watchedFiles) {
+    const listener = (current: fs.Stats, previous: fs.Stats) => {
+      if (
+        current.mtimeMs === previous.mtimeMs &&
+        current.ctimeMs === previous.ctimeMs &&
+        current.size === previous.size
+      ) {
+        return;
+      }
+      scheduleAnalysis();
+    };
+    listeners.set(file, listener);
+    fs.watchFile(file, { interval: 500, persistent: true }, listener);
+  }
+
+  process.once("SIGINT", stopWatching);
+  process.once("SIGTERM", stopWatching);
+  console.log(`Watching for changes: ${watchedFiles.join(", ")}`);
 }
 
 function reportCommand(args: string[]) {

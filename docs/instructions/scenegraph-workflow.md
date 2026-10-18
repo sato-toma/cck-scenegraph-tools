@@ -37,7 +37,7 @@ npm run scenegraph:analyze -- `
   --project-path "C:\path\to\UnityProject" `
   --scene-path "Assets/Scenes/Main.unity" `
   --script-path "C:\path\to\UnityProject\Assets\Script\main.ts" `
-  --unity-path "C:\Program Files\Unity\Hub\Editor\6000.2.6f2\Editor\Unity.exe"
+  --unity-path "C:\Program Files\Unity\Hub\Editor\<version>\Editor\Unity.exe"
 ```
 
 `--project-path`、`--scene-path`、`--script-path`、`--output-path`、`--unity-path`、`--log-path` を指定できます。`--output-path` の既定値はプロジェクト直下の `SceneGraph.generated.toml` です。Unity Editor が終了時に消去する `Temp` 配下を出力先にしないでください。
