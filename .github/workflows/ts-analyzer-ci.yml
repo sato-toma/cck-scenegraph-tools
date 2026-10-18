@@ -48,8 +48,8 @@ jobs:
         run: |
           node dist/cli.js analyze src/fixtures/scene-graph-export.toml examples/sample.ts --format json > "$RUNNER_TEMP/analysis-report.json"
           node dist/cli.js analyze src/fixtures/scene-graph-export.toml examples/sample.ts --format sarif > "$RUNNER_TEMP/analysis-report.sarif"
-          node -e "const fs = require('fs'); const report = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); if (report.schemaVersion !== 1 || report.results[0].componentRequests.length !== 2) process.exit(1)" "$RUNNER_TEMP/analysis-report.json"
-          node -e "const fs = require('fs'); const report = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); if (report.version !== '2.1.0' || report.runs[0].results.length !== 1) process.exit(1)" "$RUNNER_TEMP/analysis-report.sarif"
+          node -e "const fs = require('fs'); const report = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); const requests = report.results?.[0]?.componentRequests ?? []; if (report.schemaVersion !== 1 || report.results?.length !== 1 || !requests.some((request) => request.verificationStatus === 'satisfied') || !requests.some((request) => request.verificationStatus === 'missing')) process.exit(1)" "$RUNNER_TEMP/analysis-report.json"
+          node -e "const fs = require('fs'); const report = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); const findings = report.runs?.[0]?.results ?? []; if (report.version !== '2.1.0' || report.\$schema !== 'https://json.schemastore.org/sarif-' + report.version + '.json' || !findings.some((finding) => finding.level === 'error')) process.exit(1)" "$RUNNER_TEMP/analysis-report.sarif"
 
       - name: Render analyzer findings as GitHub Actions annotations
         if: github.event_name == 'workflow_dispatch'
