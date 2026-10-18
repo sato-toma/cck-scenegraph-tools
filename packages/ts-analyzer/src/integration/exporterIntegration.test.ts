@@ -15,7 +15,7 @@ const fixturePath = path.join(
 
 function analyzeExporterFixture(
   source: string,
-  fileName = "onGrabSceneGraphContract.ts",
+  fileName = "sample.ts",
   transformGraph: (graph: string) => string = (graph) => graph,
 ) {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "scenegraph-export-"));
@@ -47,7 +47,7 @@ describe("SceneGraph exporter integration", () => {
     );
 
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "scenegraph-export-"));
-    const scriptPath = path.join(tempDir, "onGrabSceneGraphContract.ts");
+    const scriptPath = path.join(tempDir, "sample.ts");
     fs.writeFileSync(scriptPath, "$.onGrab(() => {});\n");
 
     const result = new ClusterScriptAnalyzer(fixturePath).analyzeTypeScriptFile(
@@ -79,7 +79,7 @@ describe("SceneGraph exporter integration", () => {
       );
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "scenegraph-export-"));
     const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
-    const scriptPath = path.join(tempDir, "onGrabSceneGraphContract.ts");
+    const scriptPath = path.join(tempDir, "sample.ts");
     fs.writeFileSync(sceneGraphPath, fixture);
     fs.writeFileSync(scriptPath, "$.onGrab(() => {});\n");
 
@@ -97,7 +97,7 @@ describe("SceneGraph exporter integration", () => {
     const satisfied = analyzeExporterFixture("$.onGrab(() => {});\n");
     const missing = analyzeExporterFixture(
       "if (canGrab) {\n  $.onGrab(() => {});\n}\n",
-      "onGrabSceneGraphContract.ts",
+      "sample.ts",
       (graph) =>
         graph.replace(
           /(type = "ClusterVR\.CreatorKit\.Item\.Implements\.GrabbableItem"\r?\nenabled = )true/,
@@ -106,7 +106,7 @@ describe("SceneGraph exporter integration", () => {
     );
     const ambiguous = analyzeExporterFixture(
       "$.onGrab(() => {});\n",
-      "onGrabSceneGraphContract.ts",
+      "sample.ts",
       (graph) => `${graph}
 
 [[gameObjects]]
@@ -121,7 +121,7 @@ type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
 enabled = true
 
 [gameObjects.components.properties]
-Source_Code_Asset = "onGrabSceneGraphContract"
+Source_Code_Asset = "sample"
 `,
     );
     const unsupported = analyzeExporterFixture(
@@ -170,7 +170,7 @@ Source_Code_Asset = "onGrabSceneGraphContract"
   it("creates a non-mutating plan from a missing requirement in exporter data", () => {
     const { analyzer, result } = analyzeExporterFixture(
       "$.onGrab(() => {});\n",
-      "onGrabSceneGraphContract.ts",
+      "sample.ts",
       (graph) =>
         graph.replace(
           /(type = "ClusterVR\.CreatorKit\.Item\.Implements\.GrabbableItem"\r?\nenabled = )true/,

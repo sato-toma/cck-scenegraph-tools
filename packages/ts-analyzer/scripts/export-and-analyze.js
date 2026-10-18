@@ -32,6 +32,7 @@ Options:
   --script-path <path>      ClusterScript TypeScript file to analyze
   --output-path <path>      SceneGraph TOML path, relative to the Unity project or absolute
   --log-path <path>         Unity log path, relative to the Unity project or absolute
+  --format <format>         Report format: text, json, sarif, or github-actions
   --fail-on-issues          Exit with code 1 when analyzer issues are found
   --fail-on-unverified      Exit with code 1 for ambiguous, unsupported, or unverified requirements
   --help                    Show this help
@@ -39,7 +40,11 @@ Options:
 }
 
 function parseArguments(args) {
-  const options = { failOnIssues: false, failOnUnverified: false };
+  const options = {
+    failOnIssues: false,
+    failOnUnverified: false,
+    format: "text",
+  };
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
@@ -53,6 +58,18 @@ function parseArguments(args) {
     }
     if (argument === "--fail-on-unverified") {
       options.failOnUnverified = true;
+      continue;
+    }
+    if (argument === "--format") {
+      const value = args[index + 1];
+      if (!value || value.startsWith("--")) {
+        throw new Error("Missing value for --format");
+      }
+      if (!["text", "json", "sarif", "github-actions"].includes(value)) {
+        throw new Error(`Unsupported report format: ${value}`);
+      }
+      options.format = value;
+      index += 1;
       continue;
     }
     if (!argument.startsWith("--")) {
@@ -160,10 +177,12 @@ function runUnity(options) {
     logPath,
   ];
 
-  console.log(`Unity project: ${projectPath}`);
-  console.log(`Scene: ${scenePath}`);
-  console.log(`SceneGraph output: ${outputPath}`);
-  console.log(`Unity log: ${logPath}`);
+  const logProgress =
+    options.format === "text" ? console.log.bind(console) : console.error.bind(console);
+  logProgress(`Unity project: ${projectPath}`);
+  logProgress(`Scene: ${scenePath}`);
+  logProgress(`SceneGraph output: ${outputPath}`);
+  logProgress(`Unity log: ${logPath}`);
 
   try {
     const isPowerShellScript = path.extname(unityPath).toLowerCase() === ".ps1";
@@ -175,7 +194,16 @@ function runUnity(options) {
     const commandArguments = isPowerShellScript
       ? ["-NoProfile", "-File", unityPath, ...unityArguments]
       : unityArguments;
-    const result = spawnSync(command, commandArguments, { stdio: "inherit" });
+    const result = spawnSync(command, commandArguments, {
+      stdio:
+        options.format === "text"
+          ? "inherit"
+          : ["inherit", "pipe", "inherit"],
+      maxBuffer: 10 * 1024 * 1024,
+    });
+    if (options.format !== "text" && result.stdout) {
+      process.stderr.write(result.stdout);
+    }
     if (result.error) {
       throw new Error(`Failed to start Unity: ${result.error.message}`);
     }
@@ -225,10 +253,17 @@ function runAnalyzer(outputPath, scriptPath, options) {
     ClusterScriptAnalyzer,
     hasMissingComponentRequirements,
     hasUnverifiedComponentRequirements,
+    formatStructuredAnalysisReport,
   } = loadAnalyzerModule();
   const analyzer = new ClusterScriptAnalyzer(outputPath);
   const result = analyzer.analyzeTypeScriptFile(resolvedScriptPath);
-  console.log(analyzer.generateReport(new Map([[resolvedScriptPath, result]])));
+  if (options.format === "text") {
+    console.log(analyzer.generateReport(new Map([[resolvedScriptPath, result]])));
+  } else {
+    console.log(
+      formatStructuredAnalysisReport(options.format, [result]),
+    );
+  }
 
   const hasMissingRequirements = hasMissingComponentRequirements(
     result.componentRequests,

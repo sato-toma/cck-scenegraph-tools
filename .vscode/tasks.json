@@ -1,0 +1,108 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "SceneGraph: Unityシーンを出力して解析",
+      "dependsOn": "解析器: ビルド",
+      "dependsOrder": "sequence",
+      "type": "process",
+      "command": "npm",
+      "args": [
+        "run",
+        "scenegraph:analyze",
+        "--",
+        "--project-path",
+        "${input:unityProjectPath}",
+        "--scene-path",
+        "${input:unityScenePath}",
+        "--script-path",
+        "${input:clusterScriptPath}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/packages/ts-analyzer"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "detail": "指定したUnityプロジェクトからシーン情報を出力し、ClusterScriptを一度解析します。"
+    },
+    {
+      "label": "SceneGraph: 保存時に再解析して問題を表示",
+      "dependsOn": "解析器: ビルド",
+      "dependsOrder": "sequence",
+      "type": "process",
+      "command": "node",
+      "args": [
+        "dist\\cli.js",
+        "analyze",
+        "${input:sceneGraphPath}",
+        "${input:clusterScriptPath}",
+        "--watch",
+        "--format",
+        "vscode-problems"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/packages/ts-analyzer"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "scenegraph-analyzer",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^(.+)\\((\\d+),(\\d+)\\): (error|warning|info) (SCENEGRAPH_[A-Z_]+): (.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "code": 5,
+          "message": 6
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^SCENEGRAPH_ANALYSIS_STARTED$",
+          "endsPattern": "^SCENEGRAPH_ANALYSIS_FINISHED$"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false
+      },
+      "detail": "出力済みSceneGraph.tomlとClusterScriptを監視し、保存時に再解析してVS Codeの問題一覧に表示します。"
+    },
+    {
+      "label": "解析器: ビルド",
+      "type": "process",
+      "command": "npm",
+      "args": ["run", "build"],
+      "options": {
+        "cwd": "${workspaceFolder}/packages/ts-analyzer"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "unityProjectPath",
+      "type": "promptString",
+      "description": "Unityプロジェクトの絶対パス"
+    },
+    {
+      "id": "unityScenePath",
+      "type": "promptString",
+      "description": "Unityプロジェクトからのシーン相対パス（例: Assets/Scenes/Main.unity）"
+    },
+    {
+      "id": "clusterScriptPath",
+      "type": "promptString",
+      "description": "解析するClusterScript（TypeScriptファイル）の絶対パス"
+    },
+    {
+      "id": "sceneGraphPath",
+      "type": "promptString",
+      "description": "Unityから出力済みのSceneGraph.tomlの絶対パス"
+    }
+  ]
+}

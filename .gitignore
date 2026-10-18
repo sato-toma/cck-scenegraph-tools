@@ -30,8 +30,9 @@ AssetBundles/
 .DS_Store
 Thumbs.db
 
-# VS Code
-.vscode/
+# Ignore VS Code settings, but keep the shared task definitions.
+.vscode/*
+!.vscode/tasks.json
 
 # Unity package cache / build artifacts
 packages/*/Library/

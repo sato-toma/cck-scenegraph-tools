@@ -23,6 +23,18 @@ export {
 } from "./analysis/componentChangePlan";
 export { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
 export {
+  ANALYSIS_REPORT_FORMATS,
+  formatGitHubActionsAnnotations,
+  formatJsonAnalysisReport,
+  formatSarifAnalysisReport,
+  formatStructuredAnalysisReport,
+  formatVSCodeProblems,
+} from "./reporting/structuredAnalysisFormatter";
+export type {
+  AnalysisReportFormat,
+  StructuredAnalysisReportFormat,
+} from "./reporting/structuredAnalysisFormatter";
+export {
   formatComponentChangeVerificationReport,
 } from "./reporting/componentChangeVerificationFormatter";
 export {

@@ -9,6 +9,8 @@ npm ci
 npm run build
 ```
 
+最初の解析結果を確認する手順と、自分の Unity プロジェクトへの導入方法は、リポジトリの[クイックスタート](../../docs/quickstart.md)を参照してください。
+
 ## CLI
 
 ビルド後、次のコマンドで SceneGraph とスクリプトを解析できます。
@@ -43,6 +45,8 @@ Unity Exporter の実行から解析までをまとめて行う場合は、リ�
 ## 判定と CI
 
 Component 要求は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unverified` の状態で報告されます。照合対象を特定できない場合に任意の GameObject を選んで不足と判定することはありません。
+
+解析レポートは `analyze <SceneGraph.toml> [script.ts] --format json|sarif|github-actions` で出力形式を選べます。既定のテキスト形式と終了コードは変更しません。形式と schema の詳細は[Analyzer レポート形式](../../docs/analysis-report-formats.md)を参照してください。
 
 - `--fail-on-issues`: Analyzer の問題、または確定した Component 不足があれば終了コード 1
 - `--fail-on-unverified`: 曖昧・未対応・未検証の要求があれば終了コード 1
