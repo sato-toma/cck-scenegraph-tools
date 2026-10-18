@@ -40,7 +40,8 @@ Component の自動修正は組み込まれていません。MCP は任意の補
 
 ## 詳細
 
-- [開発ガイドと Export / Analyze 手順](docs/repository-guide.md)
+- [リポジトリ案内](docs/repository-guide.md)
+- [SceneGraph の操作・解析手順](docs/instructions/scenegraph-workflow.md)
 - [Unity MCP のセットアップ](docs/unity-mcp-setup.md)
 - [Unity MCP の調査と制約](docs/unity-cli-mcp.md)
 - [SceneGraph TOML スキーマ](docs/schema/scene-graph-toml.md)
