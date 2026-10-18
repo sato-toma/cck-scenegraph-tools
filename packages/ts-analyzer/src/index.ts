@@ -11,6 +11,9 @@ export {
   applyApprovedComponentChangePlanViaUnityCliMcp,
   applyAndVerifyComponentChangePlanViaUnityCliMcp,
   approveComponentChangePlan,
+  COMPONENT_CHANGE_ACTION_STATUSES,
+  COMPONENT_CHANGE_CHECK_STATUSES,
+  COMPONENT_CHANGE_VERIFICATION_STATUSES,
   ComponentChangeApplicationError,
   createComponentChangePlan,
   excludeComponentChangeReviewItem,
@@ -46,6 +49,7 @@ export type {
 } from "./sceneGraph/mcpSceneAdapter";
 export type {
   ComponentChangeApplicationRecord,
+  ComponentChangeActionStatus,
   ComponentChangeCheckStatus,
   ComponentChangeVerificationAction,
   ComponentChangeVerificationDependencies,

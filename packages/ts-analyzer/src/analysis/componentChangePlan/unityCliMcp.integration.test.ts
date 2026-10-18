@@ -3,6 +3,8 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
+  COMPONENT_CHANGE_ACTION_STATUSES,
+  COMPONENT_CHANGE_VERIFICATION_STATUSES,
   applyAndVerifyComponentChangePlanViaUnityCliMcp,
   approveComponentChangePlan,
   createComponentChangePlan,
@@ -208,13 +210,16 @@ describe("Unity CLI MCP application integration", () => {
     );
 
     expect(report).toMatchObject({
-      status: "success",
+      status: COMPONENT_CHANGE_VERIFICATION_STATUSES.success,
       runtimeBehavior: "not-verified",
       actions: [
         {
+          changeStatus: COMPONENT_CHANGE_ACTION_STATUSES.added,
           componentStatus: "verified",
           enabledStatus: "verified",
           settingsStatus: "verified",
+          requestedSettings: { mass: 2 },
+          exportedSettings: { mass: 2 },
           analysisStatus: "verified",
         },
       ],
@@ -231,7 +236,13 @@ describe("Unity CLI MCP application integration", () => {
       ],
     });
     expect(formatComponentChangeVerificationReport(report)).toContain(
-      "Runtime behavior: NOT VERIFIED",
+      "Runtime behavior: UNVERIFIED",
+    );
+    expect(formatComponentChangeVerificationReport(report)).toContain(
+      "requested settings: {\"mass\":2}",
+    );
+    expect(formatComponentChangeVerificationReport(report)).toContain(
+      "Root/Item (item-id)",
     );
     expect((await readServerState(statePath)).components).toContain(
       "UnityEngine.Rigidbody",
@@ -275,6 +286,81 @@ describe("Unity CLI MCP application integration", () => {
     );
   });
 
+  it("reports mismatched exported settings as failure", async () => {
+    const directory = await mkdtemp(
+      path.join(os.tmpdir(), "cck-component-verification-"),
+    );
+    temporaryDirectories.push(directory);
+    const { configPath } = await createMcpConfig();
+    const sourcePath = path.join(directory, "item.ts");
+    const sceneGraphPath = path.join(directory, "SceneGraph.toml");
+    await writeFile(sourcePath, "$.onCollide(() => {});\n");
+
+    const report = await applyAndVerifyComponentChangePlanViaUnityCliMcp(
+      makePlan(["UnityEngine.Rigidbody"], { mass: 2 }),
+      {
+        configPath,
+        projectPath: directory,
+        sceneGraphPath,
+        sourcePaths: [sourcePath],
+        unityPath: "Unity.exe",
+      },
+      {
+        exportSceneGraph: async ({ outputPath }) => {
+          await writeFile(
+            outputPath,
+            exportedSceneGraph().replace("Mass = 2", "Mass = 3"),
+          );
+        },
+      },
+    );
+
+    expect(report.status).toBe("failure");
+    expect(report.actions[0]).toMatchObject({
+      settingsStatus: "failed",
+      requestedSettings: { mass: 2 },
+      exportedSettings: { mass: 3 },
+    });
+  });
+
+  it("reports exporter-omitted settings as unverified", async () => {
+    const directory = await mkdtemp(
+      path.join(os.tmpdir(), "cck-component-verification-"),
+    );
+    temporaryDirectories.push(directory);
+    const { configPath } = await createMcpConfig();
+    const sourcePath = path.join(directory, "item.ts");
+    const sceneGraphPath = path.join(directory, "SceneGraph.toml");
+    await writeFile(sourcePath, "$.onCollide(() => {});\n");
+
+    const report = await applyAndVerifyComponentChangePlanViaUnityCliMcp(
+      makePlan(["UnityEngine.Rigidbody"], { mass: 2 }),
+      {
+        configPath,
+        projectPath: directory,
+        sceneGraphPath,
+        sourcePaths: [sourcePath],
+        unityPath: "Unity.exe",
+      },
+      {
+        exportSceneGraph: async ({ outputPath }) => {
+          await writeFile(
+            outputPath,
+            exportedSceneGraph().replace("Mass = 2\n", ""),
+          );
+        },
+      },
+    );
+
+    expect(report.status).toBe("unverified");
+    expect(report.actions[0]).toMatchObject({
+      componentStatus: "verified",
+      enabledStatus: "verified",
+      settingsStatus: "unverified",
+      analysisStatus: "verified",
+    });
+  });
+
   it("does not treat a stale SceneGraph as success when re-export fails", async () => {
     const directory = await mkdtemp(
       path.join(os.tmpdir(), "cck-component-verification-"),
@@ -303,6 +389,35 @@ describe("Unity CLI MCP application integration", () => {
     expect(report.status).toBe("failure");
     expect(report.exportError).toContain("Exporter unavailable");
     expect(report.actions[0]?.componentStatus).toBe("unverified");
+  });
+
+  it("reports post-export analysis failures instead of success", async () => {
+    const directory = await mkdtemp(
+      path.join(os.tmpdir(), "cck-component-verification-"),
+    );
+    temporaryDirectories.push(directory);
+    const { configPath } = await createMcpConfig();
+    const sceneGraphPath = path.join(directory, "SceneGraph.toml");
+
+    const report = await applyAndVerifyComponentChangePlanViaUnityCliMcp(
+      makePlan(),
+      {
+        configPath,
+        projectPath: directory,
+        sceneGraphPath,
+        sourcePaths: [path.join(directory, "missing.ts")],
+        unityPath: "Unity.exe",
+      },
+      {
+        exportSceneGraph: async ({ outputPath }) => {
+          await writeFile(outputPath, exportedSceneGraph());
+        },
+      },
+    );
+
+    expect(report.status).toBe("failure");
+    expect(report.exportError).toContain("Post-export analysis failed");
+    expect(report.exportError).toContain("TypeScript source file not found");
   });
 
   it("applies only the approved component and its explicitly resolved settings", async () => {

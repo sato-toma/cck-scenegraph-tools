@@ -123,7 +123,7 @@ function runUnity(options) {
   const projectPath = resolvePath(options.projectPath || defaultProjectPath, process.cwd());
   const scenePath = options.scenePath || "Assets/test.unity";
   const outputPath = resolvePath(
-    options.outputPath || path.join("Temp", "SceneGraph.generated.toml"),
+    options.outputPath || "SceneGraph.generated.toml",
     projectPath,
   );
   const temporaryOutputPath = path.join(

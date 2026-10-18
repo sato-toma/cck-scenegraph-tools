@@ -25,6 +25,9 @@ SceneGraph + 構造化された要求 + ClusterScriptDefinitions
   -> ユーザー確認・明示承認
   -> 承認済み変更のみを Unity CLI MCP `add_component` で適用
   -> 対象ID・階層の再確認、重複防止、適用結果の記録
+  -> Unity batchmode exporterで再出力
+  -> 対象Component / enabled / 設定値の再照合、同じClusterScriptの再解析
+  -> success / failure / unverified の検証レポート
 
 Unity CLI MCP の読み取り応答
   -> McpSceneAdapter
@@ -58,6 +61,7 @@ Unity CLI MCP の読み取り応答
 - 照合結果は `AnalysisResult.componentRequests` と `summary.componentRequestCounts`、および `analyze` / `report` の出力で確認できる。条件付き要求は、実行された場合に必要な Component として照合し、各出現位置の条件式をレポートする。対象が一意に解決できない場合は `MISSING_COMPONENT` を出さず、要求状態を `ambiguous` / `unverified` として報告する。`export-and-analyze --fail-on-issues` は analyzer issue と確定した `missing` で失敗し、`--fail-on-unverified` は `ambiguous` / `unsupported` / `unverified` で失敗する。すべての要求を確認済みにする CI では両方を指定する。
 - `ComponentChangePlan` は確定した `missing` 要求から追加のみの計画を作る。SceneGraph TOML にシーンパスは含まれないため、対象Unityシーンのパスを明示する。計画生成にMCP読み取りは不要。設定値や代替Componentの選択、対象解決が未確定の項目を含む計画は、明示的なユーザー判断なしに承認できない。承認は計画内容に結び付けられ、承認後に変更された計画は適用用データへ変換できない。
 - `applyApprovedComponentChangePlan` は承認ダイジェストを検証してからのみ MCP ブリッジを呼ぶ。`applyApprovedComponentChangePlanViaUnityCliMcp` は `.mcp.json` の Unity stdio サーバーに接続し、この適用関数を呼び出す。各追加の直前・直後に GlobalObjectId と階層パスを再確認し、Component が既に存在する場合は追加を省略する。設定は承認計画の値だけを送り、対象不一致や MCP エラーでは後続の変更を停止して監査記録を含むエラーを返す。ユーザー承認 UI は呼び出し側の責務である。
+- `applyAndVerifyComponentChangePlanViaUnityCliMcp` は、承認済み計画を適用した後に Unity batchmode exporterを実行し、生成したSceneGraphと対象スクリプトを再解析する。変更結果には GlobalObjectId / path、Component型、承認値とExporter出力値を含める。状態は実行時定数 `COMPONENT_CHANGE_*_STATUSES` とその型で表し、確認できない値は成功にせず `unverified` とする。この結果は構造と静的制約の検証であり、実行時動作を保証しない。
 - `McpSceneAdapter` は Unity CLI MCP の `get_scene_hierarchy` / `find_gameobjects` 応答を純粋関数で正規化する。`instanceId` は応答間の結合にだけ使い、GlobalObjectId が得られない対象は診断に記録してスナップショットから除外する。Component の `enabled` は MCP から取得できないため `unsupported` とし、SceneGraph や analyzer の入力に変換しない。
 
 ### 要求モデルとバリデータ

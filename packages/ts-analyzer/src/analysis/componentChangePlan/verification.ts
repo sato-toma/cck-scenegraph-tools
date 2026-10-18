@@ -7,6 +7,7 @@ import { ClusterScriptAnalyzer } from "../analyzer";
 import type {
   AnalysisResult,
   Component,
+  ComponentProperty,
   ComponentPropertyValue,
   SceneGraph,
 } from "../../domain/types";
@@ -22,20 +23,44 @@ import type {
 import { ComponentChangeApplicationError } from "./application";
 import type { ComponentChangePlan } from "./index";
 
-export type ComponentChangeVerificationStatus =
-  | "success"
-  | "failure"
-  | "unverified";
+export const COMPONENT_CHANGE_ACTION_STATUSES = Object.freeze({
+  added: "added",
+  alreadyPresent: "already-present",
+  failed: "failed",
+  notAttempted: "not-attempted",
+});
 
-export type ComponentChangeCheckStatus = "verified" | "failed" | "unverified";
+export type ComponentChangeActionStatus =
+  (typeof COMPONENT_CHANGE_ACTION_STATUSES)[keyof typeof COMPONENT_CHANGE_ACTION_STATUSES];
+
+export const COMPONENT_CHANGE_CHECK_STATUSES = Object.freeze({
+  verified: "verified",
+  failed: "failed",
+  unverified: "unverified",
+});
+
+export type ComponentChangeCheckStatus =
+  (typeof COMPONENT_CHANGE_CHECK_STATUSES)[keyof typeof COMPONENT_CHANGE_CHECK_STATUSES];
+
+export const COMPONENT_CHANGE_VERIFICATION_STATUSES = Object.freeze({
+  success: "success",
+  failure: "failure",
+  unverified: "unverified",
+});
+
+export type ComponentChangeVerificationStatus =
+  (typeof COMPONENT_CHANGE_VERIFICATION_STATUSES)[keyof typeof COMPONENT_CHANGE_VERIFICATION_STATUSES];
 
 export interface ComponentChangeVerificationAction {
   actionId: string;
+  changeStatus: ComponentChangeActionStatus;
   target: {
     globalObjectId: string;
     hierarchyPath: string;
   };
   componentType: string;
+  requestedSettings: ComponentProperty;
+  exportedSettings: ComponentProperty;
   componentStatus: ComponentChangeCheckStatus;
   enabledStatus: ComponentChangeCheckStatus;
   settingsStatus: ComponentChangeCheckStatus;
@@ -229,20 +254,44 @@ function collectActions(
   plan: ComponentChangePlan,
   sceneGraph: SceneGraph,
   analysisResults: AnalysisResult[],
+  applicationRecords: ComponentChangeApplicationRecord[],
 ): ComponentChangeVerificationAction[] {
   return plan.actions.map((action, actionIndex) => {
     const messages: string[] = [];
+    const actionRecords = applicationRecords.filter(
+      (record) => record.actionId === action.id,
+    );
+    const changeStatus: ComponentChangeActionStatus =
+      actionRecords.some(
+        (record) => record.result === COMPONENT_CHANGE_ACTION_STATUSES.failed,
+      )
+        ? COMPONENT_CHANGE_ACTION_STATUSES.failed
+        : actionRecords.some(
+              (record) =>
+                record.phase === "add-component" &&
+                record.result === COMPONENT_CHANGE_ACTION_STATUSES.added,
+            )
+          ? COMPONENT_CHANGE_ACTION_STATUSES.added
+          : actionRecords.some(
+                (record) =>
+                  record.phase === "after" && record.result === "skipped",
+              )
+            ? COMPONENT_CHANGE_ACTION_STATUSES.alreadyPresent
+            : COMPONENT_CHANGE_ACTION_STATUSES.notAttempted;
     const result: ComponentChangeVerificationAction = {
       actionId: action.id,
+      changeStatus,
       target: {
         globalObjectId: action.target.gameObjectId,
         hierarchyPath: action.target.gameObjectPath,
       },
       componentType: action.componentType,
-      componentStatus: "unverified",
-      enabledStatus: "unverified",
-      settingsStatus: "verified",
-      analysisStatus: "unverified",
+      requestedSettings: { ...action.settings.values },
+      exportedSettings: {},
+      componentStatus: COMPONENT_CHANGE_CHECK_STATUSES.unverified,
+      enabledStatus: COMPONENT_CHANGE_CHECK_STATUSES.unverified,
+      settingsStatus: COMPONENT_CHANGE_CHECK_STATUSES.verified,
+      analysisStatus: COMPONENT_CHANGE_CHECK_STATUSES.unverified,
       messages,
     };
 
@@ -252,8 +301,8 @@ function collectActions(
         gameObject.path === action.target.gameObjectPath,
     );
     if (targets.length !== 1) {
-      result.componentStatus = "failed";
-      result.enabledStatus = "failed";
+      result.componentStatus = COMPONENT_CHANGE_CHECK_STATUSES.failed;
+      result.enabledStatus = COMPONENT_CHANGE_CHECK_STATUSES.failed;
       messages.push(
         `Expected one exported target matching its GlobalObjectId and path; found ${targets.length}.`,
       );
@@ -262,35 +311,38 @@ function collectActions(
         (component) => component.type === action.componentType,
       );
       if (components.length === 0) {
-        result.componentStatus = "failed";
-        result.enabledStatus = "failed";
+        result.componentStatus = COMPONENT_CHANGE_CHECK_STATUSES.failed;
+        result.enabledStatus = COMPONENT_CHANGE_CHECK_STATUSES.failed;
         messages.push("The exported target does not contain the component.");
       } else {
-        result.componentStatus = "verified";
+        result.componentStatus = COMPONENT_CHANGE_CHECK_STATUSES.verified;
         const enabledComponents = components.filter(
           (component) => component.enabled,
         );
         if (enabledComponents.length === 0) {
-          result.enabledStatus = "failed";
+          result.enabledStatus = COMPONENT_CHANGE_CHECK_STATUSES.failed;
           messages.push("The exported component is disabled.");
         } else {
-          result.enabledStatus = "verified";
+          result.enabledStatus = COMPONENT_CHANGE_CHECK_STATUSES.verified;
           for (const [propertyName, expectedValue] of Object.entries(
             action.settings.values,
           )) {
             const property = enabledComponents
               .map((component) => findProperty(component, propertyName))
               .find((candidate) => candidate.found);
-            if (!property) {
-              result.settingsStatus = "unverified";
+            if (!property || property.value === undefined) {
+              result.settingsStatus = COMPONENT_CHANGE_CHECK_STATUSES.unverified;
               messages.push(
                 `The exporter did not expose the requested property "${propertyName}".`,
               );
-            } else if (!isDeepStrictEqual(property.value, expectedValue)) {
-              result.settingsStatus = "failed";
-              messages.push(
-                `Exported property "${propertyName}" does not match the approved value.`,
-              );
+            } else {
+              result.exportedSettings[propertyName] = property.value;
+              if (!isDeepStrictEqual(property.value, expectedValue)) {
+                result.settingsStatus = COMPONENT_CHANGE_CHECK_STATUSES.failed;
+                messages.push(
+                  `Exported property "${propertyName}" does not match the approved value.`,
+                );
+              }
             }
           }
         }
@@ -303,16 +355,16 @@ function collectActions(
       ),
     );
     if (matchingRequests.some((request) => request.verificationStatus === "missing")) {
-      result.analysisStatus = "failed";
+      result.analysisStatus = COMPONENT_CHANGE_CHECK_STATUSES.failed;
       messages.push("Static analysis still reports the requirement as missing.");
     } else if (
       matchingRequests.some(
         (request) => request.verificationStatus === "satisfied",
       )
     ) {
-      result.analysisStatus = "verified";
+      result.analysisStatus = COMPONENT_CHANGE_CHECK_STATUSES.verified;
     } else {
-      result.analysisStatus = "unverified";
+      result.analysisStatus = COMPONENT_CHANGE_CHECK_STATUSES.unverified;
       messages.push(
         "Static analysis did not produce a matching, satisfied requirement.",
       );
@@ -338,10 +390,10 @@ function overallStatus(
         action.enabledStatus,
         action.settingsStatus,
         action.analysisStatus,
-      ].includes("failed"),
+      ].includes(COMPONENT_CHANGE_CHECK_STATUSES.failed),
     )
   ) {
-    return "failure";
+    return COMPONENT_CHANGE_VERIFICATION_STATUSES.failure;
   }
   if (
     actions.length === 0 ||
@@ -351,12 +403,12 @@ function overallStatus(
         action.enabledStatus,
         action.settingsStatus,
         action.analysisStatus,
-      ].includes("unverified"),
+      ].includes(COMPONENT_CHANGE_CHECK_STATUSES.unverified),
     )
   ) {
-    return "unverified";
+    return COMPONENT_CHANGE_VERIFICATION_STATUSES.unverified;
   }
-  return "success";
+  return COMPONENT_CHANGE_VERIFICATION_STATUSES.success;
 }
 
 export async function applyAndVerifyComponentChangePlanViaUnityCliMcp(
@@ -433,7 +485,7 @@ export async function applyAndVerifyComponentChangePlanViaUnityCliMcp(
   }
 
   const actions = graph
-    ? collectActions(plan, graph, analysisResults)
+    ? collectActions(plan, graph, analysisResults, applicationRecords)
     : plan.actions.map((action) => ({
         actionId: action.id,
         target: {
@@ -441,10 +493,13 @@ export async function applyAndVerifyComponentChangePlanViaUnityCliMcp(
           hierarchyPath: action.target.gameObjectPath,
         },
         componentType: action.componentType,
-        componentStatus: "unverified" as const,
-        enabledStatus: "unverified" as const,
-        settingsStatus: "unverified" as const,
-        analysisStatus: "unverified" as const,
+        changeStatus: COMPONENT_CHANGE_ACTION_STATUSES.notAttempted,
+        requestedSettings: { ...action.settings.values },
+        exportedSettings: {},
+        componentStatus: COMPONENT_CHANGE_CHECK_STATUSES.unverified,
+        enabledStatus: COMPONENT_CHANGE_CHECK_STATUSES.unverified,
+        settingsStatus: COMPONENT_CHANGE_CHECK_STATUSES.unverified,
+        analysisStatus: COMPONENT_CHANGE_CHECK_STATUSES.unverified,
         messages: ["Could not verify because SceneGraph export or analysis failed."],
       }));
 

@@ -302,7 +302,13 @@ export {
 export {
   applyAndVerifyComponentChangePlanViaUnityCliMcp,
 } from "./verification";
+export {
+  COMPONENT_CHANGE_ACTION_STATUSES,
+  COMPONENT_CHANGE_CHECK_STATUSES,
+  COMPONENT_CHANGE_VERIFICATION_STATUSES,
+} from "./verification";
 export type {
+  ComponentChangeActionStatus,
   ComponentChangeCheckStatus,
   ComponentChangeVerificationAction,
   ComponentChangeVerificationDependencies,

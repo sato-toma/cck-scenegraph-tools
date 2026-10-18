@@ -2,14 +2,18 @@ import type {
   ComponentChangeCheckStatus,
   ComponentChangeVerificationReport,
 } from "../analysis/componentChangePlan/verification";
+import {
+  COMPONENT_CHANGE_CHECK_STATUSES,
+  COMPONENT_CHANGE_VERIFICATION_STATUSES,
+} from "../analysis/componentChangePlan/verification";
 
 function displayStatus(status: ComponentChangeCheckStatus): string {
   switch (status) {
-    case "verified":
+    case COMPONENT_CHANGE_CHECK_STATUSES.verified:
       return "verified";
-    case "failed":
+    case COMPONENT_CHANGE_CHECK_STATUSES.failed:
       return "failed";
-    case "unverified":
+    case COMPONENT_CHANGE_CHECK_STATUSES.unverified:
       return "unverified";
   }
 }
@@ -34,9 +38,12 @@ export function formatComponentChangeVerificationReport(
   for (const action of report.actions) {
     lines.push(
       `${action.componentType} on ${action.target.hierarchyPath} (${action.target.globalObjectId})`,
+      `  change: ${action.changeStatus}`,
       `  component: ${displayStatus(action.componentStatus)}`,
       `  enabled: ${displayStatus(action.enabledStatus)}`,
       `  settings: ${displayStatus(action.settingsStatus)}`,
+      `  requested settings: ${JSON.stringify(action.requestedSettings)}`,
+      `  exported settings: ${JSON.stringify(action.exportedSettings)}`,
       `  static requirement: ${displayStatus(action.analysisStatus)}`,
     );
     for (const message of action.messages) {
@@ -57,7 +64,7 @@ export function formatComponentChangeVerificationReport(
 
   lines.push(
     "",
-    "Runtime behavior: NOT VERIFIED. This report verifies exported scene data and static requirements only.",
+    `Runtime behavior: ${COMPONENT_CHANGE_VERIFICATION_STATUSES.unverified.toUpperCase()}. This report verifies exported scene data and static requirements only.`,
   );
   return lines.join("\n");
 }
