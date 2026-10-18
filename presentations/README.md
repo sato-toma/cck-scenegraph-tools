@@ -15,7 +15,7 @@ npm install
 npm run build
 ```
 
-PDF は `dist/repository-overview.pdf` に出力されます。編集時のローカルプレビューは次を実行します。
+PDF は `dist/repository-overview.pdf` に出力されます。編集時のローカルプレビューは `slides/` 内のスライドをローカルサーバーで表示します。次を実行してください。
 
 ```bash
 npm run preview
