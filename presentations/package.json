@@ -7,7 +7,7 @@
         "generate:diagrams": "node -e \"require('fs').mkdirSync('assets/generated',{recursive:true})\" && mmdc --puppeteerConfigFile puppeteer-config.json --input diagrams/repository-flow.mmd --output assets/generated/repository-flow.svg --backgroundColor transparent",
         "build:pdf": "npm run generate:diagrams && node -e \"require('fs').mkdirSync('dist',{recursive:true})\" && marp slides/repository-overview.md --pdf --allow-local-files --output dist/repository-overview.pdf",
         "build": "npm run build:pdf",
-        "preview": "marp --server slides/repository-overview.md"
+        "preview": "marp --server slides"
     },
     "devDependencies": {
         "@marp-team/marp-cli": "^4.5.1",
