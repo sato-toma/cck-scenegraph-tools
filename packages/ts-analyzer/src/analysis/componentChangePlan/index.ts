@@ -299,6 +299,17 @@ export {
 export {
   applyApprovedComponentChangePlanViaUnityCliMcp,
 } from "./unityCliMcp";
+export {
+  applyAndVerifyComponentChangePlanViaUnityCliMcp,
+} from "./verification";
+export type {
+  ComponentChangeCheckStatus,
+  ComponentChangeVerificationAction,
+  ComponentChangeVerificationDependencies,
+  ComponentChangeVerificationOptions,
+  ComponentChangeVerificationReport,
+  ComponentChangeVerificationStatus,
+} from "./verification";
 export type {
   UnityCliMcpApplicationOptions,
 } from "./unityCliMcp";

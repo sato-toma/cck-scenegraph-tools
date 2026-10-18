@@ -9,6 +9,7 @@ export { ComponentRequirementValidator } from "./analysis/componentRequirements/
 export {
   applyApprovedComponentChangePlan,
   applyApprovedComponentChangePlanViaUnityCliMcp,
+  applyAndVerifyComponentChangePlanViaUnityCliMcp,
   approveComponentChangePlan,
   ComponentChangeApplicationError,
   createComponentChangePlan,
@@ -18,6 +19,9 @@ export {
   resolveComponentChangeSettings,
 } from "./analysis/componentChangePlan";
 export { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
+export {
+  formatComponentChangeVerificationReport,
+} from "./reporting/componentChangeVerificationFormatter";
 export {
   COMPONENT_REQUIREMENT_STATUSES,
   formatComponentRequirementStatusCounts,
@@ -42,6 +46,12 @@ export type {
 } from "./sceneGraph/mcpSceneAdapter";
 export type {
   ComponentChangeApplicationRecord,
+  ComponentChangeCheckStatus,
+  ComponentChangeVerificationAction,
+  ComponentChangeVerificationDependencies,
+  ComponentChangeVerificationOptions,
+  ComponentChangeVerificationReport,
+  ComponentChangeVerificationStatus,
   ApprovedComponentChangePlan,
   ComponentChangeAction,
   ComponentChangePlan,

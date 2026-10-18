@@ -47,9 +47,25 @@
 2. `SemanticGraph/Export All Component Graph to TOML` で全体を出力する。
 3. 必要なら `SemanticGraph/Update Selected Component Graph to TOML` で選択範囲を更新する。
 4. TypeScript analyzer で `SceneGraph.toml` と ClusterScript を解析する。
-5. Component の不足を修正する場合は `ts-analyzer plan <SceneGraph.toml> <Unity-scene-path> [script.ts]` で追加候補を確認する。承認済み計画の適用では Unity CLI MCP の `add_component` を使い、各対象を適用直前に再確認する。未承認・対象不一致・曖昧な対象では適用しない。適用後の再出力と解析は別途実行する。
+5. Component の不足を修正する場合は `ts-analyzer plan <SceneGraph.toml> <Unity-scene-path> [script.ts]` で追加候補を確認する。承認済み計画の適用では Unity CLI MCP の `add_component` を使い、各対象を適用直前に再確認する。未承認・対象不一致・曖昧な対象では適用しない。適用と再検証を一括で行う場合は `applyAndVerifyComponentChangePlanViaUnityCliMcp` を使う。
 
 TypeScript 側の `applyApprovedComponentChangePlanViaUnityCliMcp` は `.mcp.json` の `unity` stdio サーバーを起動し、承認済み `ComponentChangePlan` を Unity CLI MCP に直接適用する。適用前に計画の承認状態を検証するため、呼び出し側はユーザーの明示承認後にのみ実行する。承認 UI は提供しない。変更前後の状態と失敗時の監査記録は戻り値または例外から確認する。
+
+`applyAndVerifyComponentChangePlanViaUnityCliMcp` は、適用の後に Unity Editor batchmode で同じシーンを再出力し、計画の対象 GameObject / Component / enabled 状態 / 出力可能な設定値を確認してから、計画根拠となった TypeScript を再解析する。戻り値は `success` / `failure` / `unverified` の状態、各確認項目、解析結果、MCP 適用記録を含み、`formatComponentChangeVerificationReport` で表示用テキストに整形できる。Export に失敗した場合は前回の SceneGraph を検証結果として使わず、失敗を返す。Exporter が設定値を出力しない場合はその値を `unverified` とする。結果は SceneGraph と静的制約の確認であり、スクリプトの実行時動作は保証しない。
+
+```ts
+const report = await applyAndVerifyComponentChangePlanViaUnityCliMcp(
+  approvedPlan,
+  {
+    configPath: ".mcp.json",
+    projectPath: "C:/path/to/UnityProject",
+    sceneGraphPath: "C:/path/to/UnityProject/SceneGraph.toml",
+  },
+);
+console.log(formatComponentChangeVerificationReport(report));
+```
+
+呼び出し側は `report.status` を確認し、`success` 以外を成功として扱わないでください。承認計画内の証拠から解析対象の TypeScript を解決できない場合は、`sourcePaths` を明示します。
 
 ### Unity CLIでの全体出力
 
