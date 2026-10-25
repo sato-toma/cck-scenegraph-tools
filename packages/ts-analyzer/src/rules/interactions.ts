@@ -51,6 +51,17 @@ export const interactionMethodRules: ApiMethod[] = [
     description: "乗ることができるアイテムに乗る・降りるときに呼ばれるコールバック",
   },
   {
+    name: "getGrabbingPlayer",
+    requiredComponents: [
+      {
+        componentType: "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+        requirement: "required",
+      },
+    ],
+    description:
+      "GrabbableItem が付いたアイテムを掴んでいるプレイヤーを取得します。掴んでいるプレイヤーがいない場合は null を返します。",
+  },
+  {
     name: "onCollide",
     requiredComponents: [
       {

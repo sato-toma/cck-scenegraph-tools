@@ -34,7 +34,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | [x] | `onInteract` | UnityでCollider必須条件を確認。`test.unity` のExportでは子GameObjectの有効な `BoxCollider` を確認 | `UnityEngine.BoxCollider` / `SphereCollider` / `CapsuleCollider` / `MeshCollider` / `WheelCollider` のいずれか1個以上 |
 | [ ] | `onUse` | 2026-10-17: MCP で不足・充足を確認。実行時挙動は未検証 | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem`（ClusterScript 定義に必須と明記） |
 | [x] | `onRide` | ClusterScript API で `RidableItem` 必須を確認。Creator Kit docs では Seat 未設定の Ridable Item は機能しないが、ルールは Component の有無のみを判定 | `ClusterVR.CreatorKit.Item.Implements.RidableItem` 必須 |
-| [ ] | `getGrabbingPlayer` | Grab 中と非 Grab 中の戻り値 | `GrabbableItem`。要確認 |
+| [x] | `getGrabbingPlayer` | ClusterScript API 定義で `GrabbableItem` 必須を確認。非 Grab 中は `null`。ルールは Component の有無のみを判定 | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem` 必須 |
 | [ ] | `getRidingPlayer` | Ride 中と非 Ride 中の戻り値 | `RidableItem`。要確認 |
 
 ### P1: 移動・物理
