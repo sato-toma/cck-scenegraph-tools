@@ -41,6 +41,16 @@ export const interactionMethodRules: ApiMethod[] = [
       "掴んでいるアイテムに「使う」動作をしたときのコールバック。UseItemTrigger がある場合はそちらの実行が優先されます。",
   },
   {
+    name: "onRide",
+    requiredComponents: [
+      {
+        componentType: "ClusterVR.CreatorKit.Item.Implements.RidableItem",
+        requirement: "required",
+      },
+    ],
+    description: "乗ることができるアイテムに乗る・降りるときに呼ばれるコールバック",
+  },
+  {
     name: "onCollide",
     requiredComponents: [
       {
