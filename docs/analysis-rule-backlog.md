@@ -47,7 +47,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | [ ] | `useGravity` | 読み取り、書き込み、トップレベル外の制限 | `MovableItem`。要確認 |
 | [ ] | `velocity` | 読み取り、書き込み、Grab 中の挙動 | `MovableItem`。要確認 |
 | [ ] | `angularVelocity` | 読み取り、書き込み、Grab 中の挙動 | `MovableItem`。要確認 |
-| [ ] | `addForce` | onPhysicsUpdate 内外、Rigidbody の有無 | `MovableItem`。要確認 |
+| [ ] | `addForce` | API定義では `onPhysicsUpdate` 内のみ使用可能。Analyzer は `MovableItem` と、直接特定できる `onPhysicsUpdate` コールバック内での呼び出しを要求する。公式例は Rigidbody の Mass 1 を前提とするが、不在時のUnity実行時挙動は未検証 | `ClusterVR.CreatorKit.Item.Implements.MovableItem`（Component・コールバック文脈ルール追加済み。Unity確認待ち） |
 | [ ] | `addTorque` | onPhysicsUpdate 内外、Rigidbody の有無 | `MovableItem`。要確認 |
 | [ ] | `addForceAt` | onPhysicsUpdate 内外、位置指定の扱い | `MovableItem`。要確認 |
 | [ ] | `addImpulsiveForce` | 実行可能なタイミング、Rigidbody の有無 | `MovableItem`。要確認 |

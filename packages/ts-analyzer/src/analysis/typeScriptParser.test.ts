@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CallbackContextAnalyzer } from "./callbackContextAnalyzer";
 import { TypeScriptCodeParser } from "./typeScriptParser";
 
 const sampleScript = `
@@ -40,5 +41,46 @@ $.state.items.push("item");
 
     expect(invalid).toHaveLength(2);
     expect(invalid.map((item) => item.propertyName)).toEqual(["profile", "items"]);
+  });
+});
+
+describe("CallbackContextAnalyzer", () => {
+  const analyzeAddForce = (content: string) =>
+    CallbackContextAnalyzer.analyze(content, "addForce", "onPhysicsUpdate");
+
+  it("recognizes inline and uniquely named physics callbacks", () => {
+    const inlineCallback = analyzeAddForce(
+      "$.onPhysicsUpdate((dt) => $.addForce(new Vector3(0, 1, 0)));",
+    );
+    expect([...inlineCallback.values()]).toEqual(["inside"]);
+
+    const namedCallback = analyzeAddForce(
+      "const tick = (dt: number) => { $.addForce(new Vector3(0, 1, 0)); };\n$.onPhysicsUpdate(tick);",
+    );
+    expect([...namedCallback.values()]).toEqual(["inside"]);
+  });
+
+  it("marks top-level calls and calls in other callbacks as outside", () => {
+    const contexts = analyzeAddForce(
+      "$.addForce(new Vector3(0, 1, 0));\n$.onUpdate(() => $.addForce(new Vector3(0, 1, 0)));",
+    );
+
+    expect([...contexts.values()]).toEqual(["outside", "outside"]);
+  });
+
+  it("marks nested helper functions as unverified", () => {
+    const contexts = analyzeAddForce(
+      "$.onPhysicsUpdate(() => {\n  const applyForce = () => $.addForce(new Vector3(0, 1, 0));\n  applyForce();\n});",
+    );
+
+    expect([...contexts.values()]).toEqual(["unverified"]);
+  });
+
+  it("does not treat comments or strings as API calls", () => {
+    const contexts = analyzeAddForce(
+      '// $.addForce(new Vector3(0, 1, 0));\nconst example = "$.addForce()";',
+    );
+
+    expect(contexts.size).toBe(0);
   });
 });
