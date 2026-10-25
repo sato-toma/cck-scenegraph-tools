@@ -49,12 +49,11 @@ Set-Location ..\..
   --project-path "C:\path\to\UnityProject" `
   --scene-path "Assets/Scenes/Main.unity" `
   --script-path "C:\path\to\script.ts" `
-  --strict-optional-lookups `
   --fail-on-issues `
   --fail-on-unverified
 ```
 
-`--fail-on-issues` は確定した問題や required Component 不足で、`--fail-on-unverified` は曖昧・未対応・未検証の要求でも終了コード `1` を返します。`getUnityComponent` の対象Componentが未配置の場合は既定で任意検索の警告として報告します。nullを許可しない場合は `--strict-optional-lookups` を指定するとエラー扱いになり、`--fail-on-issues` と組み合わせて終了コードにも反映できます。必要なら `plan` で追加候補を確認し、明示承認してからUnityMCP経由で適用できます。Unity Editor のパスは `UNITY_PATH` 環境変数でも指定できます。
+終了条件や strict モードは[Analyzer レポート形式](analysis-report-formats.md)を参照してください。Unity Editor のパスは `UNITY_PATH` で指定できます。
 
 ## VS Code で解析する
 

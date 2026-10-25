@@ -42,10 +42,7 @@ npm run scenegraph:analyze -- `
 
 `--project-path`、`--scene-path`、`--script-path`、`--output-path`、`--unity-path`、`--log-path` を指定できます。`--output-path` の既定値はプロジェクト直下の `SceneGraph.generated.toml` です。Unity Editor が終了時に消去する `Temp` 配下を出力先にしないでください。
 
-- `--fail-on-issues`: analyzer issue または確定した required Component 不足で終了コード `1` を返します。`getUnityComponent` の未配置は既定では対象外ですが、`--strict-optional-lookups` も指定するとエラーとして対象になります。
-- `--fail-on-unverified`: `ambiguous` / `unsupported` / `unverified` の要求でも終了コード `1` を返します。
-
-確認済みを必須にする場合は両方指定します。Unity Editor のパスは `UNITY_PATH` 環境変数でも指定できます。
+終了条件の設定は[Analyzer レポート形式](../analysis-report-formats.md)を参照してください。Unity Editor のパスは `UNITY_PATH` 環境変数でも指定できます。
 
 ## Component 変更計画を適用・再検証する
 
