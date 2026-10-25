@@ -136,6 +136,7 @@ Source_Code_Asset = "sample.ts"
       ambiguous: 0,
       unsupported: 0,
       unverified: 0,
+      optionalLookupMissing: 0,
     });
   });
 
@@ -430,7 +431,7 @@ Source_Code_Asset = "sample.ts"
     expect(report).toContain("Missing: ClusterVR.CreatorKit.Item.Implements.MovableItem");
   });
 
-  it("does not treat a literal component lookup as a mandatory requirement", () => {
+  it("warns by default and supports strict errors for a missing literal component lookup", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
     const tsFilePath = path.join(tempDir, "sample.ts");
     const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
@@ -462,13 +463,91 @@ Source_Code_Asset = "sample.ts"
     const result = analyzer.analyzeTypeScriptFile(tsFilePath);
 
     expect(result.issues).toHaveLength(0);
+    expect(result.summary.errorCount).toBe(0);
+    expect(result.summary.warningCount).toBe(0);
+    expect(result.summary.componentRequestCounts).toMatchObject({
+      missing: 0,
+      optionalLookupMissing: 1,
+    });
     expect(result.componentRequests[0]).toMatchObject({
       api: "$.getUnityComponent",
+      kind: "optional-lookup",
       componentTypes: ["UnityEngine.Rigidbody"],
       target: { resolution: "resolved", gameObjectId: "item-object" },
-      verificationStatus: "unverified",
+      verificationStatus: "missing",
       verificationReason:
-        "A component lookup does not establish that the component is required.",
+        "The component is not present on the ScriptableItem GameObject; getUnityComponent returns null. Add it only if that null result is unintended.",
+      validation: {
+        missingComponentTypes: ["UnityEngine.Rigidbody"],
+      },
+    });
+    expect(analyzer.generateComponentRequirementReport(result)).toContain(
+      "[OPTIONAL LOOKUP MISSING] $.getUnityComponent",
+    );
+
+    const strictResult = new ClusterScriptAnalyzer(sceneGraphPath, {
+      strictOptionalLookups: true,
+    }).analyzeTypeScriptFile(tsFilePath);
+
+    expect(strictResult.summary).toMatchObject({
+      totalIssues: 1,
+      errorCount: 1,
+      componentRequestCounts: { optionalLookupMissing: 1 },
+    });
+    expect(strictResult.componentRequests[0]).toMatchObject({
+      severity: "error",
+      verificationStatus: "missing",
+    });
+    expect(
+      new ClusterScriptAnalyzer(sceneGraphPath, {
+        strictOptionalLookups: true,
+      }).generateComponentRequirementReport(strictResult),
+    ).toContain("[OPTIONAL LOOKUP ERROR] $.getUnityComponent");
+  });
+
+  it("considers a disabled component present for optional component lookups", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(
+      tsFilePath,
+      '$.getUnityComponent("UnityEngine.Rigidbody");\n',
+    );
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+
+[[gameObjects.components]]
+type = "UnityEngine.Rigidbody"
+enabled = false
+`,
+    );
+
+    const result = new ClusterScriptAnalyzer(
+      sceneGraphPath,
+    ).analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.summary.componentRequestCounts.optionalLookupMissing).toBe(0);
+    expect(result.componentRequests[0]).toMatchObject({
+      verificationStatus: "satisfied",
+      validation: {
+        presentComponentTypes: ["UnityEngine.Rigidbody"],
+        missingComponentTypes: [],
+      },
     });
   });
 

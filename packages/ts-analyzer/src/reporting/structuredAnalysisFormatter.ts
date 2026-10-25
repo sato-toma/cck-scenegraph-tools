@@ -82,12 +82,21 @@ export function formatSarifAnalysisReport(
         continue;
       }
 
-      const ruleId = `component-requirement-${request.verificationStatus}`;
+      const ruleId =
+        request.kind === "optional-lookup" &&
+        request.verificationStatus === "missing"
+          ? "component-lookup-missing"
+          : `component-requirement-${request.verificationStatus}`;
+      const shortDescription =
+        request.kind === "optional-lookup" &&
+        request.verificationStatus === "missing"
+          ? "Optional Unity component lookup is not found"
+          : `Component requirement is ${request.verificationStatus}`;
       const level = getRequirementLevel(request);
       rules.set(ruleId, {
         id: ruleId,
         shortDescription: {
-          text: `Component requirement is ${request.verificationStatus}`,
+          text: shortDescription,
         },
         defaultConfiguration: { level },
       });
@@ -203,7 +212,9 @@ export function formatGitHubActionsAnnotations(
             occurrence.source.filePath,
             occurrence.source.line,
             occurrence.source.column,
-            `CCK ${request.verificationStatus}`,
+            request.kind === "optional-lookup"
+              ? "CCK optional component lookup"
+              : `CCK ${request.verificationStatus}`,
             message,
             workingDirectory,
             workspaceRoot,
@@ -252,7 +263,11 @@ export function formatVSCodeProblems(
       }
 
       const level = getRequirementLevel(request);
-      const code = `SCENEGRAPH_COMPONENT_${request.verificationStatus.toUpperCase()}`;
+      const code =
+        request.kind === "optional-lookup" &&
+        request.verificationStatus === "missing"
+          ? "SCENEGRAPH_COMPONENT_LOOKUP_MISSING"
+          : `SCENEGRAPH_COMPONENT_${request.verificationStatus.toUpperCase()}`;
       const message = toSingleLine(describeComponentRequirement(request));
       for (const occurrence of request.occurrences) {
         problems.push(
@@ -320,7 +335,11 @@ export function formatStructuredAnalysisReport(
 function getRequirementLevel(
   request: ComponentRequirementRequest,
 ): SarifLevel {
-  return request.verificationStatus === "missing" ? "error" : "warning";
+  return request.severity === "error" ||
+    (request.verificationStatus === "missing" &&
+      request.kind !== "optional-lookup")
+    ? "error"
+    : "warning";
 }
 
 function getIssueLevel(issue: ValidationIssue): SarifLevel {
@@ -346,6 +365,10 @@ function describeComponentRequirement(
   const reason = request.verificationReason
     ? `: ${request.verificationReason}`
     : "";
+
+  if (request.kind === "optional-lookup") {
+    return `${request.api} looked up ${requirement}${target} (${request.verificationStatus})${reason}`;
+  }
 
   return `${request.api} requires ${requirement}${target} (${request.verificationStatus})${reason}`;
 }

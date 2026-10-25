@@ -93,7 +93,7 @@ describe("SceneGraph exporter integration", () => {
     ).toContain("ClusterVR.CreatorKit.Item.Implements.GrabbableItem");
   });
 
-  it("distinguishes verified, missing, ambiguous, unsupported, and unverified requests", () => {
+  it("distinguishes verified, missing, ambiguous, unsupported, and optional lookup requests", () => {
     const satisfied = analyzeExporterFixture("$.onGrab(() => {});\n");
     const missing = analyzeExporterFixture(
       "if (canGrab) {\n  $.onGrab(() => {});\n}\n",
@@ -157,9 +157,10 @@ Source_Code_Asset = "sample"
     expect(unsupported.result.componentRequests[0]?.verificationStatus).toBe(
       "unsupported",
     );
-    expect(unverified.result.componentRequests[0]?.verificationStatus).toBe(
-      "unverified",
-    );
+    expect(unverified.result.componentRequests[0]).toMatchObject({
+      kind: "optional-lookup",
+      verificationStatus: "missing",
+    });
     expect(unresolved.result.componentRequests[0]).toMatchObject({
       verificationStatus: "unverified",
       target: { resolution: "unresolved" },

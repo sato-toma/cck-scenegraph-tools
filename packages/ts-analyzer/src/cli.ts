@@ -43,10 +43,12 @@ Commands:
   analyze <sceneGraphPath> [tsFilePath]
     Analyze TypeScript file(s) against SceneGraph constraints
     --format <text|json|sarif|github-actions|vscode-problems> selects the output format
+    --strict-optional-lookups treats missing getUnityComponent results as errors
     --watch re-analyzes when the SceneGraph or TypeScript file changes
 
   report <sceneGraphPath> [tsFilePath]
     Generate comprehensive analysis report
+    --strict-optional-lookups treats missing getUnityComponent results as errors
 
   coverage <sceneGraphPath> [tsFilePath]
     Show API coverage report
@@ -76,6 +78,7 @@ function analyzeCommand(args: string[]) {
     positional: string[];
     format: AnalysisReportFormat;
     watch: boolean;
+    strictOptionalLookups: boolean;
   };
   try {
     parsedArgs = parseAnalyzeArguments(args);
@@ -100,7 +103,9 @@ function analyzeCommand(args: string[]) {
   }
 
   try {
-    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath, {
+      strictOptionalLookups: parsedArgs.strictOptionalLookups,
+    });
     const targetFiles = tsFilePath
       ? [tsFilePath]
       : analyzer.getScriptableItemSourceFiles();
@@ -122,7 +127,12 @@ function analyzeCommand(args: string[]) {
       }
 
       const analyze = () =>
-        runAnalysis(sceneGraphPath, targetFiles, parsedArgs.format);
+        runAnalysis(
+          sceneGraphPath,
+          targetFiles,
+          parsedArgs.format,
+          parsedArgs.strictOptionalLookups,
+        );
       runAnalysisCycle(analyze, parsedArgs.format);
       watchAnalysisFiles(
         [sceneGraphPath, tsFilePath],
@@ -132,7 +142,12 @@ function analyzeCommand(args: string[]) {
       return;
     }
 
-    runAnalysis(sceneGraphPath, targetFiles, parsedArgs.format);
+    runAnalysis(
+      sceneGraphPath,
+      targetFiles,
+      parsedArgs.format,
+      parsedArgs.strictOptionalLookups,
+    );
   } catch (error) {
     console.error("Error during analysis:", error);
     process.exit(1);
@@ -143,8 +158,11 @@ function runAnalysis(
   sceneGraphPath: string,
   targetFiles: string[],
   format: AnalysisReportFormat,
+  strictOptionalLookups: boolean,
 ): void {
-  const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+  const analyzer = new ClusterScriptAnalyzer(sceneGraphPath, {
+    strictOptionalLookups,
+  });
   if (targetFiles.length === 0) {
     if (format === "text") {
       console.log(
@@ -223,6 +241,7 @@ function printTextAnalysisResult(
     }
   } else if (
     result.summary.componentRequestCounts.missing === 0 &&
+    result.summary.componentRequestCounts.optionalLookupMissing === 0 &&
     result.summary.componentRequestCounts.ambiguous === 0 &&
     result.summary.componentRequestCounts.unsupported === 0 &&
     result.summary.componentRequestCounts.unverified === 0
@@ -245,15 +264,19 @@ function parseAnalyzeArguments(args: string[]): {
   positional: string[];
   format: AnalysisReportFormat;
   watch: boolean;
+  strictOptionalLookups: boolean;
 } {
   const positional: string[] = [];
   let format = "text";
   let watch = false;
+  let strictOptionalLookups = false;
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index]!;
     if (argument === "--watch") {
       watch = true;
+    } else if (argument === "--strict-optional-lookups") {
+      strictOptionalLookups = true;
     } else if (argument === "--format") {
       const value = args[index + 1];
       if (!value || value.startsWith("--")) {
@@ -271,7 +294,7 @@ function parseAnalyzeArguments(args: string[]): {
   if (!isAnalysisReportFormat(format)) {
     throw new Error(`Unsupported analysis format: ${format}`);
   }
-  return { positional, format, watch };
+  return { positional, format, watch, strictOptionalLookups };
 }
 
 function isAnalysisReportFormat(value: string): value is AnalysisReportFormat {
@@ -354,14 +377,18 @@ function watchAnalysisFiles(
 }
 
 function reportCommand(args: string[]) {
-  if (args.length < 1) {
+  const strictOptionalLookups = args.includes("--strict-optional-lookups");
+  const positional = args.filter(
+    (argument) => argument !== "--strict-optional-lookups",
+  );
+  if (positional.length < 1) {
     console.error("Error: Missing argument");
     printUsage();
     process.exit(1);
   }
 
-  const sceneGraphPath = args[0];
-  const tsFilePath = args[1];
+  const sceneGraphPath = positional[0];
+  const tsFilePath = positional[1];
   const sceneGraphPathNonNull = sceneGraphPath!;
 
   if (!fs.existsSync(sceneGraphPathNonNull)) {
@@ -370,7 +397,9 @@ function reportCommand(args: string[]) {
   }
 
   try {
-    const analyzer = new ClusterScriptAnalyzer(sceneGraphPathNonNull);
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPathNonNull, {
+      strictOptionalLookups,
+    });
     const targetFiles = tsFilePath
       ? [tsFilePath]
       : analyzer.getScriptableItemSourceFiles();

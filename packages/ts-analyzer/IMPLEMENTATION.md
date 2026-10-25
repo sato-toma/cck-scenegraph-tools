@@ -365,9 +365,9 @@ interface ComponentConstraint {
 
 `ComponentRequirementRequest` は要求内容を表すデータで、判定器そのものではありません。解析時には `analysis/componentRequirements/validator.ts` の `ComponentRequirementValidator` が `Source_Code_Asset` から対象 GameObject を解決し、`validation/constraintValidator.ts` の `ConstraintValidator` を使って SceneGraph の Component と照合します。結果は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unverified` のいずれかで、`verificationReason` が付く場合は判定できない理由を示します。`matchedComponents` には照合に使った SceneGraph 上の GameObject ID / path と Component 型が含まれます。
 
-`$.getUnityComponent("UnityEngine.Rigidbody")` のようなリテラル参照は対象型を抽出しますが、それだけではスクリプトがその Component を必須としているとは限らないため `unverified` とします。required 制約が定義された API 呼び出しだけを SceneGraph 上の必須 Component として判定します。
+`$.getUnityComponent("UnityEngine.Rigidbody")` のリテラル参照は、対象ScriptableItem GameObjectに指定型があれば `satisfied`、なければ optional lookup の `missing` として警告します。`--strict-optional-lookups` を指定した場合は同じ欠落をエラーとして扱い、`summary.errorCount` / `totalIssues` に含めます。`export-and-analyze` で終了コードにも反映するには `--fail-on-issues` を併用します。required missingとは区別されます。動的な型引数は `unsupported` とします。未配置のリテラル型は Component 変更計画に任意候補として載りますが、nullが意図された動作の可能性があるため、明示承認なしにUnityMCPで追加されることはありません。
 
-照合結果は `componentRequests` と `summary.componentRequestCounts` から取得できます。レポートは状態別件数を表示し、未確定要求を「問題なし」と表示しません。Export and Analyze の `--fail-on-issues` は analyzer issue と確定した `missing` 要求で失敗し、`--fail-on-unverified` は `ambiguous` / `unsupported` / `unverified` がある場合に失敗します。CI で全要求を確認済みにするには両方を指定します。Unity CLI MCP からのシーン取得はこのローカル SceneGraph 照合とは別の後続フェーズです。
+照合結果は `componentRequests` と `summary.componentRequestCounts` から取得できます。レポートは状態別件数を表示し、未確定要求を「問題なし」と表示しません。`missing` は required 要求、`optionalLookupMissing` は任意検索APIの未配置警告を数えます。Export and Analyze の `--fail-on-issues` は analyzer issue と required の `missing` 要求で失敗し、`--fail-on-unverified` は `ambiguous` / `unsupported` / `unverified` がある場合に失敗します。CI で全必須要求を確認済みにするには両方を指定します。Unity CLI MCP からのシーン取得はこのローカル SceneGraph 照合とは別の後続フェーズです。
 
 ## パフォーマンス考慮事項
 

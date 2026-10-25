@@ -9,6 +9,7 @@ import {
 
 interface ExtractedOccurrence {
   api: string;
+  kind?: ComponentRequirementRequest["kind"];
   componentTypes: string[];
   componentMatch: ComponentRequirementRequest["componentMatch"];
   verificationStatus: ComponentRequirementRequest["verificationStatus"];
@@ -48,6 +49,7 @@ export class ComponentRequirementExtractor {
 
         extracted.push({
           api: `$.${call.methodName}`,
+          kind: undefined,
           componentTypes,
           componentMatch: componentTypes.length > 1 ? "any" : "all",
           verificationStatus: "unverified",
@@ -80,6 +82,7 @@ export class ComponentRequirementExtractor {
 
       extracted.push({
         api: "$.getUnityComponent",
+        kind: "optional-lookup",
         componentTypes,
         componentMatch: literalMatch ? "all" : "unknown",
         verificationStatus: literalMatch ? "unverified" : "unsupported",
@@ -105,6 +108,7 @@ export class ComponentRequirementExtractor {
     for (const item of extracted) {
       const key = JSON.stringify([
         item.api,
+        item.kind,
         item.componentTypes,
         item.componentMatch,
         item.verificationStatus,
@@ -123,6 +127,7 @@ export class ComponentRequirementExtractor {
             resolution: "unresolved",
           },
           verificationStatus: item.verificationStatus,
+          ...(item.kind ? { kind: item.kind } : {}),
           validation: {
             presentComponentTypes: [],
             missingComponentTypes: [],

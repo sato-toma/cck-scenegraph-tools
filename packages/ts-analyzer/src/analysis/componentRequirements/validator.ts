@@ -26,9 +26,7 @@ export class ComponentRequirementValidator {
         const verificationStatus =
           request.verificationStatus === "unsupported"
             ? "unsupported"
-            : request.api === "$.getUnityComponent"
-              ? "unverified"
-              : "ambiguous";
+            : "ambiguous";
         const verificationReason =
           verificationStatus === "ambiguous"
             ? "Multiple ScriptableItem GameObjects reference this source file; the target cannot be determined."
@@ -81,13 +79,43 @@ export class ComponentRequirementValidator {
         );
       }
 
-      if (request.api === "$.getUnityComponent") {
-        return this.withStatus(
-          request,
-          "unverified",
-          resolvedTarget,
-          "A component lookup does not establish that the component is required.",
+      if (request.kind === "optional-lookup") {
+        const matchedComponents = target.components
+          .filter((component) =>
+            request.componentTypes.includes(component.type),
+          )
+          .map((component) => ({
+            gameObjectId: target.id,
+            gameObjectPath: target.path,
+            componentId: component.id,
+            componentType: component.type,
+          }));
+        const presentComponentTypes = request.componentTypes.filter((type) =>
+          matchedComponents.some((component) => component.componentType === type),
         );
+        const missingComponentTypes = request.componentTypes.filter(
+          (type) => !presentComponentTypes.includes(type),
+        );
+        const result: ComponentRequirementRequest = {
+          ...request,
+          target: resolvedTarget,
+          verificationStatus:
+            missingComponentTypes.length === 0 ? "satisfied" : "missing",
+          validation: {
+            presentComponentTypes,
+            missingComponentTypes,
+            matchedComponents,
+          },
+        };
+
+        if (missingComponentTypes.length > 0) {
+          result.verificationReason =
+            "The component is not present on the ScriptableItem GameObject; getUnityComponent returns null. Add it only if that null result is unintended.";
+        } else {
+          delete result.verificationReason;
+        }
+
+        return result;
       }
 
       if (

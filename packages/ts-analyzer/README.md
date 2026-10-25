@@ -48,7 +48,8 @@ Component 要求は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unv
 
 解析レポートは `analyze <SceneGraph.toml> [script.ts] --format json|sarif|github-actions` で出力形式を選べます。既定のテキスト形式と終了コードは変更しません。形式と schema の詳細は[Analyzer レポート形式](../../docs/analysis-report-formats.md)を参照してください。
 
-- `--fail-on-issues`: Analyzer の問題、または確定した Component 不足があれば終了コード 1
+- `--fail-on-issues`: Analyzer の問題、または確定した required Component 不足があれば終了コード 1。
+- `--strict-optional-lookups`: 未配置の `getUnityComponent` をエラー扱いにします。終了コードに反映するには `--fail-on-issues` も指定します。
 - `--fail-on-unverified`: 曖昧・未対応・未検証の要求があれば終了コード 1
 
 CI ですべての要求を確認するには、Export and Analyze に両方のオプションを指定します。MCP の応答は解析入力ではなく、Component の自動修正も行いません。

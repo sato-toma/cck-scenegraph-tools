@@ -58,7 +58,9 @@ Unity CLI MCP の読み取り応答
 - `ComponentRequirementExtractor` は、既知 API の required 制約と文字列リテラルの `$.getUnityComponent(...)` を構造化する。動的な引数は `unsupported` とする。
 - 同一 API・同一型条件の要求は集約し、全ての出現位置・条件・根拠を残す。条件抽出は単純な `if` ブロックに限定し、解釈できない条件は `unknown` とする。
 - `ComponentRequirementValidator` は `Source_Code_Asset` とソースファイルを対応付け、対象 GameObject が一意なら `ConstraintValidator` でそのオブジェクトの階層内にある有効な Component と照合する。結果には照合した Component の所有 GameObject ID / path も含める。対象不明・複数候補・未対応引数は、それぞれ `unverified`・`ambiguous`・`unsupported` として返す。曖昧な候補は ID / path を含め、任意の候補を選んだ欠落判定は行わない。
-- 照合結果は `AnalysisResult.componentRequests` と `summary.componentRequestCounts`、および `analyze` / `report` の出力で確認できる。条件付き要求は、実行された場合に必要な Component として照合し、各出現位置の条件式をレポートする。対象が一意に解決できない場合は `MISSING_COMPONENT` を出さず、要求状態を `ambiguous` / `unverified` として報告する。`export-and-analyze --fail-on-issues` は analyzer issue と確定した `missing` で失敗し、`--fail-on-unverified` は `ambiguous` / `unsupported` / `unverified` で失敗する。すべての要求を確認済みにする CI では両方を指定する。
+- 照合結果は `AnalysisResult.componentRequests` と `summary.componentRequestCounts`、および `analyze` / `report` の出力で確認できる。条件付き要求は、実行された場合に必要な Component として照合し、各出現位置の条件式をレポートする。対象が一意に解決できない場合は `MISSING_COMPONENT` を出さず、要求状態を `ambiguous` / `unverified` として報告する。`$.getUnityComponent("...")` は対象ScriptableItem GameObjectに同じComponent型がなければ `missing` とし、既定では `optionalLookupMissing` の警告として報告する。`--strict-optional-lookups` 指定時はエラーに格上げし、`--fail-on-issues` と組み合わせると終了コードに反映される。
+- `ComponentChangePlan` は required missing に加えて、確認済みの optional lookup missing を「任意の追加候補」として含める。候補は対象ScriptableItem GameObjectへの追加として表示するが、nullが意図された動作の場合は不要なので、従来どおり値・対象を確認した明示承認なしに Unity CLI MCP で適用しない。
+- `--fail-on-issues` は analyzer issue と確定した required missing で失敗し、既定では optional lookup missing を含めない。`--strict-optional-lookups` を指定すると optional lookup missing もエラーになり、この失敗条件に含まれる。`--fail-on-unverified` は `ambiguous` / `unsupported` / `unverified` で失敗する。すべての要求を確認済みにする CI では必要に応じてこれらを組み合わせる。
 - `ComponentChangePlan` は確定した `missing` 要求から追加のみの計画を作る。SceneGraph TOML にシーンパスは含まれないため、対象Unityシーンのパスを明示する。計画生成にMCP読み取りは不要。設定値や代替Componentの選択、対象解決が未確定の項目を含む計画は、明示的なユーザー判断なしに承認できない。承認は計画内容に結び付けられ、承認後に変更された計画は適用用データへ変換できない。
 - `applyApprovedComponentChangePlan` は承認ダイジェストを検証してからのみ MCP ブリッジを呼ぶ。`applyApprovedComponentChangePlanViaUnityCliMcp` は `.mcp.json` の Unity stdio サーバーに接続し、この適用関数を呼び出す。各追加の直前・直後に GlobalObjectId と階層パスを再確認し、Component が既に存在する場合は追加を省略する。設定は承認計画の値だけを送り、対象不一致や MCP エラーでは後続の変更を停止して監査記録を含むエラーを返す。ユーザー承認 UI は呼び出し側の責務である。
 - `applyAndVerifyComponentChangePlanViaUnityCliMcp` は、承認済み計画を適用した後に Unity batchmode exporterを実行し、生成したSceneGraphと対象スクリプトを再解析する。変更結果には GlobalObjectId / path、Component型、承認値とExporter出力値を含める。状態は実行時定数 `COMPONENT_CHANGE_*_STATUSES` とその型で表し、確認できない値は成功にせず `unverified` とする。この結果は構造と静的制約の検証であり、実行時動作を保証しない。
@@ -69,7 +71,7 @@ Unity CLI MCP の読み取り応答
 - `ComponentRequirementRequest` は「どの API 呼び出しが、どの Component 型を、どのソース位置で要求したか」を表すデータであり、それ自体は SceneGraph との判定結果ではない。
 - `ComponentRequirementValidator` は要求を `Source_Code_Asset` に紐づく対象 GameObject に対応付け、照合結果を要求に付与する。
 - `ConstraintValidator` は一つの GameObject と Component 制約を比較する低レベルの判定器。対象解決や解析レポート全体の生成は担当しない。
-- `$.getUnityComponent("...")` は Component の参照であり、必須条件とは限らないため、型を抽出しても既定では `unverified` とする。
+- `$.getUnityComponent("...")` は任意のComponent参照である。対象ScriptableItem GameObjectに指定型があれば `satisfied`、なければ `missing` として警告するが、required missingには数えない。動的な型引数や対象不明は従来どおり未検証扱いとする。
 - この経路は現在の SceneGraph TOML を使う。MCP 応答の正規化は実装済みだが、Reconciler・analyzerへの接続・不足判定は未実装であり、既存の解析経路には影響しない。
 
 ### Constraint validator

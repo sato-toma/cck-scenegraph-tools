@@ -42,14 +42,14 @@ npm run scenegraph:analyze -- `
 
 `--project-path`、`--scene-path`、`--script-path`、`--output-path`、`--unity-path`、`--log-path` を指定できます。`--output-path` の既定値はプロジェクト直下の `SceneGraph.generated.toml` です。Unity Editor が終了時に消去する `Temp` 配下を出力先にしないでください。
 
-- `--fail-on-issues`: analyzer issue または確定した Component 不足で終了コード `1` を返します。
+- `--fail-on-issues`: analyzer issue または確定した required Component 不足で終了コード `1` を返します。`getUnityComponent` の未配置は既定では対象外ですが、`--strict-optional-lookups` も指定するとエラーとして対象になります。
 - `--fail-on-unverified`: `ambiguous` / `unsupported` / `unverified` の要求でも終了コード `1` を返します。
 
 確認済みを必須にする場合は両方指定します。Unity Editor のパスは `UNITY_PATH` 環境変数でも指定できます。
 
 ## Component 変更計画を適用・再検証する
 
-1. `ts-analyzer plan <SceneGraph.toml> <Unity-scene-path> [script.ts]` で追加候補を作ります。
+1. `ts-analyzer plan <SceneGraph.toml> <Unity-scene-path> [script.ts]` で追加候補を作ります。`getUnityComponent` の未配置Componentも任意候補として表示されます。
 2. 対象 GameObject、Component 型、設定値を確認します。計画を変更する場合は、確認後に明示承認します。
 3. 承認済み計画だけを MCP 経由で適用します。未承認、対象不一致、対象が曖昧な場合は適用しません。
 4. 必要なら適用後に Exporter で再出力し、構造と静的解析の結果を確認します。
