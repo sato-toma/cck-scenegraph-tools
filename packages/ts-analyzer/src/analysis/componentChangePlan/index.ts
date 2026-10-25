@@ -24,6 +24,7 @@ export type ComponentChangeReviewReason =
 
 export interface ComponentChangeAction {
   id: string;
+  kind?: "optional-lookup";
   target: {
     gameObjectId: string;
     gameObjectPath: string;
@@ -77,6 +78,7 @@ export interface ApprovedComponentChangePlan {
   sceneGraphPath: string;
   changes: Array<{
     target: ComponentChangeAction["target"];
+    kind?: ComponentChangeAction["kind"];
     componentType: string;
     settings: ComponentProperty;
     requirementIds: string[];
@@ -238,6 +240,9 @@ export function createComponentChangePlan(
         const key = `${target.gameObjectId}\0${componentType}`;
         const action = actionsByKey.get(key);
         if (action) {
+          if (request.kind !== "optional-lookup") {
+            delete action.kind;
+          }
           if (!action.requirementIds.includes(planRequestId)) {
             action.requirementIds.push(planRequestId);
           }
@@ -248,7 +253,7 @@ export function createComponentChangePlan(
           continue;
         }
 
-        actionsByKey.set(key, {
+        const newAction: ComponentChangeAction = {
           id: createActionId(target.gameObjectId, componentType),
           target: {
             gameObjectId: target.gameObjectId,
@@ -267,7 +272,11 @@ export function createComponentChangePlan(
             resolution: "needs-user-input",
             values: {},
           },
-        });
+        };
+        if (request.kind === "optional-lookup") {
+          newAction.kind = request.kind;
+        }
+        actionsByKey.set(key, newAction);
       }
     }
   }

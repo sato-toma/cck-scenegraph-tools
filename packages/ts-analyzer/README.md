@@ -46,12 +46,9 @@ Unity Exporter の実行から解析までをまとめて行う場合は、リ�
 
 Component 要求は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unverified` の状態で報告されます。照合対象を特定できない場合に任意の GameObject を選んで不足と判定することはありません。
 
-解析レポートは `analyze <SceneGraph.toml> [script.ts] --format json|sarif|github-actions` で出力形式を選べます。既定のテキスト形式と終了コードは変更しません。形式と schema の詳細は[Analyzer レポート形式](../../docs/analysis-report-formats.md)を参照してください。
+解析レポートは `--format` で形式を選べます。診断と CI オプションは[Analyzer レポート形式](../../docs/analysis-report-formats.md)を参照してください。
 
-- `--fail-on-issues`: Analyzer の問題、または確定した Component 不足があれば終了コード 1
-- `--fail-on-unverified`: 曖昧・未対応・未検証の要求があれば終了コード 1
-
-CI ですべての要求を確認するには、Export and Analyze に両方のオプションを指定します。MCP の応答は解析入力ではなく、Component の自動修正も行いません。
+Export and Analyze は MCP 応答を解析入力にせず、Component を自動修正しません。
 
 ## 開発
 

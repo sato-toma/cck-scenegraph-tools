@@ -85,6 +85,7 @@ function makePlan(
         ambiguous: 0,
         unsupported: 0,
         unverified: 0,
+        optionalLookupMissing: 0,
       },
     },
   };
@@ -231,6 +232,7 @@ describe("Unity CLI MCP application integration", () => {
             ambiguous: 0,
             unsupported: 0,
             unverified: 0,
+            optionalLookupMissing: 0,
           },
         },
       ],

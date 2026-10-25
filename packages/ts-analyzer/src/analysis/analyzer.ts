@@ -22,6 +22,10 @@ import {
 } from "./componentChangePlan";
 import { formatComponentChangePlan } from "../reporting/componentChangePlanFormatter";
 
+export interface ClusterScriptAnalyzerOptions {
+  strictOptionalLookups?: boolean;
+}
+
 /**
  * 統合的なTypeScript静的解析エンジン
  * SceneGraph.tomlとTypeScriptコードを組み合わせて、
@@ -31,11 +35,16 @@ export class ClusterScriptAnalyzer {
   private sceneGraph: SceneGraph;
   private sceneGraphPath: string;
   private reportFormatter: AnalysisReportFormatter;
+  private options: ClusterScriptAnalyzerOptions;
 
-  constructor(sceneGraphPath: string) {
+  constructor(
+    sceneGraphPath: string,
+    options: ClusterScriptAnalyzerOptions = {},
+  ) {
     this.sceneGraphPath = sceneGraphPath;
     this.sceneGraph = SceneGraphParser.parseFile(sceneGraphPath);
     this.reportFormatter = new AnalysisReportFormatter(this.sceneGraph);
+    this.options = options;
   }
 
   private getCandidateGameObjects(tsFilePath: string = ""): GameObject[] {
@@ -121,17 +130,28 @@ export class ClusterScriptAnalyzer {
       this.sceneGraphPath,
       this.sceneGraph,
       resolvedTsFilePath,
+    ).map((request) =>
+      request.kind === "optional-lookup" &&
+      request.verificationStatus === "missing" &&
+      this.options.strictOptionalLookups
+        ? { ...request, severity: "error" as const }
+        : request,
     );
     const componentRequestCounts =
       summarizeComponentRequirements(componentRequests);
+    const strictOptionalLookupErrorCount = componentRequests.filter(
+      (request) => request.severity === "error",
+    ).length;
 
     return {
       filePath: resolvedTsFilePath,
       issues,
       componentRequests,
       summary: {
-        totalIssues: issues.length,
-        errorCount: issues.filter((i) => i.severity === "error").length,
+        totalIssues: issues.length + strictOptionalLookupErrorCount,
+        errorCount:
+          issues.filter((i) => i.severity === "error").length +
+          strictOptionalLookupErrorCount,
         warningCount: issues.filter((i) => i.severity === "warning").length,
         componentRequestCounts,
       },

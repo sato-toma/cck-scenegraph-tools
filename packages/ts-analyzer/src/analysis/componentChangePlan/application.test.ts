@@ -68,6 +68,7 @@ function analysisResult(
         ambiguous: 0,
         unsupported: 0,
         unverified: 0,
+        optionalLookupMissing: 0,
       },
     },
   };

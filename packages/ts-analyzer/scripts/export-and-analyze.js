@@ -33,6 +33,7 @@ Options:
   --output-path <path>      SceneGraph TOML path, relative to the Unity project or absolute
   --log-path <path>         Unity log path, relative to the Unity project or absolute
   --format <format>         Report format: text, json, sarif, or github-actions
+  --strict-optional-lookups Treat missing getUnityComponent results as errors
   --fail-on-issues          Exit with code 1 when analyzer issues are found
   --fail-on-unverified      Exit with code 1 for ambiguous, unsupported, or unverified requirements
   --help                    Show this help
@@ -58,6 +59,10 @@ function parseArguments(args) {
     }
     if (argument === "--fail-on-unverified") {
       options.failOnUnverified = true;
+      continue;
+    }
+    if (argument === "--strict-optional-lookups") {
+      options.strictOptionalLookups = true;
       continue;
     }
     if (argument === "--format") {
@@ -255,7 +260,9 @@ function runAnalyzer(outputPath, scriptPath, options) {
     hasUnverifiedComponentRequirements,
     formatStructuredAnalysisReport,
   } = loadAnalyzerModule();
-  const analyzer = new ClusterScriptAnalyzer(outputPath);
+  const analyzer = new ClusterScriptAnalyzer(outputPath, {
+    strictOptionalLookups: options.strictOptionalLookups,
+  });
   const result = analyzer.analyzeTypeScriptFile(resolvedScriptPath);
   if (options.format === "text") {
     console.log(analyzer.generateReport(new Map([[resolvedScriptPath, result]])));

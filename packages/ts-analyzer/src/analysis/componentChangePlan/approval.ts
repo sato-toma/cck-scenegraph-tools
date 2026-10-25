@@ -155,6 +155,7 @@ export function getApprovedComponentChanges(
     sceneGraphPath: plan.sceneGraphPath,
     changes: plan.actions.map((action) => ({
       target: { ...action.target },
+      ...(action.kind ? { kind: action.kind } : {}),
       componentType: action.componentType,
       settings: { ...action.settings.values },
       requirementIds: [...action.requirementIds],

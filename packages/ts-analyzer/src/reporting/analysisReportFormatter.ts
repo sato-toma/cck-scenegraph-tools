@@ -84,6 +84,8 @@ export class AnalysisReportFormatter {
           totalComponentRequestCounts[status] +=
             result.summary.componentRequestCounts[status];
         }
+        totalComponentRequestCounts.optionalLookupMissing +=
+          result.summary.componentRequestCounts.optionalLookupMissing;
       }
     }
 
@@ -97,6 +99,7 @@ export class AnalysisReportFormatter {
 
     const needsRequirementReview =
       totalComponentRequestCounts.missing > 0 ||
+      totalComponentRequestCounts.optionalLookupMissing > 0 ||
       totalComponentRequestCounts.ambiguous > 0 ||
       totalComponentRequestCounts.unsupported > 0 ||
       totalComponentRequestCounts.unverified > 0;
@@ -139,8 +142,15 @@ export class AnalysisReportFormatter {
         })
         .join(", ");
 
+      const statusLabel =
+        request.kind === "optional-lookup" &&
+        request.verificationStatus === "missing"
+          ? request.severity === "error"
+            ? "OPTIONAL LOOKUP ERROR"
+            : "OPTIONAL LOOKUP MISSING"
+          : request.verificationStatus.toUpperCase();
       lines.push(
-        `     [${request.verificationStatus.toUpperCase()}] ${request.api} at ${locations}: ${componentTypes}`,
+        `     [${statusLabel}] ${request.api} at ${locations}: ${componentTypes}`,
       );
       if (request.target.resolution === "resolved") {
         lines.push(

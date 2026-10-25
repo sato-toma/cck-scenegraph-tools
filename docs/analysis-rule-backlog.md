@@ -89,7 +89,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | [ ] | `onExternalCallEnd` | 外部呼び出し完了条件 | 要確認 |
 | [ ] | `setVisiblePlayers` | 表示対象設定の有効範囲 | 要確認 |
 | [ ] | `clearVisiblePlayers` | 表示対象解除の有効範囲 | 要確認 |
-| [ ] | `getUnityComponent` | 指定可能な Unity component type と戻り値 | 要確認 |
+| [x] | `getUnityComponent` | 公式 API の戻り値と文字列リテラルの対象照合を確認 | 任意検索 |
 
 ## 着手しない候補
 

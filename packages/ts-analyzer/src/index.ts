@@ -4,6 +4,7 @@ export { TypeScriptCodeParser } from "./analysis/typeScriptParser";
 export { ConstraintValidator } from "./validation/constraintValidator";
 export { ClusterScriptDefinitions } from "./rules/clusterScriptDefinitions";
 export { ClusterScriptAnalyzer } from "./analysis/analyzer";
+export type { ClusterScriptAnalyzerOptions } from "./analysis/analyzer";
 export { ComponentRequirementExtractor } from "./analysis/componentRequirements/extractor";
 export { ComponentRequirementValidator } from "./analysis/componentRequirements/validator";
 export {

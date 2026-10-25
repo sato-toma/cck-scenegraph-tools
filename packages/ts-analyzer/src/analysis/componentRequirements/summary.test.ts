@@ -15,6 +15,7 @@ describe("component requirement summary", () => {
       { verificationStatus: "unsupported" },
       { verificationStatus: "unverified" },
       { verificationStatus: "satisfied" },
+      { verificationStatus: "missing", kind: "optional-lookup" },
     ]);
 
     expect(counts).toEqual({
@@ -23,17 +24,27 @@ describe("component requirement summary", () => {
       ambiguous: 1,
       unsupported: 1,
       unverified: 1,
+      optionalLookupMissing: 1,
     });
     expect(formatComponentRequirementStatusCounts(counts)).toContain(
-      "Component requirements: 6",
+      "Component requirements: 7",
     );
     expect(formatComponentRequirementStatusCounts(counts)).toContain(
       "  ambiguous: 1",
+    );
+    expect(formatComponentRequirementStatusCounts(counts)).toContain(
+      "  optional lookup missing: 1",
     );
   });
 
   it("separates confirmed missing requirements from unverified results", () => {
     const missing = [{ verificationStatus: "missing" as const }];
+    const optionalLookupMissing = [
+      {
+        verificationStatus: "missing" as const,
+        kind: "optional-lookup" as const,
+      },
+    ];
     const unresolved = [
       { verificationStatus: "ambiguous" as const },
       { verificationStatus: "unsupported" as const },
@@ -41,6 +52,7 @@ describe("component requirement summary", () => {
     ];
 
     expect(hasMissingComponentRequirements(missing)).toBe(true);
+    expect(hasMissingComponentRequirements(optionalLookupMissing)).toBe(false);
     expect(hasUnverifiedComponentRequirements(missing)).toBe(false);
     expect(hasMissingComponentRequirements(unresolved)).toBe(false);
     expect(hasUnverifiedComponentRequirements(unresolved)).toBe(true);

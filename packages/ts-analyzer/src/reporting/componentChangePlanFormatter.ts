@@ -39,7 +39,16 @@ export function formatComponentChangePlan(
     lines.push(
       `     Target: ${action.target.gameObjectPath} (${action.target.gameObjectId})`,
     );
-    lines.push(`     Required by: ${action.apis.join(", ")}`);
+    lines.push(
+      action.kind === "optional-lookup"
+        ? `     Optional lookup suggestion from: ${action.apis.join(", ")}`
+        : `     Required by: ${action.apis.join(", ")}`,
+    );
+    if (action.kind === "optional-lookup") {
+      lines.push(
+        "     This addition is optional; approve it only if a null lookup result is unintended.",
+      );
+    }
     lines.push(
       `     Settings: ${action.settings.resolution === "resolved" ? JSON.stringify(action.settings.values) : "not resolved; confirm values or explicitly confirm no additional settings"}`,
     );

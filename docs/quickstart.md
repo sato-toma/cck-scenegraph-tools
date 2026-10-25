@@ -53,7 +53,7 @@ Set-Location ..\..
   --fail-on-unverified
 ```
 
-`--fail-on-issues` は確定した問題や Component 不足で、`--fail-on-unverified` は曖昧・未対応・未検証の要求でも終了コード `1` を返します。CI で全てを確認する場合は両方を指定してください。Unity Editor のパスは `UNITY_PATH` 環境変数でも指定できます。
+終了条件や strict モードは[Analyzer レポート形式](analysis-report-formats.md)を参照してください。Unity Editor のパスは `UNITY_PATH` で指定できます。
 
 ## VS Code で解析する
 

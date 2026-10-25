@@ -108,6 +108,7 @@ function createAnalysisResult(
         ambiguous: 0,
         unsupported: 0,
         unverified: 1,
+        optionalLookupMissing: 0,
       },
     },
     ...overrides,
@@ -181,7 +182,109 @@ describe("structured analysis formatters", () => {
         },
       },
     });
+
     expect(run.results[1]?.level).toBe("warning");
+  });
+
+  it("reports a missing optional lookup as a warning, not an error", () => {
+    const result = createAnalysisResult({
+      issues: [],
+      componentRequests: [
+        createRequest({
+          id: "request-optional-lookup",
+          api: "$.getUnityComponent",
+          kind: "optional-lookup",
+          componentTypes: ["UnityEngine.Rigidbody"],
+          verificationStatus: "missing",
+          verificationReason:
+            "The component is not present on the ScriptableItem GameObject; getUnityComponent returns null.",
+          validation: {
+            presentComponentTypes: [],
+            missingComponentTypes: ["UnityEngine.Rigidbody"],
+            matchedComponents: [],
+          },
+        }),
+      ],
+      summary: {
+        totalIssues: 0,
+        errorCount: 0,
+        warningCount: 0,
+        componentRequestCounts: {
+          satisfied: 0,
+          missing: 0,
+          ambiguous: 0,
+          unsupported: 0,
+          unverified: 0,
+          optionalLookupMissing: 1,
+        },
+      },
+    });
+
+    const sarif = JSON.parse(
+      formatSarifAnalysisReport([result], workspaceRoot, workspaceRoot),
+    ) as {
+      runs: Array<{ results: Array<{ ruleId: string; level: string; message: { text: string } }> }>;
+    };
+    expect(sarif.runs[0]?.results[0]).toMatchObject({
+      ruleId: "component-lookup-missing",
+      level: "warning",
+      message: {
+        text: expect.stringContaining("returns null"),
+      },
+    });
+    expect(formatGitHubActionsAnnotations([result])).toContain(
+      "title=CCK optional component lookup::",
+    );
+    expect(formatVSCodeProblems([result])).toContain(
+      "warning SCENEGRAPH_COMPONENT_LOOKUP_MISSING",
+    );
+  });
+
+  it("reports a missing optional lookup as an error in strict mode", () => {
+    const result = createAnalysisResult({
+      issues: [],
+      componentRequests: [
+        createRequest({
+          id: "request-optional-lookup",
+          api: "$.getUnityComponent",
+          kind: "optional-lookup",
+          severity: "error",
+          componentTypes: ["UnityEngine.Rigidbody"],
+          verificationStatus: "missing",
+          validation: {
+            presentComponentTypes: [],
+            missingComponentTypes: ["UnityEngine.Rigidbody"],
+            matchedComponents: [],
+          },
+        }),
+      ],
+      summary: {
+        totalIssues: 1,
+        errorCount: 1,
+        warningCount: 0,
+        componentRequestCounts: {
+          satisfied: 0,
+          missing: 0,
+          ambiguous: 0,
+          unsupported: 0,
+          unverified: 0,
+          optionalLookupMissing: 1,
+        },
+      },
+    });
+
+    const sarif = JSON.parse(
+      formatSarifAnalysisReport([result], workspaceRoot, workspaceRoot),
+    ) as {
+      runs: Array<{ results: Array<{ level: string }> }>;
+    };
+    expect(sarif.runs[0]?.results[0]?.level).toBe("error");
+    expect(formatGitHubActionsAnnotations([result])).toContain(
+      "::error ",
+    );
+    expect(formatVSCodeProblems([result])).toContain(
+      "error SCENEGRAPH_COMPONENT_LOOKUP_MISSING",
+    );
   });
 
   it("emits GitHub Actions annotations and escapes annotation contents", () => {

@@ -96,14 +96,16 @@ export type ComponentRequirementVerificationStatus =
   | "unsupported"
   | "unverified";
 
-export type ComponentRequirementStatusCounts = Record<
-  ComponentRequirementVerificationStatus,
-  number
->;
+export interface ComponentRequirementStatusCounts
+  extends Record<ComponentRequirementVerificationStatus, number> {
+  optionalLookupMissing: number;
+}
 
 export interface ComponentRequirementRequest {
   id: string;
   api: string;
+  kind?: "optional-lookup";
+  severity?: "error" | "warning";
   componentTypes: string[];
   componentMatch: "all" | "any" | "unknown";
   target: ComponentRequirementTarget;

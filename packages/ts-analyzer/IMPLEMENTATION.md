@@ -365,10 +365,6 @@ interface ComponentConstraint {
 
 `ComponentRequirementRequest` は要求内容を表すデータで、判定器そのものではありません。解析時には `analysis/componentRequirements/validator.ts` の `ComponentRequirementValidator` が `Source_Code_Asset` から対象 GameObject を解決し、`validation/constraintValidator.ts` の `ConstraintValidator` を使って SceneGraph の Component と照合します。結果は `satisfied`、`missing`、`ambiguous`、`unsupported`、`unverified` のいずれかで、`verificationReason` が付く場合は判定できない理由を示します。`matchedComponents` には照合に使った SceneGraph 上の GameObject ID / path と Component 型が含まれます。
 
-`$.getUnityComponent("UnityEngine.Rigidbody")` のようなリテラル参照は対象型を抽出しますが、それだけではスクリプトがその Component を必須としているとは限らないため `unverified` とします。required 制約が定義された API 呼び出しだけを SceneGraph 上の必須 Component として判定します。
-
-照合結果は `componentRequests` と `summary.componentRequestCounts` から取得できます。レポートは状態別件数を表示し、未確定要求を「問題なし」と表示しません。Export and Analyze の `--fail-on-issues` は analyzer issue と確定した `missing` 要求で失敗し、`--fail-on-unverified` は `ambiguous` / `unsupported` / `unverified` がある場合に失敗します。CI で全要求を確認済みにするには両方を指定します。Unity CLI MCP からのシーン取得はこのローカル SceneGraph 照合とは別の後続フェーズです。
-
 ## パフォーマンス考慮事項
 
 1. **TOML 解析**: 大規模シーン（>10000 GameObjects）では時間がかかる可能性

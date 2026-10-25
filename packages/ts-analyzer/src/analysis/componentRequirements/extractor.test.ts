@@ -11,6 +11,7 @@ describe("ComponentRequirementExtractor", () => {
     expect(requests).toHaveLength(1);
     expect(requests[0]).toMatchObject({
       api: "$.getUnityComponent",
+      kind: "optional-lookup",
       componentTypes: ["UnityEngine.Rigidbody"],
       componentMatch: "all",
       target: {
@@ -40,6 +41,7 @@ describe("ComponentRequirementExtractor", () => {
     expect(requests).toHaveLength(1);
     expect(requests[0]).toMatchObject({
       componentTypes: [],
+      kind: "optional-lookup",
       componentMatch: "unknown",
       verificationStatus: "unsupported",
       occurrences: [{ confidence: "low" }],

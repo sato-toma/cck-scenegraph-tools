@@ -77,6 +77,11 @@ function analysisResult(
         unverified: requests.filter(
           (item) => item.verificationStatus === "unverified",
         ).length,
+        optionalLookupMissing: requests.filter(
+          (item) =>
+            item.kind === "optional-lookup" &&
+            item.verificationStatus === "missing",
+        ).length,
       },
     },
   };
@@ -124,10 +129,54 @@ describe("component change planning", () => {
         { source: { line: 20 }, condition: { expression: "canInteract" } },
       ],
     });
+
     const report = formatComponentChangePlan(plan);
     expect(report).toContain("Unity scene: Assets/Main.unity");
     expect(report).toContain("confirm values or explicitly confirm no additional settings");
     expect(report).toContain("No existing component is removed or replaced");
+  });
+
+  it("plans optional lookup additions as suggestions requiring explicit approval", () => {
+    const lookupRequest = request({
+      api: "$.getUnityComponent",
+      kind: "optional-lookup",
+      componentTypes: ["UnityEngine.Rigidbody"],
+      validation: {
+        presentComponentTypes: [],
+        missingComponentTypes: ["UnityEngine.Rigidbody"],
+        matchedComponents: [],
+      },
+      occurrences: [
+        {
+          source: { filePath: "item.ts", line: 4, column: 0 },
+          condition: { kind: "unconditional" },
+          evidence:
+            'Literal component type passed to $.getUnityComponent: UnityEngine.Rigidbody',
+          confidence: "high",
+        },
+      ],
+    });
+    const plan = createComponentChangePlan(
+      sceneGraph,
+      [analysisResult([lookupRequest])],
+      "Assets/Main.unity",
+      "SceneGraph.toml",
+    );
+
+    expect(plan.status).toBe("needs-user-input");
+    expect(plan.actions).toHaveLength(1);
+    expect(plan.actions[0]).toMatchObject({
+      kind: "optional-lookup",
+      componentType: "UnityEngine.Rigidbody",
+      apis: ["$.getUnityComponent"],
+      settings: { resolution: "needs-user-input" },
+    });
+    expect(formatComponentChangePlan(plan)).toContain(
+      "approve it only if a null lookup result is unintended",
+    );
+    expect(() => getApprovedComponentChanges(plan)).toThrow(
+      "has not been approved",
+    );
   });
 
   it("requires settings and explicit disposition of unresolved requirements before approval", () => {
