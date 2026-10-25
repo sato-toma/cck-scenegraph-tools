@@ -46,6 +46,36 @@ enabled = true
 Source_Code_Asset = "getGrabbingPlayerScript"
 Source_Code = ""
 
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1083906091-0"
+type = "UnityEngine.Rigidbody"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1083906090-0"
+type = "ClusterVR.CreatorKit.Item.Implements.MovableItem"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1083906089-0"
+type = "ClusterVR.CreatorKit.Item.Implements.GrabbableItem"
+enabled = true
+
+[[gameObjects]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-221868667-0"
+path = "getGrabbingPlayer/Cube"
+name = "Cube"
+parent = "getGrabbingPlayer"
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-221868671-0"
+type = "UnityEngine.MeshFilter"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-221868670-0"
+type = "UnityEngine.MeshRenderer"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-221868669-0"
+type = "UnityEngine.BoxCollider"
+enabled = true
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-568831066-0"
