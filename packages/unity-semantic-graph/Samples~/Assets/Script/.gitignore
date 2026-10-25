@@ -1,7 +1,6 @@
 node_modules/
 *.js
 *.js.map
-dist/
 external/
 venue_*.meta
 venue_*.unity
