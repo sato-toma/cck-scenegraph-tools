@@ -43,7 +43,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | --- | --- | --- | --- |
 | [ ] | `getPosition` | MovableItem なし、親にある場合、戻り値 | `MovableItem`。要確認 |
 | [ ] | `getRotation` | MovableItem なし、親にある場合、戻り値 | `MovableItem`。要確認 |
-| [ ] | `onPhysicsUpdate` | Rigidbody、MovableItem、FixedUpdate 相当の実行条件 | `MovableItem`。要確認 |
+| [ ] | `onPhysicsUpdate` | 公式 API 定義では物理状態の更新時（Unity の `FixedUpdate` 相当）と説明されるが、必須 Component は明記されていない。`MovableItem` は候補に留め、必須条件としての Unity 検証は未完了 | 確定した制約なし（候補: `ClusterVR.CreatorKit.Item.Implements.MovableItem`） |
 | [ ] | `useGravity` | 読み取り、書き込み、トップレベル外の制限 | `MovableItem`。要確認 |
 | [ ] | `velocity` | 読み取り、書き込み、Grab 中の挙動 | `MovableItem`。要確認 |
 | [ ] | `angularVelocity` | 読み取り、書き込み、Grab 中の挙動 | `MovableItem`。要確認 |
