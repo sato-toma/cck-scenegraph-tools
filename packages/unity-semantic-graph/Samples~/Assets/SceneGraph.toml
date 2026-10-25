@@ -217,6 +217,36 @@ type = "UnityEngine.BoxCollider"
 enabled = true
 
 [[gameObjects]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1654111238-0"
+path = "onRide"
+name = "onRide"
+parent = ""
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1654111241-0"
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+[gameObjects.components.properties]
+Item_Name = ""
+Size = [0, 0, 0]
+Movement_Type = "Smooth"
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1654111240-0"
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "onRideScript"
+Source_Code = ""
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1654111242-0"
+type = "ClusterVR.CreatorKit.Item.Implements.RidableItem"
+enabled = true
+[gameObjects.components.properties]
+Seat = "onRide"
+
+
+[[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1250673560-0"
 path = "onUse"
 name = "onUse"
@@ -249,6 +279,24 @@ enabled = true
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1250673564-0"
 type = "ClusterVR.CreatorKit.Item.Implements.GrabbableItem"
+enabled = true
+
+[[gameObjects]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1225602650-0"
+path = "onUse/Cube"
+name = "Cube"
+parent = "onUse"
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1225602654-0"
+type = "UnityEngine.MeshFilter"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1225602653-0"
+type = "UnityEngine.MeshRenderer"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1225602652-0"
+type = "UnityEngine.BoxCollider"
 enabled = true
 
 [[gameObjects]]
