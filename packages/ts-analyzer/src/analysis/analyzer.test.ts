@@ -271,6 +271,75 @@ enabled = ${componentEnabled}
     });
   });
 
+  it("requires GrabbableItem for getGrabbingPlayer and only passes when enabled", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(tsFilePath, "$.getGrabbingPlayer();\n");
+
+    const analyzeWithGrabbableItem = (componentEnabled?: boolean) => {
+      fs.writeFileSync(
+        sceneGraphPath,
+        `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+${componentEnabled === undefined ? "" : `
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.GrabbableItem"
+enabled = ${componentEnabled}
+`}
+`,
+      );
+      return new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+        tsFilePath,
+      );
+    };
+
+    const missing = analyzeWithGrabbableItem();
+    expect(missing.issues).toHaveLength(1);
+    expect(missing.issues[0]).toMatchObject({
+      apiCall: "getGrabbingPlayer",
+      requiredComponents: [
+        "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+      ],
+    });
+    expect(missing.componentRequests[0]).toMatchObject({
+      api: "$.getGrabbingPlayer",
+      verificationStatus: "missing",
+      validation: {
+        missingComponentTypes: [
+          "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+        ],
+      },
+    });
+
+    const disabled = analyzeWithGrabbableItem(false);
+    expect(disabled.issues).toHaveLength(1);
+    expect(disabled.componentRequests[0]).toMatchObject({
+      api: "$.getGrabbingPlayer",
+      verificationStatus: "missing",
+    });
+
+    const satisfied = analyzeWithGrabbableItem(true);
+    expect(satisfied.issues).toHaveLength(0);
+    expect(satisfied.componentRequests[0]).toMatchObject({
+      api: "$.getGrabbingPlayer",
+      verificationStatus: "satisfied",
+    });
+  });
+
   it("validates the specific ScriptableItem that matches the analyzed file", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
     const tsFilePath = path.join(tempDir, "setRotationScript.ts");
