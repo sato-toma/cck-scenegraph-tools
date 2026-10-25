@@ -640,6 +640,66 @@ Source_Code_Asset = "onInteractScript"
     });
   });
 
+  it("accepts an enabled Collider on a child GameObject for onInteract", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "onInteractScript.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(tsFilePath, "$.onInteract(() => {});\n");
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "onInteractScript"
+
+[[gameObjects]]
+id = "collider-child"
+path = "Item/Cube"
+name = "Cube"
+parent = "Item"
+
+[[gameObjects.components]]
+type = "UnityEngine.BoxCollider"
+enabled = true
+`,
+    );
+
+    const result = new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+      tsFilePath,
+    );
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests[0]).toMatchObject({
+      api: "$.onInteract",
+      target: {
+        resolution: "resolved",
+        gameObjectId: "item-object",
+      },
+      verificationStatus: "satisfied",
+      validation: {
+        presentComponentTypes: ["UnityEngine.BoxCollider"],
+        matchedComponents: [
+          {
+            gameObjectId: "collider-child",
+            gameObjectPath: "Item/Cube",
+            componentType: "UnityEngine.BoxCollider",
+          },
+        ],
+      },
+    });
+  });
+
   it("resolves a nested script from Source_Code_Asset by basename", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
     const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");

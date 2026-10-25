@@ -31,7 +31,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 
 | 状態 | API | Unity で確認すること | 想定する制約 |
 | --- | --- | --- | --- |
-| [ ] | `onInteract` | 無効化時、親階層の扱い（Unity 未確認） | `UnityEngine.BoxCollider` / `SphereCollider` / `CapsuleCollider` / `MeshCollider` / `WheelCollider` のいずれか1個以上 |
+| [x] | `onInteract` | UnityでCollider必須条件を確認。`test.unity` のExportでは子GameObjectの有効な `BoxCollider` を確認 | `UnityEngine.BoxCollider` / `SphereCollider` / `CapsuleCollider` / `MeshCollider` / `WheelCollider` のいずれか1個以上 |
 | [ ] | `onUse` | 2026-10-17: MCP で不足・充足を確認。実行時挙動は未検証 | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem`（ClusterScript 定義に必須と明記） |
 | [ ] | `onRide` | 乗車可能設定、RidableItem の有無 | `RidableItem`。要確認 |
 | [ ] | `getGrabbingPlayer` | Grab 中と非 Grab 中の戻り値 | `GrabbableItem`。要確認 |
