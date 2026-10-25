@@ -54,6 +54,10 @@ export class ClusterScriptDefinitions {
     return method ? method.requiredComponents : [];
   }
 
+  static getMethodDefinition(methodName: string): ApiMethod | undefined {
+    return this.getDefinitions().methods.get(methodName);
+  }
+
   /**
    * プロパティの必須コンポーネントを取得
    */

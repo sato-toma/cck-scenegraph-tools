@@ -14,6 +14,10 @@ import { ComponentRequirementValidator } from "./componentRequirements/validator
 import {
   summarizeComponentRequirements,
 } from "./componentRequirements/summary";
+import {
+  CallbackContextAnalyzer,
+  CallbackContextStatus,
+} from "./callbackContextAnalyzer";
 import * as path from "path";
 import { AnalysisReportFormatter } from "../reporting/analysisReportFormatter";
 import {
@@ -58,16 +62,54 @@ export class ClusterScriptAnalyzer {
 
   analyzeTypeScriptFile(tsFilePath: string = ""): AnalysisResult {
     const resolvedTsFilePath = this.resolveTypeScriptFile(tsFilePath);
-    const apiCalls = TypeScriptCodeParser.extractApiCalls(resolvedTsFilePath);
+    const sourceContent = fs.readFileSync(resolvedTsFilePath, "utf-8");
+    const apiCalls = TypeScriptCodeParser.extractApiCallsFromString(sourceContent);
     const issues: ValidationIssue[] = [];
+    const callbackContexts = new Map<
+      string,
+      Map<string, CallbackContextStatus>
+    >();
 
     // 各APIコールについてチェック
     for (const call of apiCalls) {
-      const constraints = ClusterScriptDefinitions.getMethodConstraints(
-        call.methodName,
-      );
+      const method = ClusterScriptDefinitions.getMethodDefinition(call.methodName);
+      if (!method) {
+        continue;
+      }
 
-      // 制約がない場合はスキップ
+      if (method.requiredCallbackContext) {
+        const contextKey = `${method.name}:${method.requiredCallbackContext}`;
+        let methodContexts = callbackContexts.get(contextKey);
+        if (!methodContexts) {
+          methodContexts = CallbackContextAnalyzer.analyze(
+            sourceContent,
+            method.name,
+            method.requiredCallbackContext,
+          );
+          callbackContexts.set(contextKey, methodContexts);
+        }
+
+        const contextStatus = methodContexts.get(`${call.line}:${call.column}`);
+        if (contextStatus === "outside" || contextStatus === "unverified") {
+          const isUnverified = contextStatus === "unverified";
+          issues.push({
+            line: call.line,
+            column: call.column,
+            severity: isUnverified ? "warning" : "error",
+            code: isUnverified
+              ? "UNVERIFIED_API_CONTEXT"
+              : "INVALID_API_CONTEXT",
+            message: isUnverified
+              ? `Could not verify that '${call.methodName}' is called directly inside '$.${method.requiredCallbackContext}'.`
+              : `Method '${call.methodName}' must be called inside the callback registered with '$.${method.requiredCallbackContext}'.`,
+            apiCall: call.methodName,
+            requiredComponents: [],
+            availableComponents: [],
+          });
+        }
+      }
+
+      const constraints = method.requiredComponents;
       if (constraints.length === 0) {
         continue;
       }

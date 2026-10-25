@@ -31,6 +31,7 @@ npm run --silent scenegraph:analyze -- `
 
 構造化形式はレポートを標準出力に出力します。`--format` は終了コードに影響しません。CI では `--fail-on-issues` と `--fail-on-unverified` で失敗条件を指定します。
 `--fail-on-issues` は analyzer issue と required Component 不足、`--fail-on-unverified` は `ambiguous` / `unsupported` / `unverified` で失敗します。optional lookup は strict モード時だけ前者に含まれます。
+`addForce` を `onPhysicsUpdate` 以外から呼び出すと `INVALID_API_CONTEXT` error を報告します。ネストした関数内など、直接のコールバック文脈を特定できない場合は `UNVERIFIED_API_CONTEXT` warning を報告します。
 
 ## JSON
 
