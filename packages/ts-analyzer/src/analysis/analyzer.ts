@@ -11,6 +11,7 @@ import { ConstraintValidator } from "../validation/constraintValidator";
 import { ClusterScriptDefinitions } from "../rules/clusterScriptDefinitions";
 import { ComponentRequirementExtractor } from "./componentRequirements/extractor";
 import { ComponentRequirementValidator } from "./componentRequirements/validator";
+import { SetStateCompatArgumentValidator } from "./setStateCompatArgumentValidator";
 import {
   summarizeComponentRequirements,
 } from "./componentRequirements/summary";
@@ -64,7 +65,8 @@ export class ClusterScriptAnalyzer {
     const resolvedTsFilePath = this.resolveTypeScriptFile(tsFilePath);
     const sourceContent = fs.readFileSync(resolvedTsFilePath, "utf-8");
     const apiCalls = TypeScriptCodeParser.extractApiCallsFromString(sourceContent);
-    const issues: ValidationIssue[] = [];
+    const issues: ValidationIssue[] =
+      SetStateCompatArgumentValidator.validate(sourceContent);
     const callbackContexts = new Map<
       string,
       Map<string, CallbackContextStatus>
@@ -77,8 +79,8 @@ export class ClusterScriptAnalyzer {
         continue;
       }
 
-      if (method.requiredCallbackContext) {
-        const contextKey = `${method.name}:${method.requiredCallbackContext}`;
+      if (method.requiredCallbackContext || method.requiresCallbackContext) {
+        const contextKey = `${method.name}:${method.requiredCallbackContext ?? "any"}`;
         let methodContexts = callbackContexts.get(contextKey);
         if (!methodContexts) {
           methodContexts = CallbackContextAnalyzer.analyze(
@@ -92,6 +94,12 @@ export class ClusterScriptAnalyzer {
         const contextStatus = methodContexts.get(`${call.line}:${call.column}`);
         if (contextStatus === "outside" || contextStatus === "unverified") {
           const isUnverified = contextStatus === "unverified";
+          const requiredContext = method.requiredCallbackContext
+            ? "'$." + method.requiredCallbackContext + "'"
+            : "a callback";
+          const invalidContext = method.requiredCallbackContext
+            ? `the callback registered with ${requiredContext}`
+            : "a callback";
           issues.push({
             line: call.line,
             column: call.column,
@@ -100,8 +108,8 @@ export class ClusterScriptAnalyzer {
               ? "UNVERIFIED_API_CONTEXT"
               : "INVALID_API_CONTEXT",
             message: isUnverified
-              ? `Could not verify that '${call.methodName}' is called directly inside '$.${method.requiredCallbackContext}'.`
-              : `Method '${call.methodName}' must be called inside the callback registered with '$.${method.requiredCallbackContext}'.`,
+              ? `Could not verify that '${call.methodName}' is called directly inside ${requiredContext}.`
+              : `Method '${call.methodName}' must be called inside ${invalidContext}.`,
             apiCall: call.methodName,
             requiredComponents: [],
             availableComponents: [],

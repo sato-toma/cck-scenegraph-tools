@@ -15,13 +15,13 @@ export class CallbackContextAnalyzer {
   static analyze(
     content: string,
     methodName: string,
-    callbackName: string,
+    callbackName?: string,
   ): Map<string, CallbackContextStatus> {
     const tokens = this.tokenize(content);
     const matchingDelimiters = this.findMatchingDelimiters(tokens);
     const namedCallbacks = this.findNamedCallbacks(tokens, matchingDelimiters);
     const functionRanges = this.findFunctionRanges(tokens, matchingDelimiters);
-    const physicsCallbacks: SourceRange[] = [];
+    const requiredCallbacks: SourceRange[] = [];
     const otherCallbacks: SourceRange[] = [];
 
     for (let index = 0; index + 3 < tokens.length; index += 1) {
@@ -54,8 +54,8 @@ export class CallbackContextAnalyzer {
         namedCallbacks,
       );
       if (callbackRange) {
-        (calledCallback === callbackName
-          ? physicsCallbacks
+        (callbackName === undefined || calledCallback === callbackName
+          ? requiredCallbacks
           : otherCallbacks
         ).push(callbackRange);
       }
@@ -77,19 +77,18 @@ export class CallbackContextAnalyzer {
       const line = content.slice(0, lineStart).split("\n").length;
       const column = callOffset - lineStart;
       const key = `${line}:${column}`;
-      const containingPhysicsCallbacks = physicsCallbacks
+      const containingCallbacks = requiredCallbacks
         .filter((range) => this.contains(range, callOffset))
         .sort((left, right) => left.end - left.start - (right.end - right.start));
-      const physicsCallback = containingPhysicsCallbacks[0];
+      const callback = containingCallbacks[0];
 
-      if (physicsCallback) {
+      if (callback) {
         const isNestedFunction = functionRanges.some(
           (range) =>
-            range.start >= physicsCallback.start &&
-            range.end <= physicsCallback.end &&
+            range.start >= callback.start &&
+            range.end <= callback.end &&
             this.contains(range, callOffset) &&
-            (range.start !== physicsCallback.start ||
-              range.end !== physicsCallback.end),
+            (range.start !== callback.start || range.end !== callback.end),
         );
         results.set(key, isNestedFunction ? "unverified" : "inside");
       } else if (

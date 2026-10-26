@@ -265,6 +265,94 @@ Source_Code_Asset = "sample.ts"
     }
   });
 
+  it("requires setStateCompat to be called inside a callback", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(sceneGraphPath, 'project = "TestProject"\n');
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+
+    fs.writeFileSync(
+      tsFilePath,
+      '$.setStateCompat("this", "key", true);\n',
+    );
+    const outsideCallback = analyzer.analyzeTypeScriptFile(tsFilePath);
+    expect(outsideCallback.issues).toMatchObject([
+      {
+        code: "INVALID_API_CONTEXT",
+        severity: "error",
+        apiCall: "setStateCompat",
+        message:
+          "Method 'setStateCompat' must be called inside a callback.",
+      },
+    ]);
+
+    fs.writeFileSync(
+      tsFilePath,
+      '$.onUpdate(() => $.setStateCompat("this", "key", true));\n',
+    );
+    const insideCallback = analyzer.analyzeTypeScriptFile(tsFilePath);
+    expect(insideCallback.issues).toHaveLength(0);
+
+    fs.writeFileSync(
+      tsFilePath,
+      [
+        "$.onUpdate(() => {",
+        "  const updateState = () => $.setStateCompat('this', 'key', true);",
+        "  updateState();",
+        "});",
+      ].join("\n"),
+    );
+    const nestedFunction = analyzer.analyzeTypeScriptFile(tsFilePath);
+    expect(nestedFunction.issues).toMatchObject([
+      {
+        code: "UNVERIFIED_API_CONTEXT",
+        severity: "warning",
+        apiCall: "setStateCompat",
+      },
+    ]);
+  });
+
+  it("warns for invalid setStateCompat targets and string values", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(sceneGraphPath, 'project = "TestProject"\n');
+    fs.writeFileSync(
+      tsFilePath,
+      [
+        "$.onUpdate(() => {",
+        '  $.setStateCompat("global", "custom-key", true);',
+        '  $.setStateCompat("this", "another-key", "text");',
+        '  $.setStateCompat("owner", "any-string-key", false);',
+        "});",
+      ].join("\n"),
+    );
+
+    const result = new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+      tsFilePath,
+    );
+
+    expect(result.issues).toMatchObject([
+      {
+        severity: "warning",
+        code: "INVALID_API_ARGUMENT",
+        apiCall: "setStateCompat",
+        message:
+          'setStateCompat target must be "this" or "owner"; received "global".',
+      },
+      {
+        severity: "warning",
+        code: "INVALID_API_ARGUMENT",
+        apiCall: "setStateCompat",
+        message:
+          "setStateCompat value does not support strings; use a number, boolean, Vector2, or Vector3.",
+      },
+    ]);
+  });
+
   it("requires GrabbableItem for onUse and passes when the component exists", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
     const tsFilePath = path.join(tempDir, "sample.ts");
