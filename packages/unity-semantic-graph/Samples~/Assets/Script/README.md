@@ -1,6 +1,6 @@
 # Sample ClusterScript
 
-このフォルダには Unity Semantic Graph の TypeScript サンプルがあります。ソースは `src/` に置き、ビルドすると JavaScript が `dist/` に生成されます。
+このフォルダには Unity Semantic Graph の TypeScript サンプルがあります。ソースは `src/` に置き、ビルドすると型チェック済みのJavaScriptを `dist/` に生成し、各ファイルをbundleせずにminifyします。
 
 ```bash
 npm ci

@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "typescript": "7.0.2"
   },
   "scripts": {
-    "build": "tsc --project tsconfig.json"
+    "build": "tsc --project tsconfig.json && node scripts/minify.cjs"
   }
 }
