@@ -44,6 +44,23 @@ npm run scenegraph:analyze -- `
 
 終了条件の設定は[Analyzer レポート形式](../analysis-report-formats.md)を参照してください。Unity Editor のパスは `UNITY_PATH` 環境変数でも指定できます。
 
+## 静的解析ルールを検証する
+
+解析ルールの変更では、単体テストに加えて実サンプルを SceneGraph と組み合わせて解析し、正常系・不足系の結果を確認します。`npm run verify` はビルドとテストを実行しますが、実サンプルを自動で解析するコマンドではありません。成功しても、サンプルの解析結果が正しいことを意味しません。
+
+```powershell
+Set-Location packages\ts-analyzer
+npm run verify
+node dist\cli.js analyze ..\unity-semantic-graph\Samples~\Assets\SceneGraph.toml ..\unity-semantic-graph\Samples~\Assets\Script\src\onUseScript.ts
+node dist\cli.js analyze ..\unity-semantic-graph\Samples~\Assets\SceneGraph.toml ..\unity-semantic-graph\Samples~\Assets\Script\src\onUseMissingScript.ts
+```
+
+`onUseScript.ts` は `onUse` の要求が充足され、エラーがないことを確認します。`onUseMissingScript.ts` は子オブジェクト `Cube` にある `MeshRenderer` を `getUnityComponent` で取得し、見つかったことをログ表示するサンプルです。Analyzer でも lookup が充足されることを確認します。コンポーネント不足やコールバック登録位置の負例は、Unity サンプルではなく Analyzer のテスト入力で検証します。
+
+ClusterScript の[公式リファレンス](https://docs.cluster.mu/script/)では、ScriptableItem のコールバック登録APIはトップレベルでのみ利用できるAPIに分類されています。このAnalyzerでは誤りを早期に明示するため、`if` やブロック内も直接トップレベル文ではないものとしてエラーにします。
+
+現在の `analyze` CLI は診断をレポートしても終了コード `0` を返します。そのため、サンプル検証では終了コードだけでなく、期待するAPI・Component・診断状態がレポートに出ていることを確認してください。`npm run verify` が成功し、かつサンプルの正常系・不足系が期待どおりであることを解析変更の完了条件とします。
+
 ## Component 変更計画を適用・再検証する
 
 1. `ts-analyzer plan <SceneGraph.toml> <Unity-scene-path> [script.ts]` で追加候補を作ります。`getUnityComponent` の未配置Componentも任意候補として表示されます。

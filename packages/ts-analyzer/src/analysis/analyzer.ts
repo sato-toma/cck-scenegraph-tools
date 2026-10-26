@@ -19,6 +19,10 @@ import {
   CallbackContextAnalyzer,
   CallbackContextStatus,
 } from "./callbackContextAnalyzer";
+import {
+  TopLevelApiCallAnalyzer,
+  TopLevelApiCallStatus,
+} from "./topLevelApiCallAnalyzer";
 import * as path from "path";
 import { AnalysisReportFormatter } from "../reporting/analysisReportFormatter";
 import {
@@ -71,12 +75,48 @@ export class ClusterScriptAnalyzer {
       string,
       Map<string, CallbackContextStatus>
     >();
+    const topLevelContexts = new Map<
+      string,
+      Map<string, TopLevelApiCallStatus>
+    >();
 
     // 各APIコールについてチェック
     for (const call of apiCalls) {
       const method = ClusterScriptDefinitions.getMethodDefinition(call.methodName);
       if (!method) {
         continue;
+      }
+
+      if (method.requiresTopLevelContext) {
+        let methodContexts = topLevelContexts.get(method.name);
+        if (!methodContexts) {
+          methodContexts = TopLevelApiCallAnalyzer.analyze(
+            sourceContent,
+            method.name,
+          );
+          topLevelContexts.set(method.name, methodContexts);
+        }
+
+        const contextStatus = methodContexts.get(
+          `${call.line}:${call.column}`,
+        );
+        if (contextStatus === "nested" || contextStatus === "unverified") {
+          const isUnverified = contextStatus === "unverified";
+          issues.push({
+            line: call.line,
+            column: call.column,
+            severity: isUnverified ? "warning" : "error",
+            code: isUnverified
+              ? "UNVERIFIED_API_CONTEXT"
+              : "INVALID_API_CONTEXT",
+            message: isUnverified
+              ? `Could not verify that '${call.methodName}' is a direct top-level statement.`
+              : `Method '${call.methodName}' must be a direct top-level statement.`,
+            apiCall: call.methodName,
+            requiredComponents: [],
+            availableComponents: [],
+          });
+        }
       }
 
       if (method.requiredCallbackContext || method.requiresCallbackContext) {

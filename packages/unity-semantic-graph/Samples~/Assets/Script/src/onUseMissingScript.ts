@@ -1,3 +1,6 @@
-$.onUse((isDown) => {
-  $.log(`onUse callback invoked without GrabbableItem: ${isDown}.`);
+$.onStart(() => {
+  const meshRenderer = $.subNode("Cube").getUnityComponent("MeshRenderer");
+  $.log(
+    `MeshRenderer lookup on Cube: ${meshRenderer ? "found" : "not found"}.`,
+  );
 });

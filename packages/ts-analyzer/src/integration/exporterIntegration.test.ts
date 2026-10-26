@@ -33,6 +33,62 @@ function analyzeExporterFixture(
 }
 
 describe("SceneGraph exporter integration", () => {
+  it("analyzes successful onUse and nested component lookup Unity samples", () => {
+    const sampleAssetsPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "unity-semantic-graph",
+      "Samples~",
+      "Assets",
+    );
+    const sceneGraphPath = path.join(sampleAssetsPath, "SceneGraph.toml");
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const validOnUse = analyzer.analyzeTypeScriptFile(
+      path.join(sampleAssetsPath, "Script", "src", "onUseScript.ts"),
+    );
+    const optionalLookup = analyzer.analyzeTypeScriptFile(
+      path.join(sampleAssetsPath, "Script", "src", "onUseMissingScript.ts"),
+    );
+
+    expect(validOnUse.issues).toHaveLength(0);
+    expect(validOnUse.componentRequests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          api: "$.onUse",
+          verificationStatus: "satisfied",
+        }),
+      ]),
+    );
+    expect(optionalLookup.issues).toHaveLength(0);
+    expect(optionalLookup.componentRequests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          api: "$.getUnityComponent",
+          componentTypes: ["MeshRenderer"],
+          verificationStatus: "satisfied",
+        }),
+      ]),
+    );
+  });
+
+  it("rejects callback registration inside a top-level conditional block", () => {
+    const { result } = analyzeExporterFixture(
+      "if (shouldRegister) {\n  $.onUse(() => {});\n}\n",
+    );
+
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          apiCall: "onUse",
+          code: "INVALID_API_CONTEXT",
+          message: expect.stringContaining("direct top-level statement"),
+        }),
+      ]),
+    );
+  });
+
   it("parses exporter-shaped TOML and analyzes the mapped ClusterScript", () => {
     const sceneGraph = SceneGraphParser.parseFile(fixturePath);
     expect(WorldUploadValidator.validate(sceneGraph)).toEqual([]);

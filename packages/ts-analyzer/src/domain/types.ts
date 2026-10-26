@@ -56,6 +56,7 @@ export interface ApiMethod {
   requiredComponents: ComponentConstraint[];
   requiredCallbackContext?: string;
   requiresCallbackContext?: boolean;
+  requiresTopLevelContext?: boolean;
   parameterTypes?: string[];
   returnType?: string;
   description?: string;
