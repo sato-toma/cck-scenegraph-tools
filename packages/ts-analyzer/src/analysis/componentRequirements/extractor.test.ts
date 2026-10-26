@@ -32,6 +32,63 @@ describe("ComponentRequirementExtractor", () => {
     );
   });
 
+  it("extracts literal getUnityComponent requests from a generic receiver path", () => {
+    const requests = ComponentRequirementExtractor.extractFromString(
+      '$.navigate("Cube").select("API_Label").getUnityComponent("MeshRenderer");',
+      "script.ts",
+    );
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatchObject({
+      api: "$.getUnityComponent",
+      lookupTargetPath: ["Cube", "API_Label"],
+      kind: "optional-lookup",
+      componentTypes: ["MeshRenderer"],
+      verificationStatus: "unverified",
+      occurrences: [
+        {
+          source: { filePath: "script.ts", line: 1, column: 0 },
+          confidence: "high",
+        },
+      ],
+    });
+  });
+
+  it("marks a dynamic receiver path argument unsupported", () => {
+    const requests = ComponentRequirementExtractor.extractFromString(
+      '$.navigate(targetName).getUnityComponent("MeshRenderer");',
+      "script.ts",
+    );
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatchObject({
+      api: "$.getUnityComponent",
+      componentTypes: ["MeshRenderer"],
+      verificationStatus: "unsupported",
+      occurrences: [
+        {
+          confidence: "low",
+          evidence:
+            "Lookup receiver must be a static method chain rooted at $ with string-literal arguments",
+        },
+      ],
+    });
+  });
+
+  it("marks a receiver path with a nested dynamic argument unsupported", () => {
+    const requests = ComponentRequirementExtractor.extractFromString(
+      '$.navigate(resolveTarget()).getUnityComponent("MeshRenderer");',
+      "script.ts",
+    );
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]).toMatchObject({
+      componentTypes: ["MeshRenderer"],
+      verificationStatus: "unsupported",
+      occurrences: [{ confidence: "low" }],
+    });
+  });
+
   it("marks dynamic component type arguments unsupported", () => {
     const requests = ComponentRequirementExtractor.extractFromString(
       "$.getUnityComponent(componentName);",

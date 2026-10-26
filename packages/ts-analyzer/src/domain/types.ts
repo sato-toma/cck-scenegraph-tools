@@ -107,6 +107,7 @@ export interface ComponentRequirementRequest {
   id: string;
   api: string;
   kind?: "optional-lookup";
+  lookupTargetPath?: string[];
   severity?: "error" | "warning";
   componentTypes: string[];
   componentMatch: "all" | "any" | "unknown";

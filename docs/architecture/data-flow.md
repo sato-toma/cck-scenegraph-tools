@@ -55,7 +55,7 @@ Unity CLI MCP の読み取り応答
 - 現在は文字列パターンから `$.method()`、プロパティアクセス、`$.state` の直接変更を検出する。
 - コメント、別名、複雑な式、改行を含むコードでは誤検出や見逃しがあり得る。
 - Compiler API へ移行するまでは、検出できる構文をテストで明示する。
-- `ComponentRequirementExtractor` は、既知 API の required 制約と文字列リテラルの `$.getUnityComponent(...)` を構造化する。動的な引数は `unsupported` とする。
+- `ComponentRequirementExtractor` は、既知 API の required 制約と文字列リテラルの `getUnityComponent(...)` lookup を構造化する。`$` から続くreceiver method chainの文字列引数を階層パスとして扱い、動的な引数は `unsupported` とする。任意 lookup の完全修飾型名は完全一致し、短縮型名は SceneGraph 上で末尾名が一致するすべての型と照合する。階層パスは最終的な GameObject が一意な場合だけ解決する。`unityProp` による個々のプロパティ名・値の妥当性は analyzer では検証しない。
 - 同一 API・同一型条件の要求は集約し、全ての出現位置・条件・根拠を残す。条件抽出は単純な `if` ブロックに限定し、解釈できない条件は `unknown` とする。
 - `ComponentRequirementValidator` は `Source_Code_Asset` とソースファイルを対応付け、対象 GameObject が一意なら `ConstraintValidator` でそのオブジェクトの階層内にある有効な Component と照合する。結果には照合した Component の所有 GameObject ID / path も含める。対象不明・複数候補・未対応引数は、それぞれ `unverified`・`ambiguous`・`unsupported` として返す。曖昧な候補は ID / path を含め、任意の候補を選んだ欠落判定は行わない。
 - `AnalysisResult.componentRequests` は要求と照合結果を保持する。条件付き要求は条件式とともに出力し、対象を特定できない場合は不足と断定しない。
