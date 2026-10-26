@@ -55,6 +55,8 @@ export interface ApiMethod {
   name: string;
   requiredComponents: ComponentConstraint[];
   requiredCallbackContext?: string;
+  requiresCallbackContext?: boolean;
+  requiresTopLevelContext?: boolean;
   parameterTypes?: string[];
   returnType?: string;
   description?: string;
@@ -106,6 +108,7 @@ export interface ComponentRequirementRequest {
   id: string;
   api: string;
   kind?: "optional-lookup";
+  lookupTargetPath?: string[];
   severity?: "error" | "warning";
   componentTypes: string[];
   componentMatch: "all" | "any" | "unknown";

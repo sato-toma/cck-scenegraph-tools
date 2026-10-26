@@ -171,4 +171,41 @@ Unsupported = 1979-05-27T07:32:00Z
       ]),
     );
   });
+
+  it("resolves nested parents stored as SceneGraph paths", () => {
+    const sceneGraph = SceneGraphParser.parse(`
+project = "TestProject"
+
+[[gameObjects]]
+id = "item"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects]]
+id = "cube"
+path = "Item/Cube"
+name = "Cube"
+parent = "Item"
+
+[[gameObjects]]
+id = "label"
+path = "Item/Cube/API_Label"
+name = "API_Label"
+parent = "Item/Cube"
+`);
+    const item = sceneGraph.gameObjects[0]!;
+    const label = sceneGraph.gameObjects[2]!;
+
+    expect(
+      SceneGraphParser.getGameObjectDescendants(sceneGraph, item).map(
+        (gameObject) => gameObject.path,
+      ),
+    ).toEqual(["Item/Cube", "Item/Cube/API_Label"]);
+    expect(
+      SceneGraphParser.getGameObjectAncestors(sceneGraph, label).map(
+        (gameObject) => gameObject.path,
+      ),
+    ).toEqual(["Item/Cube", "Item"]);
+  });
 });

@@ -9,6 +9,7 @@ import {
 
 interface ExtractedOccurrence {
   api: string;
+  lookupTargetPath?: string[];
   kind?: ComponentRequirementRequest["kind"];
   componentTypes: string[];
   componentMatch: ComponentRequirementRequest["componentMatch"];
@@ -64,13 +65,16 @@ export class ComponentRequirementExtractor {
     }
 
     const unityComponentCallPattern =
-      /\$\s*\.\s*getUnityComponent\s*\(([\s\S]*?)\)/g;
+      /(\$\s*(?:\.\s*[A-Za-z_$][\w$]*\s*\((?:[^()]|\([^()]*\))*\))*)\s*\.\s*getUnityComponent\s*\(([\s\S]*?)\)/g;
     let unityComponentCall: RegExpExecArray | null;
 
     while (
       (unityComponentCall = unityComponentCallPattern.exec(content)) !== null
     ) {
-      const argument = unityComponentCall[1]!.trim();
+      const receiver = unityComponentCall[1]!.trim();
+      const { path: lookupTargetPath, supported: receiverSupported } =
+        this.extractLookupTargetPath(receiver);
+      const argument = unityComponentCall[2]!.trim();
       const literalMatch = argument.match(/^(['"])([^'"]+)\1$/);
       const source = this.getSourcePosition(content, unityComponentCall.index);
       const componentTypes = literalMatch ? [literalMatch[2]!] : [];
@@ -82,17 +86,21 @@ export class ComponentRequirementExtractor {
 
       extracted.push({
         api: "$.getUnityComponent",
+        ...(lookupTargetPath.length > 0 ? { lookupTargetPath } : {}),
         kind: "optional-lookup",
         componentTypes,
         componentMatch: literalMatch ? "all" : "unknown",
-        verificationStatus: literalMatch ? "unverified" : "unsupported",
+        verificationStatus:
+          literalMatch && receiverSupported ? "unverified" : "unsupported",
         occurrence: {
           source: { filePath, ...source },
           condition,
-          evidence: literalMatch
-            ? `Literal component type passed to $.getUnityComponent: ${literalMatch[2]}`
-            : "Component type argument is not a supported string literal",
-          confidence: literalMatch ? "high" : "low",
+          evidence: !receiverSupported
+            ? "Lookup receiver must be a static method chain rooted at $ with string-literal arguments"
+            : literalMatch
+              ? `Literal component type passed to getUnityComponent: ${literalMatch[2]}`
+              : "Component type argument is not a supported string literal",
+          confidence: literalMatch && receiverSupported ? "high" : "low",
         },
       });
     }
@@ -108,6 +116,7 @@ export class ComponentRequirementExtractor {
     for (const item of extracted) {
       const key = JSON.stringify([
         item.api,
+        item.lookupTargetPath,
         item.kind,
         item.componentTypes,
         item.componentMatch,
@@ -120,6 +129,9 @@ export class ComponentRequirementExtractor {
         request = {
           id,
           api: item.api,
+          ...(item.lookupTargetPath
+            ? { lookupTargetPath: item.lookupTargetPath }
+            : {}),
           componentTypes: item.componentTypes,
           componentMatch: item.componentMatch,
           target: {
@@ -142,6 +154,29 @@ export class ComponentRequirementExtractor {
     }
 
     return [...requests.values()];
+  }
+
+  private static extractLookupTargetPath(receiver: string): {
+    path: string[];
+    supported: boolean;
+  } {
+    let remaining = receiver.trim().replace(/^\$\s*/, "");
+    const path: string[] = [];
+
+    while (remaining.length > 0) {
+      const methodCall = remaining.match(
+        /^\s*\.\s*[A-Za-z_$][\w$]*\s*\(([^()]*)\)/,
+      );
+      const literalArgument = methodCall?.[1]?.trim().match(/^(['"])([^'"]+)\1$/);
+      if (!methodCall || !literalArgument) {
+        return { path: [], supported: false };
+      }
+
+      path.push(literalArgument[2]!);
+      remaining = remaining.slice(methodCall[0].length);
+    }
+
+    return { path, supported: true };
   }
 
   private static extractCondition(

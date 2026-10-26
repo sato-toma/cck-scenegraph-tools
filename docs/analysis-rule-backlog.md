@@ -25,6 +25,12 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | state の配列メソッド | 状態の直接変更を検出 | コンポーネント制約なし |
 | state のネスト代入 | 状態の直接変更を検出 | コンポーネント制約なし |
 
+### ステート変更APIの制約
+
+| 状態 | API | ルール | 根拠・検証 |
+| --- | --- | --- | --- |
+| [x] | `setStateCompat` | 任意の `$.on...` コールバック内での呼び出しを要求。文字列リテラルの `target` は `"this"` または `"owner"` に限定し、`value` に文字列を渡す場合は警告 | [ClusterScript API 定義](https://docs.cluster.mu/script/interfaces/ClusterScript.html) と `Samples~/Assets/Script/external/index.d.ts` の引数仕様に基づく。`key` は任意の `string`。コールバック制約はAPI利用制限の一般則を本APIに適用したもので、個別記述ではない。動的な引数の型・値は検査しない |
+
 ## 優先候補
 
 ### P0: 既存ルールの近接 API

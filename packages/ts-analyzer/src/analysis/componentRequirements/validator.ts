@@ -4,6 +4,7 @@ import {
   ComponentConstraint,
   ComponentRequirementRequest,
   ComponentRequirementTarget,
+  GameObject,
   SceneGraph,
 } from "../../domain/types";
 
@@ -80,18 +81,53 @@ export class ComponentRequirementValidator {
       }
 
       if (request.kind === "optional-lookup") {
-        const matchedComponents = target.components
+        const lookupTargets = this.resolveLookupTargets(
+          sceneGraph,
+          target,
+          request.lookupTargetPath,
+        );
+        if (lookupTargets.length !== 1) {
+          if (lookupTargets.length > 1) {
+            return this.withStatus(
+              request,
+              "ambiguous",
+              resolvedTarget,
+              `Lookup target "${request.lookupTargetPath?.join("/")}" matches multiple GameObjects under the ScriptableItem.`,
+            );
+          }
+
+          const result: ComponentRequirementRequest = {
+            ...request,
+            target: resolvedTarget,
+            verificationStatus: "missing",
+            verificationReason: request.lookupTargetPath?.length
+              ? `Lookup target "${request.lookupTargetPath.join("/")}" is not present under the ScriptableItem; getUnityComponent returns null.`
+              : "The ScriptableItem GameObject could not be resolved.",
+            validation: {
+              presentComponentTypes: [],
+              missingComponentTypes: request.componentTypes,
+              matchedComponents: [],
+            },
+          };
+          return result;
+        }
+        const lookupTarget = lookupTargets[0]!;
+        const matchedComponents = lookupTarget.components
           .filter((component) =>
-            request.componentTypes.includes(component.type),
+            request.componentTypes.some((type) =>
+              this.componentTypeMatches(component.type, type),
+            ),
           )
           .map((component) => ({
-            gameObjectId: target.id,
-            gameObjectPath: target.path,
+            gameObjectId: lookupTarget.id,
+            gameObjectPath: lookupTarget.path,
             componentId: component.id,
             componentType: component.type,
           }));
         const presentComponentTypes = request.componentTypes.filter((type) =>
-          matchedComponents.some((component) => component.componentType === type),
+          matchedComponents.some(
+            (component) => this.componentTypeMatches(component.componentType, type),
+          ),
         );
         const missingComponentTypes = request.componentTypes.filter(
           (type) => !presentComponentTypes.includes(type),
@@ -109,8 +145,10 @@ export class ComponentRequirementValidator {
         };
 
         if (missingComponentTypes.length > 0) {
-          result.verificationReason =
-            "The component is not present on the ScriptableItem GameObject; getUnityComponent returns null. Add it only if that null result is unintended.";
+          const lookupPath = request.lookupTargetPath?.join("/");
+          result.verificationReason = lookupPath
+            ? `The component is not present on lookup target "${lookupPath}"; getUnityComponent returns null. Add it only if that null result is unintended.`
+            : "The component is not present on the ScriptableItem GameObject; getUnityComponent returns null. Add it only if that null result is unintended.";
         } else {
           delete result.verificationReason;
         }
@@ -175,6 +213,40 @@ export class ComponentRequirementValidator {
         },
       };
     });
+  }
+
+  private static resolveLookupTargets(
+    sceneGraph: SceneGraph,
+    root: GameObject,
+    lookupTargetPath?: string[],
+  ): GameObject[] {
+    if (!lookupTargetPath?.length) {
+      return [root];
+    }
+
+    let targets = [root];
+    for (const segment of lookupTargetPath) {
+      targets = targets.flatMap((target) =>
+        SceneGraphParser.getGameObjectDescendants(sceneGraph, target).filter(
+          (gameObject) => gameObject.name === segment,
+        ),
+      );
+    }
+    return targets;
+  }
+
+  private static componentTypeMatches(
+    actualType: string,
+    requestedType: string,
+  ): boolean {
+    if (actualType === requestedType) {
+      return true;
+    }
+    const lastSeparator = actualType.lastIndexOf(".");
+    return (
+      !requestedType.includes(".") &&
+      actualType.slice(lastSeparator + 1) === requestedType
+    );
   }
 
   private static toConstraints(

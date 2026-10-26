@@ -265,6 +265,94 @@ Source_Code_Asset = "sample.ts"
     }
   });
 
+  it("requires setStateCompat to be called inside a callback", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(sceneGraphPath, 'project = "TestProject"\n');
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+
+    fs.writeFileSync(
+      tsFilePath,
+      '$.setStateCompat("this", "key", true);\n',
+    );
+    const outsideCallback = analyzer.analyzeTypeScriptFile(tsFilePath);
+    expect(outsideCallback.issues).toMatchObject([
+      {
+        code: "INVALID_API_CONTEXT",
+        severity: "error",
+        apiCall: "setStateCompat",
+        message:
+          "Method 'setStateCompat' must be called inside a callback.",
+      },
+    ]);
+
+    fs.writeFileSync(
+      tsFilePath,
+      '$.onUpdate(() => $.setStateCompat("this", "key", true));\n',
+    );
+    const insideCallback = analyzer.analyzeTypeScriptFile(tsFilePath);
+    expect(insideCallback.issues).toHaveLength(0);
+
+    fs.writeFileSync(
+      tsFilePath,
+      [
+        "$.onUpdate(() => {",
+        "  const updateState = () => $.setStateCompat('this', 'key', true);",
+        "  updateState();",
+        "});",
+      ].join("\n"),
+    );
+    const nestedFunction = analyzer.analyzeTypeScriptFile(tsFilePath);
+    expect(nestedFunction.issues).toMatchObject([
+      {
+        code: "UNVERIFIED_API_CONTEXT",
+        severity: "warning",
+        apiCall: "setStateCompat",
+      },
+    ]);
+  });
+
+  it("warns for invalid setStateCompat targets and string values", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(sceneGraphPath, 'project = "TestProject"\n');
+    fs.writeFileSync(
+      tsFilePath,
+      [
+        "$.onUpdate(() => {",
+        '  $.setStateCompat("global", "custom-key", true);',
+        '  $.setStateCompat("this", "another-key", "text");',
+        '  $.setStateCompat("owner", "any-string-key", false);',
+        "});",
+      ].join("\n"),
+    );
+
+    const result = new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+      tsFilePath,
+    );
+
+    expect(result.issues).toMatchObject([
+      {
+        severity: "warning",
+        code: "INVALID_API_ARGUMENT",
+        apiCall: "setStateCompat",
+        message:
+          'setStateCompat target must be "this" or "owner"; received "global".',
+      },
+      {
+        severity: "warning",
+        code: "INVALID_API_ARGUMENT",
+        apiCall: "setStateCompat",
+        message:
+          "setStateCompat value does not support strings; use a number, boolean, Vector2, or Vector3.",
+      },
+    ]);
+  });
+
   it("requires GrabbableItem for onUse and passes when the component exists", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
     const tsFilePath = path.join(tempDir, "sample.ts");
@@ -810,6 +898,175 @@ enabled = false
       validation: {
         presentComponentTypes: ["UnityEngine.Rigidbody"],
         missingComponentTypes: [],
+      },
+    });
+  });
+
+  it("matches a generic lookup target and short component type name", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(
+      tsFilePath,
+      '$.subNode("API_Label").getUnityComponent("MeshRenderer");\n',
+    );
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+
+[[gameObjects]]
+id = "cube-object"
+path = "Item/Cube"
+name = "Cube"
+parent = "Item"
+
+[[gameObjects]]
+id = "label-object"
+path = "Item/Cube/API_Label"
+name = "API_Label"
+parent = "Item/Cube"
+
+[[gameObjects.components]]
+type = "UnityEngine.MeshRenderer"
+enabled = true
+`,
+    );
+
+    const result = new ClusterScriptAnalyzer(
+      sceneGraphPath,
+    ).analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.summary.componentRequestCounts.optionalLookupMissing).toBe(0);
+    expect(result.componentRequests[0]).toMatchObject({
+      api: "$.getUnityComponent",
+      lookupTargetPath: ["API_Label"],
+      componentTypes: ["MeshRenderer"],
+      verificationStatus: "satisfied",
+      validation: {
+        presentComponentTypes: ["MeshRenderer"],
+        missingComponentTypes: [],
+        matchedComponents: [
+          {
+            gameObjectPath: "Item/Cube/API_Label",
+            componentType: "UnityEngine.MeshRenderer",
+          },
+        ],
+      },
+    });
+  });
+
+  it("reports a missing lookup type on a generic receiver target", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(
+      tsFilePath,
+      '$.navigate("API_Label").getUnityComponent("MeshRenderer");\n',
+    );
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+
+[[gameObjects]]
+id = "label-object"
+path = "Item/API_Label"
+name = "API_Label"
+parent = "Item"
+`,
+    );
+
+    const result = new ClusterScriptAnalyzer(
+      sceneGraphPath,
+    ).analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.summary.componentRequestCounts.optionalLookupMissing).toBe(1);
+    expect(result.componentRequests[0]).toMatchObject({
+      api: "$.getUnityComponent",
+      lookupTargetPath: ["API_Label"],
+      verificationStatus: "missing",
+      verificationReason:
+        'The component is not present on lookup target "API_Label"; getUnityComponent returns null. Add it only if that null result is unintended.',
+      validation: {
+        missingComponentTypes: ["MeshRenderer"],
+      },
+    });
+  });
+
+  it("matches every scene component with the same short type name", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(tsFilePath, '$.getUnityComponent("SharedType");\n');
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+
+[[gameObjects.components]]
+type = "First.Namespace.SharedType"
+enabled = true
+
+[[gameObjects.components]]
+type = "Second.Namespace.SharedType"
+enabled = true
+`,
+    );
+
+    const result = new ClusterScriptAnalyzer(
+      sceneGraphPath,
+    ).analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.componentRequests[0]).toMatchObject({
+      componentTypes: ["SharedType"],
+      verificationStatus: "satisfied",
+      validation: {
+        presentComponentTypes: ["SharedType"],
+        missingComponentTypes: [],
+        matchedComponents: [
+          { componentType: "First.Namespace.SharedType" },
+          { componentType: "Second.Namespace.SharedType" },
+        ],
       },
     });
   });

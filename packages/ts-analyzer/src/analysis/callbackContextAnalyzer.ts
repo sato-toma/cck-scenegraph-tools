@@ -10,18 +10,105 @@ interface SourceRange {
 }
 
 export type CallbackContextStatus = "inside" | "outside" | "unverified";
+export type TopLevelApiCallStatus = "top-level" | "nested" | "unverified";
 
 export class CallbackContextAnalyzer {
+  static analyzeTopLevelApiCalls(
+    content: string,
+    methodName: string,
+  ): Map<string, TopLevelApiCallStatus> {
+    const tokens = this.tokenize(content);
+    const matchingDelimiters = this.findMatchingDelimiters(tokens);
+    const hasUnmatchedDelimiters = tokens.some(
+      (token, index) =>
+        ["(", ")", "[", "]", "{", "}"].includes(token.text) &&
+        !matchingDelimiters.has(index),
+    );
+    const results = new Map<string, TopLevelApiCallStatus>();
+
+    for (let index = 0; index + 3 < tokens.length; index += 1) {
+      if (
+        tokens[index]?.text !== "$" ||
+        tokens[index + 1]?.text !== "." ||
+        tokens[index + 2]?.text !== methodName ||
+        tokens[index + 3]?.text !== "("
+      ) {
+        continue;
+      }
+
+      const callEnd = matchingDelimiters.get(index + 3);
+      const callOffset = tokens[index]!.start;
+      const lineStart = content.lastIndexOf("\n", callOffset - 1) + 1;
+      const line = content.slice(0, lineStart).split("\n").length;
+      const column = callOffset - lineStart;
+      const key = `${line}:${column}`;
+
+      if (hasUnmatchedDelimiters || callEnd === undefined) {
+        results.set(key, "unverified");
+        continue;
+      }
+
+      const isInsideBlock = tokens.some(
+        (token, tokenIndex) =>
+          tokenIndex < index &&
+          token.text === "{" &&
+          (matchingDelimiters.get(tokenIndex) ?? -1) > index,
+      );
+      const previousToken = tokens[index - 1];
+      const hasLineBreakBefore =
+        previousToken !== undefined &&
+        /[\r\n]/.test(content.slice(previousToken.end, callOffset));
+      const followsControlCondition =
+        previousToken?.text === ")" &&
+        (() => {
+          const openingParenthesis = matchingDelimiters.get(index - 1);
+          return (
+            openingParenthesis !== undefined &&
+            ["catch", "for", "if", "switch", "while", "with"].includes(
+              tokens[openingParenthesis - 1]?.text ?? "",
+            )
+          );
+        })();
+      const startsStatement =
+        previousToken === undefined ||
+        previousToken.text === ";" ||
+        previousToken.text === "}" ||
+        (hasLineBreakBefore &&
+          !followsControlCondition &&
+          /^(?:[$\w]+|\d+(?:\.\d+)?|[)\]}]|\+\+|--)$/.test(
+            previousToken.text,
+          ));
+      const nextToken = tokens[callEnd + 1];
+      const hasLineBreakAfter =
+        nextToken !== undefined &&
+        /[\r\n]/.test(content.slice(tokens[callEnd]!.end, nextToken.start));
+      const endsStatement =
+        nextToken === undefined ||
+        nextToken.text === ";" ||
+        nextToken.text === "}" ||
+        hasLineBreakAfter;
+
+      results.set(
+        key,
+        !isInsideBlock && startsStatement && endsStatement
+          ? "top-level"
+          : "nested",
+      );
+    }
+
+    return results;
+  }
+
   static analyze(
     content: string,
     methodName: string,
-    callbackName: string,
+    callbackName?: string,
   ): Map<string, CallbackContextStatus> {
     const tokens = this.tokenize(content);
     const matchingDelimiters = this.findMatchingDelimiters(tokens);
     const namedCallbacks = this.findNamedCallbacks(tokens, matchingDelimiters);
     const functionRanges = this.findFunctionRanges(tokens, matchingDelimiters);
-    const physicsCallbacks: SourceRange[] = [];
+    const requiredCallbacks: SourceRange[] = [];
     const otherCallbacks: SourceRange[] = [];
 
     for (let index = 0; index + 3 < tokens.length; index += 1) {
@@ -54,8 +141,8 @@ export class CallbackContextAnalyzer {
         namedCallbacks,
       );
       if (callbackRange) {
-        (calledCallback === callbackName
-          ? physicsCallbacks
+        (callbackName === undefined || calledCallback === callbackName
+          ? requiredCallbacks
           : otherCallbacks
         ).push(callbackRange);
       }
@@ -77,19 +164,18 @@ export class CallbackContextAnalyzer {
       const line = content.slice(0, lineStart).split("\n").length;
       const column = callOffset - lineStart;
       const key = `${line}:${column}`;
-      const containingPhysicsCallbacks = physicsCallbacks
+      const containingCallbacks = requiredCallbacks
         .filter((range) => this.contains(range, callOffset))
         .sort((left, right) => left.end - left.start - (right.end - right.start));
-      const physicsCallback = containingPhysicsCallbacks[0];
+      const callback = containingCallbacks[0];
 
-      if (physicsCallback) {
+      if (callback) {
         const isNestedFunction = functionRanges.some(
           (range) =>
-            range.start >= physicsCallback.start &&
-            range.end <= physicsCallback.end &&
+            range.start >= callback.start &&
+            range.end <= callback.end &&
             this.contains(range, callOffset) &&
-            (range.start !== physicsCallback.start ||
-              range.end !== physicsCallback.end),
+            (range.start !== callback.start || range.end !== callback.end),
         );
         results.set(key, isNestedFunction ? "unverified" : "inside");
       } else if (

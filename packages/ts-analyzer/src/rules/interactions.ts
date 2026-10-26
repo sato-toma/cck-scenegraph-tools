@@ -3,6 +3,7 @@ import { ApiMethod } from "../domain/types";
 export const interactionMethodRules: ApiMethod[] = [
   {
     name: "onInteract",
+    requiresTopLevelContext: true,
     requiredComponents: [
       {
         // Unity の Collider を継承する具象型のいずれか1つ以上が必要 (抽象型は SceneGraph.toml に出力されない)
@@ -21,6 +22,7 @@ export const interactionMethodRules: ApiMethod[] = [
   },
   {
     name: "onGrab",
+    requiresTopLevelContext: true,
     requiredComponents: [
       {
         componentType: "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
@@ -31,6 +33,7 @@ export const interactionMethodRules: ApiMethod[] = [
   },
   {
     name: "onUse",
+    requiresTopLevelContext: true,
     requiredComponents: [
       {
         componentType: "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
@@ -42,6 +45,7 @@ export const interactionMethodRules: ApiMethod[] = [
   },
   {
     name: "onRide",
+    requiresTopLevelContext: true,
     requiredComponents: [
       {
         componentType: "ClusterVR.CreatorKit.Item.Implements.RidableItem",
@@ -63,6 +67,7 @@ export const interactionMethodRules: ApiMethod[] = [
   },
   {
     name: "onCollide",
+    requiresTopLevelContext: true,
     requiredComponents: [
       {
         componentType: "UnityEngine.Rigidbody",

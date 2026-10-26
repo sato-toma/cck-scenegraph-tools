@@ -192,7 +192,11 @@ export class SceneGraphParser {
       // parent in SceneGraph may be an id or a name; try both
       let parent = this.getGameObjectById(sceneGraph, current.parent);
       if (!parent) {
-        parent = sceneGraph.gameObjects.find((obj) => obj.name === current.parent) || null;
+        parent =
+          sceneGraph.gameObjects.find(
+            (obj) =>
+              obj.name === current.parent || obj.path === current.parent,
+          ) || null;
       }
       if (!parent) {
         break;
@@ -238,7 +242,10 @@ export class SceneGraphParser {
 
     // parent can be stored as id or name in the TOML; match either
     const children = sceneGraph.gameObjects.filter(
-      (o) => o.parent === gameObject.id || o.parent === gameObject.name,
+      (o) =>
+        o.parent === gameObject.id ||
+        o.parent === gameObject.name ||
+        o.parent === gameObject.path,
     );
     for (const child of children) {
       descendants.push(child);
