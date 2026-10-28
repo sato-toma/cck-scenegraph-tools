@@ -30,7 +30,9 @@ export class SetVisiblePlayersArgumentValidator {
       }
 
       const nullToken =
-        players.length === 1 && players[0]?.text === "null"
+        players[0]?.text === "null" &&
+        (players.length === 1 ||
+          (players.length === 2 && players[1]?.text === "!"))
           ? players[0]
           : undefined;
       if (nullToken) {

@@ -372,6 +372,7 @@ Source_Code_Asset = "sample.ts"
       tsFilePath,
       [
         "$.setVisiblePlayers(null);",
+        "$.setVisiblePlayers(null!);",
         `$.setVisiblePlayers([${limitPlayers}]);`,
         `$.setVisiblePlayers([${overLimitPlayers}]);`,
         `$.setVisiblePlayers(${overLimitSparseArray});`,
@@ -395,7 +396,15 @@ Source_Code_Asset = "sample.ts"
           "setVisiblePlayers does not accept null; pass an array of PlayerHandle values.",
       },
       {
-        line: 3,
+        line: 2,
+        severity: "warning",
+        code: "INVALID_API_ARGUMENT",
+        apiCall: "setVisiblePlayers",
+        message:
+          "setVisiblePlayers does not accept null; pass an array of PlayerHandle values.",
+      },
+      {
+        line: 4,
         severity: "warning",
         code: "INVALID_API_ARGUMENT",
         apiCall: "setVisiblePlayers",
@@ -403,7 +412,7 @@ Source_Code_Asset = "sample.ts"
           "setVisiblePlayers accepts at most 64 players; received 65.",
       },
       {
-        line: 4,
+        line: 5,
         severity: "warning",
         code: "INVALID_API_ARGUMENT",
         apiCall: "setVisiblePlayers",

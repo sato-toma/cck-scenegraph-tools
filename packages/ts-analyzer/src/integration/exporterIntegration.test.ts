@@ -4,6 +4,7 @@ import * as path from "path";
 import { describe, expect, it } from "vitest";
 import { ClusterScriptAnalyzer } from "../analysis/analyzer";
 import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
+import { ClusterScriptDefinitions } from "../rules/clusterScriptDefinitions";
 import { WorldUploadValidator } from "../validation/worldUploadValidator";
 
 const fixturePath = path.join(
@@ -71,6 +72,78 @@ describe("SceneGraph exporter integration", () => {
         }),
       ]),
     );
+  });
+
+  it("analyzes the successful setVisiblePlayers overlap Unity sample", () => {
+    const sampleAssetsPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "unity-semantic-graph",
+      "Samples~",
+      "Assets",
+    );
+    const sceneGraphPath = path.join(sampleAssetsPath, "SceneGraph.toml");
+    const sceneGraph = SceneGraphParser.parseFile(sceneGraphPath);
+    const sampleObject = sceneGraph.gameObjects.find(
+      (gameObject) => gameObject.path === "setVisiblePlayers",
+    );
+    const sampleCube = sceneGraph.gameObjects.find(
+      (gameObject) => gameObject.path === "setVisiblePlayers/Cube",
+    );
+    const sampleLabel = sceneGraph.gameObjects.find(
+      (gameObject) => gameObject.path === "setVisiblePlayers/Cube/API_Label",
+    );
+    const scriptableItem = sampleObject?.components.find(
+      (component) =>
+        component.type ===
+        "ClusterVR.CreatorKit.Item.Implements.ScriptableItem",
+    );
+
+    expect(scriptableItem?.properties?.Source_Code_Asset).toBe(
+      "setVisiblePlayersScript",
+    );
+    expect(
+      sampleCube?.components.map((component) => component.type),
+    ).toContain(
+      "ClusterVR.CreatorKit.Item.Implements.OverlapDetectorShape",
+    );
+    expect(
+      sampleLabel?.components.map((component) => component.type),
+    ).toContain("UnityEngine.TextMesh");
+
+    const result = new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+      path.join(
+        sampleAssetsPath,
+        "Script",
+        "src",
+        "setVisiblePlayersScript.ts",
+      ),
+    );
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          api: "$.getOverlaps",
+          verificationStatus: "satisfied",
+        }),
+        expect.objectContaining({
+          api: "$.getUnityComponent",
+          componentTypes: ["TextMesh"],
+          verificationStatus: "satisfied",
+        }),
+      ]),
+    );
+    expect(
+      ClusterScriptDefinitions.getMethodDefinition("clearVisiblePlayers"),
+    ).toMatchObject({
+      name: "clearVisiblePlayers",
+      parameterTypes: [],
+      returnType: "void",
+      requiredComponents: [],
+    });
   });
 
   it("rejects callback registration inside a top-level conditional block", () => {
