@@ -12,6 +12,7 @@ import { ClusterScriptDefinitions } from "../rules/clusterScriptDefinitions";
 import { ComponentRequirementExtractor } from "./componentRequirements/extractor";
 import { ComponentRequirementValidator } from "./componentRequirements/validator";
 import { SetStateCompatArgumentValidator } from "./setStateCompatArgumentValidator";
+import { SetVisiblePlayersArgumentValidator } from "./setVisiblePlayersArgumentValidator";
 import {
   summarizeComponentRequirements,
 } from "./componentRequirements/summary";
@@ -70,7 +71,9 @@ export class ClusterScriptAnalyzer {
     const sourceContent = fs.readFileSync(resolvedTsFilePath, "utf-8");
     const apiCalls = TypeScriptCodeParser.extractApiCallsFromString(sourceContent);
     const issues: ValidationIssue[] =
-      SetStateCompatArgumentValidator.validate(sourceContent);
+      SetStateCompatArgumentValidator.validate(sourceContent).concat(
+        SetVisiblePlayersArgumentValidator.validate(sourceContent),
+      );
     const callbackContexts = new Map<
       string,
       Map<string, CallbackContextStatus>

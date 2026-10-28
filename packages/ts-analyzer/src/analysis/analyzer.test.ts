@@ -353,6 +353,75 @@ Source_Code_Asset = "sample.ts"
     ]);
   });
 
+  it("warns when setVisiblePlayers receives null or more than 64 literal players", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+    const limitPlayers = Array.from(
+      { length: 64 },
+      (_, index) => `player${index + 1}`,
+    ).join(", ");
+    const overLimitPlayers = Array.from(
+      { length: 65 },
+      (_, index) => `player${index + 1}`,
+    ).join(", ");
+    const overLimitSparseArray = `[${",".repeat(65)}]`;
+
+    fs.writeFileSync(sceneGraphPath, 'project = "TestProject"\n');
+    fs.writeFileSync(
+      tsFilePath,
+      [
+        "$.setVisiblePlayers(null);",
+        "$.setVisiblePlayers(null!);",
+        `$.setVisiblePlayers([${limitPlayers}]);`,
+        `$.setVisiblePlayers([${overLimitPlayers}]);`,
+        `$.setVisiblePlayers(${overLimitSparseArray});`,
+        "$.setVisiblePlayers([player1, player2]);",
+        "$.setVisiblePlayers(players);",
+        "$.setVisiblePlayers([...players]);",
+      ].join("\n"),
+    );
+
+    const result = new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+      tsFilePath,
+    );
+
+    expect(result.issues).toMatchObject([
+      {
+        line: 1,
+        severity: "warning",
+        code: "INVALID_API_ARGUMENT",
+        apiCall: "setVisiblePlayers",
+        message:
+          "setVisiblePlayers does not accept null; pass an array of PlayerHandle values.",
+      },
+      {
+        line: 2,
+        severity: "warning",
+        code: "INVALID_API_ARGUMENT",
+        apiCall: "setVisiblePlayers",
+        message:
+          "setVisiblePlayers does not accept null; pass an array of PlayerHandle values.",
+      },
+      {
+        line: 4,
+        severity: "warning",
+        code: "INVALID_API_ARGUMENT",
+        apiCall: "setVisiblePlayers",
+        message:
+          "setVisiblePlayers accepts at most 64 players; received 65.",
+      },
+      {
+        line: 5,
+        severity: "warning",
+        code: "INVALID_API_ARGUMENT",
+        apiCall: "setVisiblePlayers",
+        message:
+          "setVisiblePlayers accepts at most 64 players; received 65.",
+      },
+    ]);
+  });
+
   it("requires GrabbableItem for onUse and passes when the component exists", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
     const tsFilePath = path.join(tempDir, "sample.ts");
