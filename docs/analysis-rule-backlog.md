@@ -93,7 +93,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | [ ] | `requestOwner` | 所有権要求の許可条件 | 要確認 |
 | [ ] | `callExternal` | External Call 関連設定と callback 対応 | 要確認 |
 | [ ] | `onExternalCallEnd` | 外部呼び出し完了条件 | 要確認 |
-| [ ] | `setVisiblePlayers` | 表示対象設定の有効範囲 | 要確認 |
+| [x] | `setVisiblePlayers` | `null` と64要素を超える配列リテラルを警告。変数・spreadを含む配列は実行時サイズを静的に確定できないため対象外 | 公式 ClusterScript API 定義にある引数制約に基づく。Unity Component 制約なし |
 | [ ] | `clearVisiblePlayers` | 表示対象解除の有効範囲 | 要確認 |
 | [x] | `getUnityComponent` | 公式 API の戻り値と文字列リテラルの対象照合を確認 | 任意検索 |
 
