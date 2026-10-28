@@ -14,6 +14,13 @@ description: "Use when changing Unity SceneGraph TOML export, parsing, component
 7. Update the schema document or ADR when behavior or compatibility changes, and update the related GitHub issue.
 8. Report the changed contract, tests run, and any Unity-only validation that was unavailable.
 
+## ClusterScript API rule scope
+
+- Exclude APIs identified as beta in the official ClusterScript API documentation from rule implementation and API coverage by default.
+- Check the current official API documentation before selecting an API; do not infer beta status from the API name alone.
+- Handle beta APIs only when the user explicitly requests them.
+- Keep this scope policy separate from the per-API backlog and rule definitions.
+
 ## Local re-export and analysis check
 
 Use this flow whenever the sample Unity project (`packages/unity-semantic-graph/Samples~`) changes (new GameObject, new script wiring, new component) and you need to confirm `SceneGraph.toml` and the analyzer agree with it.
