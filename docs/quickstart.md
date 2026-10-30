@@ -6,7 +6,7 @@
 
 | 用途 | ツール | バージョン・条件 |
 | --- | --- | --- |
-| 解析器 | Node.js | `packages/ts-analyzer/.nvmrc` で指定（現在 24.x） |
+| 解析器 | Node.js | `packages/ts-analyzer/.nvmrc` で指定（現在 26.x） |
 | Exporter・サンプル Unity プロジェクト | Unity Editor | 6000.2.6f2 で動作確認。Unity Pipeline 操作には Unity 6.0 LTS 以上 |
 | ClusterScript・サンプル Unity プロジェクト | Cluster Creator Kit | 3.0.0 以上。解析器は 3.4.0 で動作確認 |
 | VS Code から Unity MCP を使う場合 | VS Code / GitHub Copilot Chat | 1.141.0 / 0.69.0 で確認 |
