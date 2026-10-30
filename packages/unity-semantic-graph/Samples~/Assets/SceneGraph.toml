@@ -567,6 +567,63 @@ type = "UnityEngine.MeshRenderer"
 enabled = true
 
 [[gameObjects]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154523-0"
+path = "setPlayerScript"
+name = "setPlayerScript"
+parent = ""
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154526-0"
+type = "UnityEngine.MeshFilter"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154525-0"
+type = "UnityEngine.BoxCollider"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154524-0"
+type = "UnityEngine.MeshRenderer"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154528-0"
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+[gameObjects.components.properties]
+Item_Name = ""
+Size = [0, 0, 0]
+Movement_Type = "Smooth"
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154529-0"
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "setPlayerScriptScript"
+Source_Code = ""
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154530-0"
+type = "ClusterVR.CreatorKit.Item.Implements.PlayerScript"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "setPlayerScriptPlayer"
+Source_Code = ""
+
+
+[[gameObjects]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-443706365-0"
+path = "setPlayerScript/API_Label"
+name = "API_Label"
+parent = "setPlayerScript"
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-443706367-0"
+type = "UnityEngine.MeshRenderer"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-443706368-0"
+type = "UnityEngine.TextMesh"
+enabled = true
+
+[[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-948913346-0"
 path = "setPosition"
 name = "setPosition"
