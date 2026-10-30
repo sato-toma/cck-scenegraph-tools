@@ -55,6 +55,17 @@ export const interactionMethodRules: ApiMethod[] = [
     description: "乗ることができるアイテムに乗る・降りるときに呼ばれるコールバック",
   },
   {
+    name: "setPlayerScript",
+    requiredComponents: [
+      {
+        componentType: "ClusterVR.CreatorKit.Item.Implements.PlayerScript",
+        requirement: "required",
+      },
+    ],
+    description:
+      "対象プレイヤーにアイテムのPlayer Scriptを設定します。アイテムにPlayer Scriptコンポーネントが必要です。",
+  },
+  {
     name: "getGrabbingPlayer",
     requiredComponents: [
       {
