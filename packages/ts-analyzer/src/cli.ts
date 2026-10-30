@@ -108,7 +108,7 @@ function analyzeCommand(args: string[]) {
     });
     const targetFiles = tsFilePath
       ? [tsFilePath]
-      : analyzer.getScriptableItemSourceFiles();
+      : analyzer.getScriptSourceFiles();
 
     if (parsedArgs.watch) {
       if (!tsFilePath) {
@@ -402,7 +402,7 @@ function reportCommand(args: string[]) {
     });
     const targetFiles = tsFilePath
       ? [tsFilePath]
-      : analyzer.getScriptableItemSourceFiles();
+      : analyzer.getScriptSourceFiles();
 
     console.log(analyzer.generateSceneGraphReport());
     console.log("\n");
@@ -443,7 +443,7 @@ function coverageCommand(args: string[]) {
     const analyzer = new ClusterScriptAnalyzer(sceneGraphPathNonNull);
     const targetFiles = tsFilePath
       ? [tsFilePath]
-      : analyzer.getScriptableItemSourceFiles();
+      : analyzer.getScriptSourceFiles();
 
     for (const targetFile of targetFiles) {
       if (!fs.existsSync(targetFile)) {
@@ -478,7 +478,7 @@ function recommendCommand(args: string[]) {
     const analyzer = new ClusterScriptAnalyzer(sceneGraphPathNonNull);
     const targetFiles = tsFilePath
       ? [tsFilePath]
-      : analyzer.getScriptableItemSourceFiles();
+      : analyzer.getScriptSourceFiles();
 
     for (const targetFile of targetFiles) {
       if (!fs.existsSync(targetFile)) {
@@ -513,7 +513,7 @@ function planCommand(args: string[]) {
     const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
     const targetFiles = tsFilePath
       ? [tsFilePath]
-      : analyzer.getScriptableItemSourceFiles();
+      : analyzer.getScriptSourceFiles();
     const results: AnalysisResult[] = [];
 
     for (const targetFile of targetFiles) {

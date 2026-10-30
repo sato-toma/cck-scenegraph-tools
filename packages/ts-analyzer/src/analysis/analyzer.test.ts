@@ -140,6 +140,78 @@ Source_Code_Asset = "sample.ts"
     });
   });
 
+  it.each([
+    ["$", "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"],
+    ["_", "ClusterVR.CreatorKit.Item.Implements.PlayerScript"],
+  ])(
+    "requires WorldItemReferenceList for %s.worldItemReference",
+    (receiver, scriptType) => {
+      const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+      const tsFilePath = path.join(tempDir, "world-item-reference.ts");
+      const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+      fs.writeFileSync(
+        tsFilePath,
+        `${receiver}.worldItemReference("door");\n`,
+      );
+
+      const analyzeWithComponent = (enabled?: boolean) => {
+        const componentEntry =
+          enabled === undefined
+            ? ""
+            : `
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.WorldItemReferenceList"
+enabled = ${enabled}
+`;
+        fs.writeFileSync(
+          sceneGraphPath,
+          `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+
+[[gameObjects.components]]
+type = "${scriptType}"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "world-item-reference.ts"
+${componentEntry}
+`,
+        );
+
+        const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+        return { analyzer, result: analyzer.analyzeTypeScriptFile(tsFilePath) };
+      };
+
+      const missing = analyzeWithComponent();
+      expect(missing.result.issues).toMatchObject([
+        {
+          code: "MISSING_COMPONENT",
+          apiCall: "worldItemReference",
+          requiredComponents: [
+            "ClusterVR.CreatorKit.Item.Implements.WorldItemReferenceList",
+          ],
+        },
+      ]);
+
+      const disabled = analyzeWithComponent(false);
+      expect(disabled.result.issues).toHaveLength(1);
+
+      const enabled = analyzeWithComponent(true);
+      expect(enabled.result.issues).toHaveLength(0);
+      expect(enabled.analyzer.getScriptSourceFiles()).toContain(tsFilePath);
+    },
+  );
+
   it("requires MovableItem for addForce", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
     const tsFilePath = path.join(tempDir, "sample.ts");

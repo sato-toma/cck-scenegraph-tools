@@ -26,6 +26,21 @@ describe("TypeScriptCodeParser", () => {
     expect(methodNames).toContain("velocity");
   });
 
+  it("extracts both ScriptableItem and PlayerScript API receivers", () => {
+    const calls = TypeScriptCodeParser.extractApiCallsFromString(`
+$.worldItemReference("door");
+_.worldItemReference("door");
+item.worldItemReference("door");
+`);
+
+    expect(
+      calls.map(({ methodName, receiver }) => ({ methodName, receiver })),
+    ).toEqual([
+      { methodName: "worldItemReference", receiver: "$" },
+      { methodName: "worldItemReference", receiver: "_" },
+    ]);
+  });
+
   it("detects invalid state mutations", () => {
     const invalid = TypeScriptCodeParser.extractInvalidStateMutationsFromString(sampleScript);
     expect(invalid).toHaveLength(1);

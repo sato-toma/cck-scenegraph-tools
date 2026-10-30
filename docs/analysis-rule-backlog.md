@@ -41,6 +41,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | [x] | `onUse` | Unity サンプルの `onUseScript` と `onUseMissingScript` で、GrabbableItem の有無を含む動作を確認済み | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem`（ClusterScript 定義に必須と明記） |
 | [x] | `onRide` | ClusterScript API で `RidableItem` 必須を確認。Creator Kit docs では Seat 未設定の Ridable Item は機能しないが、ルールは Component の有無のみを判定 | `ClusterVR.CreatorKit.Item.Implements.RidableItem` 必須 |
 | [x] | `getGrabbingPlayer` | ClusterScript API 定義で `GrabbableItem` 必須を確認。非 Grab 中は `null`。ルールは Component の有無のみを判定 | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem` 必須 |
+| [x] | `worldItemReference` | [`ClusterScript API`](https://docs.cluster.mu/script/interfaces/ClusterScript.html) と [`World Item Reference List`](https://docs.cluster.mu/creatorkit/item-components/world-item-reference-list/) を確認。`$` / `_` の両形式に対応 | 同じ Item GameObject に有効な `ClusterVR.CreatorKit.Item.Implements.WorldItemReferenceList` が必須。リスト内 ID と参照先の照合は、現在の SceneGraph TOML に要素データが出力されないため対象外 |
 | [ ] | `getRidingPlayer` | Ride 中と非 Ride 中の戻り値 | `RidableItem`。要確認 |
 
 ### P1: 移動・物理

@@ -32,6 +32,8 @@ scene-graph   SceneGraph の構造を表示
 list-apis     対応 API を表示
 ```
 
+TypeScript ファイルを省略して解析する場合は、SceneGraph に割り当てられた有効な `ScriptableItem` と `PlayerScript` のソースが対象になります。
+
 Unity Exporter の実行から解析までをまとめて行う場合は、リポジトリルートの [export-and-analyze スクリプト](../../scripts/export-and-analyze.ps1) を利用してください。
 
 ## 修正計画と承認
