@@ -353,6 +353,43 @@ Source_Code_Asset = "sample.ts"
     ]);
   });
 
+  it("allows clearVisiblePlayers without component constraints", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(tsFilePath, "$.clearVisiblePlayers();\n");
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+`,
+    );
+
+    const result = new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+      tsFilePath,
+    );
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests).toHaveLength(0);
+  });
+
   it("warns when setVisiblePlayers receives null or more than 64 literal players", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
     const tsFilePath = path.join(tempDir, "sample.ts");

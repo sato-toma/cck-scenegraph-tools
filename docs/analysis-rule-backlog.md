@@ -38,7 +38,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | 状態 | API | Unity で確認すること | 想定する制約 |
 | --- | --- | --- | --- |
 | [x] | `onInteract` | UnityでCollider必須条件を確認。`test.unity` のExportでは子GameObjectの有効な `BoxCollider` を確認 | `UnityEngine.BoxCollider` / `SphereCollider` / `CapsuleCollider` / `MeshCollider` / `WheelCollider` のいずれか1個以上 |
-| [ ] | `onUse` | 2026-10-17: MCP で不足・充足を確認。実行時挙動は未検証 | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem`（ClusterScript 定義に必須と明記） |
+| [x] | `onUse` | Unity サンプルの `onUseScript` と `onUseMissingScript` で、GrabbableItem の有無を含む動作を確認済み | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem`（ClusterScript 定義に必須と明記） |
 | [x] | `onRide` | ClusterScript API で `RidableItem` 必須を確認。Creator Kit docs では Seat 未設定の Ridable Item は機能しないが、ルールは Component の有無のみを判定 | `ClusterVR.CreatorKit.Item.Implements.RidableItem` 必須 |
 | [x] | `getGrabbingPlayer` | ClusterScript API 定義で `GrabbableItem` 必須を確認。非 Grab 中は `null`。ルールは Component の有無のみを判定 | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem` 必須 |
 | [ ] | `getRidingPlayer` | Ride 中と非 Ride 中の戻り値 | `RidableItem`。要確認 |
@@ -49,11 +49,11 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | --- | --- | --- | --- |
 | [ ] | `getPosition` | MovableItem なし、親にある場合、戻り値 | `MovableItem`。要確認 |
 | [ ] | `getRotation` | MovableItem なし、親にある場合、戻り値 | `MovableItem`。要確認 |
-| [ ] | `onPhysicsUpdate` | 公式 API 定義では物理状態の更新時（Unity の `FixedUpdate` 相当）と説明されるが、必須 Component は明記されていない。`MovableItem` は候補に留め、必須条件としての Unity 検証は未完了 | 確定した制約なし（候補: `ClusterVR.CreatorKit.Item.Implements.MovableItem`） |
+| [x] | `onPhysicsUpdate` | Unity サンプルの `addForceScript` でコールバックの動作を確認済み。必須 Component は公式 API 定義に明記されていない | 確定した制約なし（`MovableItem` は `addForce` の制約として扱う） |
 | [ ] | `useGravity` | 読み取り、書き込み、トップレベル外の制限 | `MovableItem`。要確認 |
 | [ ] | `velocity` | 読み取り、書き込み、Grab 中の挙動 | `MovableItem`。要確認 |
 | [ ] | `angularVelocity` | 読み取り、書き込み、Grab 中の挙動 | `MovableItem`。要確認 |
-| [ ] | `addForce` | API定義では `onPhysicsUpdate` 内のみ使用可能。Analyzer は `MovableItem` と、直接特定できる `onPhysicsUpdate` コールバック内での呼び出しを要求する。公式例は Rigidbody の Mass 1 を前提とするが、不在時のUnity実行時挙動は未検証 | `ClusterVR.CreatorKit.Item.Implements.MovableItem`（Component・コールバック文脈ルール追加済み。Unity確認待ち） |
+| [x] | `addForce` | Unity サンプルの `addForceScript` で `onPhysicsUpdate` 内の動作を確認済み。Analyzer は `MovableItem` と、直接特定できる `onPhysicsUpdate` コールバック内での呼び出しを要求する | `ClusterVR.CreatorKit.Item.Implements.MovableItem`（Component・コールバック文脈ルール追加済み） |
 | [ ] | `addTorque` | onPhysicsUpdate 内外、Rigidbody の有無 | `MovableItem`。要確認 |
 | [ ] | `addForceAt` | onPhysicsUpdate 内外、位置指定の扱い | `MovableItem`。要確認 |
 | [ ] | `addImpulsiveForce` | 実行可能なタイミング、Rigidbody の有無 | `MovableItem`。要確認 |
