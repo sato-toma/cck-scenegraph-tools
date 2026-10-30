@@ -19,6 +19,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | --- | --- | --- |
 | `setPosition` | `MovableItem` 必須 | 済み |
 | `setRotation` | `MovableItem` 必須 | 済み |
+| `setPlayerScript` | ワールドアイテムでは同じItem上の `ClusterVR.CreatorKit.Item.Implements.PlayerScript` 必須。Craft Itemでの利用はベータのため対象外 | 静的テスト済み（不足・無効・有効）。Unityシーン確認はMCP/Pipeline未接続のため未実施 |
 | `onGrab` | `GrabbableItem` 必須 | 済み |
 | `onCollide` | `Rigidbody` 必須 | 済み |
 | `getOverlaps` | `OverlapDetectorShape` 必須 | 済み |
@@ -37,6 +38,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 
 | 状態 | API | Unity で確認すること | 想定する制約 |
 | --- | --- | --- | --- |
+| [x] | [`setPlayerScript`](https://docs.cluster.mu/script/interfaces/ClusterScript.html#setplayerscript) | Player Scriptコンポーネント不足・無効・有効時のAnalyzer結果をfixtureで確認。Unity実シーンでの確認は未実施（Editor/Pipeline未接続） | ワールドアイテムの同一GameObject上に `ClusterVR.CreatorKit.Item.Implements.PlayerScript` が必要。Craft Itemでの利用はベータのため対象外 |
 | [x] | `onInteract` | UnityでCollider必須条件を確認。`test.unity` のExportでは子GameObjectの有効な `BoxCollider` を確認 | `UnityEngine.BoxCollider` / `SphereCollider` / `CapsuleCollider` / `MeshCollider` / `WheelCollider` のいずれか1個以上 |
 | [x] | `onUse` | Unity サンプルの `onUseScript` と `onUseMissingScript` で、GrabbableItem の有無を含む動作を確認済み | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem`（ClusterScript 定義に必須と明記） |
 | [x] | `onRide` | ClusterScript API で `RidableItem` 必須を確認。Creator Kit docs では Seat 未設定の Ridable Item は機能しないが、ルールは Component の有無のみを判定 | `ClusterVR.CreatorKit.Item.Implements.RidableItem` 必須 |
