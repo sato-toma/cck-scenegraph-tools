@@ -22,7 +22,7 @@ export class SubNodeExistenceValidator {
     sourceFilePath: string,
   ): ValidationIssue[] {
     const tokens = this.tokenize(source);
-    const targets = SceneGraphParser.findGameObjectsForSourceFile(
+    const targets = SceneGraphParser.findGameObjectsForScriptableItemSourceFile(
       sceneGraphPath,
       sceneGraph,
       sourceFilePath,

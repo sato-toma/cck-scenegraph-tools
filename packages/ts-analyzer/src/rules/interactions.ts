@@ -77,6 +77,18 @@ export const interactionMethodRules: ApiMethod[] = [
       "GrabbableItem が付いたアイテムを掴んでいるプレイヤーを取得します。掴んでいるプレイヤーがいない場合は null を返します。",
   },
   {
+    name: "worldItemReference",
+    requiredComponents: [
+      {
+        componentType:
+          "ClusterVR.CreatorKit.Item.Implements.WorldItemReferenceList",
+        requirement: "required",
+      },
+    ],
+    description:
+      "WorldItemReferenceList に登録されたワールドアイテムを参照します。リスト内の ID との照合は SceneGraph の出力範囲外です。",
+  },
+  {
     name: "onCollide",
     requiresTopLevelContext: true,
     requiredComponents: [

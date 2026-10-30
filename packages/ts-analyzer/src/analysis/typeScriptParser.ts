@@ -42,8 +42,8 @@ export class TypeScriptCodeParser {
 
     // パターン: receiver.methodName(...)
     // receiver には $, player, item など
-    const methodCallPattern = /(\w+\.)*\$\.(\w+)\s*\(/g;
-    const propertyAccessPattern = /(\w+\.)*\$\.(\w+)(?!\s*\()/g;
+    const methodCallPattern = /(\w+\.)*([$_])\.(\w+)\s*\(/g;
+    const propertyAccessPattern = /(\w+\.)*([$_])\.(\w+)(?![\w$])(?!\s*\()/g;
 
     lines.forEach((line: string, lineIndex: number) => {
       let match: RegExpExecArray | null;
@@ -53,8 +53,8 @@ export class TypeScriptCodeParser {
         results.push({
           line: lineIndex + 1,
           column: match.index,
-          methodName: match[2]!,
-          receiver: "$",
+          methodName: match[3]!,
+          receiver: match[2]!,
           fullExpression: match[0].trim(),
         });
       }
@@ -68,8 +68,8 @@ export class TypeScriptCodeParser {
           results.push({
             line: lineIndex + 1,
             column: match.index,
-            methodName: match[2]!,
-            receiver: "$",
+            methodName: match[3]!,
+            receiver: match[2]!,
             fullExpression: match[0].trim(),
           });
         }

@@ -10,6 +10,14 @@ import {
 
 type TomlRecord = Record<string, unknown>;
 
+const SCRIPTABLE_ITEM_TYPE =
+  "ClusterVR.CreatorKit.Item.Implements.ScriptableItem";
+const PLAYER_SCRIPT_TYPE = "ClusterVR.CreatorKit.Item.Implements.PlayerScript";
+const SCRIPT_COMPONENT_TYPES = new Set([
+  SCRIPTABLE_ITEM_TYPE,
+  PLAYER_SCRIPT_TYPE,
+]);
+
 function isTomlRecord(value: unknown): value is TomlRecord {
   return (
     typeof value === "object" &&
@@ -277,9 +285,15 @@ export class SceneGraphParser {
   ): GameObject[] {
     return sceneGraph.gameObjects.filter((obj) =>
       obj.components.some(
-        (comp) =>
-          comp.type === "ClusterVR.CreatorKit.Item.Implements.ScriptableItem" &&
-          comp.enabled,
+        (comp) => comp.type === SCRIPTABLE_ITEM_TYPE && comp.enabled,
+      ),
+    );
+  }
+
+  static getGameObjectsWithScript(sceneGraph: SceneGraph): GameObject[] {
+    return sceneGraph.gameObjects.filter((obj) =>
+      obj.components.some(
+        (comp) => SCRIPT_COMPONENT_TYPES.has(comp.type) && comp.enabled,
       ),
     );
   }
@@ -341,55 +355,92 @@ export class SceneGraphParser {
     sourceFilePath: string,
   ): GameObject[] {
     const normalizedTargetPath = path.resolve(sourceFilePath);
-    const scriptableObjects = this.getGameObjectsWithScriptableItem(sceneGraph);
-    const resolvedPathMatches = scriptableObjects.filter((gameObject) => {
-      const resolvedPath = this.resolveScriptableItemSourcePath(
-        sceneGraphPath,
-        gameObject,
-      );
-      return (
-        resolvedPath !== null &&
-        path.resolve(resolvedPath) === normalizedTargetPath
-      );
-    });
+    const sourceMappings = this.getGameObjectsWithScript(sceneGraph).flatMap(
+      (gameObject) =>
+        gameObject.components
+          .filter(
+            (component) =>
+              SCRIPT_COMPONENT_TYPES.has(component.type) && component.enabled,
+          )
+          .flatMap((component) => {
+            const sourceCodeAsset =
+              component.properties?.Source_Code_Asset;
+            if (
+              typeof sourceCodeAsset !== "string" ||
+              sourceCodeAsset.length === 0
+            ) {
+              return [];
+            }
+
+            return [
+              {
+                gameObject,
+                sourceCodeAsset,
+                resolvedPath: this.resolveSourceCodeAssetPath(
+                  sceneGraphPath,
+                  sourceCodeAsset,
+                ),
+              },
+            ];
+          }),
+    );
+    const resolvedPathMatches = sourceMappings
+      .filter(
+        ({ resolvedPath }) =>
+          resolvedPath !== null &&
+          path.resolve(resolvedPath) === normalizedTargetPath,
+      )
+      .map(({ gameObject }) => gameObject);
     if (resolvedPathMatches.length > 0) {
-      return resolvedPathMatches;
+      return [...new Set(resolvedPathMatches)];
     }
 
     const targetBaseName = path.basename(normalizedTargetPath);
-    const resolvedBaseNameMatches = scriptableObjects.filter((gameObject) => {
-      const resolvedPath = this.resolveScriptableItemSourcePath(
-        sceneGraphPath,
-        gameObject,
-      );
-      return (
-        resolvedPath !== null &&
-        path.basename(path.resolve(resolvedPath)) === targetBaseName
-      );
-    });
+    const resolvedBaseNameMatches = sourceMappings
+      .filter(
+        ({ resolvedPath }) =>
+          resolvedPath !== null &&
+          path.basename(path.resolve(resolvedPath)) === targetBaseName,
+      )
+      .map(({ gameObject }) => gameObject);
     if (resolvedBaseNameMatches.length > 0) {
-      return resolvedBaseNameMatches;
+      return [...new Set(resolvedBaseNameMatches)];
     }
 
     const targetNameWithoutExtension = path.basename(
       targetBaseName,
       path.extname(targetBaseName),
     );
-    return scriptableObjects.filter((gameObject) => {
-      const sourceCodeAsset = gameObject.components.find(
-        (component) =>
-          component.type ===
-            "ClusterVR.CreatorKit.Item.Implements.ScriptableItem" &&
-          component.enabled,
-      )?.properties?.Source_Code_Asset;
+    return [
+      ...new Set(
+        sourceMappings
+          .filter(
+            ({ sourceCodeAsset }) =>
+              path.basename(
+                sourceCodeAsset,
+                path.extname(sourceCodeAsset),
+              ) === targetNameWithoutExtension,
+          )
+          .map(({ gameObject }) => gameObject),
+      ),
+    ];
+  }
 
-      return (
-        typeof sourceCodeAsset === "string" &&
-        sourceCodeAsset.length > 0 &&
-        path.basename(sourceCodeAsset, path.extname(sourceCodeAsset)) ===
-          targetNameWithoutExtension
-      );
-    });
+  static findGameObjectsForScriptableItemSourceFile(
+    sceneGraphPath: string,
+    sceneGraph: SceneGraph,
+    sourceFilePath: string,
+  ): GameObject[] {
+    return this.findGameObjectsForSourceFile(
+      sceneGraphPath,
+      sceneGraph,
+      sourceFilePath,
+    ).filter((gameObject) =>
+      gameObject.components.some(
+        (component) =>
+          component.type === SCRIPTABLE_ITEM_TYPE && component.enabled,
+      ),
+    );
   }
 
   /**
@@ -408,6 +459,39 @@ export class SceneGraphParser {
       );
       if (resolvedPath) {
         paths.add(resolvedPath);
+      }
+    }
+
+    return Array.from(paths);
+  }
+
+  static getScriptSourcePaths(
+    sceneGraphPath: string,
+    sceneGraph: SceneGraph,
+  ): string[] {
+    const paths = new Set<string>();
+
+    for (const gameObject of sceneGraph.gameObjects) {
+      for (const component of gameObject.components) {
+        if (
+          !SCRIPT_COMPONENT_TYPES.has(component.type) ||
+          !component.enabled
+        ) {
+          continue;
+        }
+
+        const sourceCodeAsset = component.properties?.Source_Code_Asset;
+        if (typeof sourceCodeAsset !== "string" || sourceCodeAsset.length === 0) {
+          continue;
+        }
+
+        const resolvedPath = this.resolveSourceCodeAssetPath(
+          sceneGraphPath,
+          sourceCodeAsset,
+        );
+        if (resolvedPath) {
+          paths.add(resolvedPath);
+        }
       }
     }
 
@@ -438,6 +522,34 @@ export class SceneGraphParser {
       return null;
     }
 
+    return this.resolveSourceCodeAssetPath(sceneGraphPath, sourceCodeAsset);
+  }
+
+  static resolvePlayerScriptSourcePath(
+    sceneGraphPath: string,
+    gameObject: GameObject,
+  ): string | null {
+    const playerScriptComponent = gameObject.components.find(
+      (comp) => comp.type === PLAYER_SCRIPT_TYPE && comp.enabled,
+    );
+
+    if (!playerScriptComponent) {
+      return null;
+    }
+
+    const sourceCodeAsset =
+      playerScriptComponent.properties?.Source_Code_Asset;
+    if (typeof sourceCodeAsset !== "string" || sourceCodeAsset.length === 0) {
+      return null;
+    }
+
+    return this.resolveSourceCodeAssetPath(sceneGraphPath, sourceCodeAsset);
+  }
+
+  private static resolveSourceCodeAssetPath(
+    sceneGraphPath: string,
+    sourceCodeAsset: string,
+  ): string | null {
     const sceneGraphDir = path.dirname(sceneGraphPath);
     const baseName = path.basename(
       sourceCodeAsset,

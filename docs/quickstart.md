@@ -68,7 +68,7 @@ Set-Location ..\..
 
 - `Analyzer build not found`: `packages\ts-analyzer` で `npm ci` と `npm run build` を実行します。
 - Exporter が見つからない: Unity Package Manager で上記パッケージが導入され、Unity のコンパイルが完了していることを確認します。
-- `unverified` / `ambiguous`: SceneGraph の `ScriptableItem` と ClusterScript の割り当て、レポートの対象 GameObject と根拠を確認します。
+- `unverified` / `ambiguous`: SceneGraph の `ScriptableItem` / `PlayerScript` と ClusterScript の割り当て、レポートの対象 GameObject と根拠を確認します。
 - アップロード要件エラー: SceneGraph に記録された Spawn Point / Despawn Height など、Cluster ワールドの要件を確認します。
 
 ## Unity MCP を使った修正支援

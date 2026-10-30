@@ -13,7 +13,7 @@ ClusterScript TypeScript
   -> 検出した API / state mutation
   -> ComponentRequirementExtractor
   -> 構造化されたコンポーネント要求
-  -> ScriptableItem / Source_Code_Asset による対象 GameObject の解決
+  -> ScriptableItem / PlayerScript の Source_Code_Asset による対象 GameObject の解決
   -> ComponentRequirementValidator
   -> 対象 GameObject に対する照合結果
 

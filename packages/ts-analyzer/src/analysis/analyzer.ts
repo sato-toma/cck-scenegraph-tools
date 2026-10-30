@@ -263,14 +263,14 @@ export class ClusterScriptAnalyzer {
       return tsFilePath;
     }
 
-    const scriptableSources = SceneGraphParser.getScriptableItemSourcePaths(
+    const scriptSources = SceneGraphParser.getScriptSourcePaths(
       this.sceneGraphPath,
       this.sceneGraph,
     );
 
-    for (const scriptableSource of scriptableSources) {
-      if (fs.existsSync(scriptableSource)) {
-        return scriptableSource;
+    for (const scriptSource of scriptSources) {
+      if (fs.existsSync(scriptSource)) {
+        return scriptSource;
       }
     }
 
@@ -284,10 +284,27 @@ export class ClusterScriptAnalyzer {
     );
   }
 
+  getScriptSourceFiles(): string[] {
+    return SceneGraphParser.getScriptSourcePaths(
+      this.sceneGraphPath,
+      this.sceneGraph,
+    );
+  }
+
   analyzeAllScriptableItemFiles(): Map<string, AnalysisResult> {
     const results = new Map<string, AnalysisResult>();
 
     for (const sourceFile of this.getScriptableItemSourceFiles()) {
+      results.set(sourceFile, this.analyzeTypeScriptFile(sourceFile));
+    }
+
+    return results;
+  }
+
+  analyzeAllScriptFiles(): Map<string, AnalysisResult> {
+    const results = new Map<string, AnalysisResult>();
+
+    for (const sourceFile of this.getScriptSourceFiles()) {
       results.set(sourceFile, this.analyzeTypeScriptFile(sourceFile));
     }
 
