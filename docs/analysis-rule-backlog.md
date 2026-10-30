@@ -39,7 +39,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | --- | --- | --- | --- |
 | [x] | `onInteract` | UnityでCollider必須条件を確認。`test.unity` のExportでは子GameObjectの有効な `BoxCollider` を確認 | `UnityEngine.BoxCollider` / `SphereCollider` / `CapsuleCollider` / `MeshCollider` / `WheelCollider` のいずれか1個以上 |
 | [x] | `onUse` | Unity サンプルの `onUseScript` と `onUseMissingScript` で、GrabbableItem の有無を含む動作を確認済み | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem`（ClusterScript 定義に必須と明記） |
-| [x] | `onRide` | ClusterScript API で `RidableItem` 必須を確認。Creator Kit docs では Seat 未設定の Ridable Item は機能しないが、ルールは Component の有無のみを判定 | `ClusterVR.CreatorKit.Item.Implements.RidableItem` 必須 |
+| [x] | [`onRide`](https://docs.cluster.mu/script/interfaces/ClusterScript.html#onride) | トップレベル登録と有効な `RidableItem` を要求。サンプルの負例（無効化）では `MISSING_COMPONENT` が1件、有効状態の再Exportではエラー0件を確認。Creator Kitの追加要件（Seat設定、同階層または子のCollider）はサンプルに設定するが、Analyzerでは自動検査しない | [公式 ClusterScript API Reference](https://docs.cluster.mu/script/interfaces/ClusterScript.html#onride)、[`Ridable Item コンポーネント`](https://docs.cluster.mu/creatorkit/item-components/ridable-item/)、[`index.d.ts` の `ClusterScript.onRide`](../packages/unity-semantic-graph/Samples~/Assets/Script/external/index.d.ts) を参照。実例は [`onRideScript.ts`](../packages/unity-semantic-graph/Samples~/Assets/Script/src/onRideScript.ts) と [`test.unity`](../packages/unity-semantic-graph/Samples~/Assets/test.unity) |
 | [x] | `getGrabbingPlayer` | ClusterScript API 定義で `GrabbableItem` 必須を確認。非 Grab 中は `null`。ルールは Component の有無のみを判定 | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem` 必須 |
 | [ ] | `getRidingPlayer` | Ride 中と非 Ride 中の戻り値 | `RidableItem`。要確認 |
 

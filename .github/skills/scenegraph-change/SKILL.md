@@ -21,6 +21,20 @@ description: "Use when changing Unity SceneGraph TOML export, parsing, component
 - Handle beta APIs only when the user explicitly requests them.
 - Keep this scope policy separate from the per-API backlog and rule definitions.
 
+## Researching ClusterScript API rules
+
+Before implementing or changing a rule, follow its method entry in the official [ClusterScript API reference](https://docs.cluster.mu/script/interfaces/ClusterScript.html) and inspect the corresponding declaration and documentation in `packages/unity-semantic-graph/Samples~/Assets/Script/external/index.d.ts`. The official reference is the current public contract; the local declaration helps verify callback signatures and supports the sample project's TypeScript build. If the two disagree, do not silently choose one: record the discrepancy and ask which contract to follow.
+
+For each API, record the source links and separate:
+
+1. Explicit API requirements (such as a required component or a top-level-only registration constraint).
+2. Additional conditions documented by related Creator Kit component documentation.
+3. Behaviors not explicitly required by the API docs and therefore not enforced by the analyzer.
+
+Use the API-specific official documentation to establish its requirements. Follow each referenced Creator Kit component to its official component page and inspect required fields, dependencies, and hierarchy constraints. Use the repository's actual examples in `packages/unity-semantic-graph/Samples~/Assets/Script` and `packages/unity-semantic-graph/Samples~/Assets/test.unity`; do not embed API-specific example code in this Skill. Do not turn an inferred condition into a rule without evidence and a focused test. Tests should include a violating case and a satisfying case for each enforced condition. Keep the backlog's Unity verification notes distinct from requirements stated by the API and component references.
+
+For Unity-backed rule verification, use the same flow as neighboring API-confirmation objects in `packages/unity-semantic-graph/Samples~/Assets/test.unity`: attach the TypeScript build output from `Assets/Script/dist` to a ScriptableItem on the matching GameObject, export SceneGraph from Unity, and analyze the source TypeScript against that export. Verify both a negative configuration and a successful configuration, and leave the final scene in the successful configuration. Record related component documentation and its constraints in `docs/analysis-rule-backlog.md`.
+
 ## Local re-export and analysis check
 
 Use this flow whenever the sample Unity project (`packages/unity-semantic-graph/Samples~`) changes (new GameObject, new script wiring, new component) and you need to confirm `SceneGraph.toml` and the analyzer agree with it.
