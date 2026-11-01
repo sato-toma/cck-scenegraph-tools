@@ -1,11 +1,13 @@
 ---
 name: unity-mcp-setup
-description: "Use when setting up, verifying, or troubleshooting the Unity CLI MCP server for VS Code GitHub Copilot Agent mode, editing .mcp.json, or reading Unity scene data through MCP tools."
+description: "Use when setting up, verifying, or troubleshooting Unity CLI MCP configuration and connection for VS Code GitHub Copilot Agent mode, including editing .mcp.json."
 ---
 
 # Unity MCP Setup and Verification
 
 Human-readable procedure: `docs/unity-mcp-setup.md`. Investigation results and SceneGraph mapping: `docs/unity-cli-mcp.md`. Read both before changing MCP configuration.
+
+This Skill owns MCP installation, configuration, and connection troubleshooting. For inspecting or maintaining Unity sample-scene content, use [unity-sample-maintenance](../unity-sample-maintenance/SKILL.md).
 
 ## Facts to rely on (verified 2026-10-12)
 
