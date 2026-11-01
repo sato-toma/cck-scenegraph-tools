@@ -4,6 +4,7 @@ import { movementRules } from "./movement";
 import { stateRules } from "./state";
 import { stateMutationRules } from "./stateMutation";
 import { lifecycleRules } from "./lifecycle";
+import { materialRules } from "./material";
 import { visibilityRules } from "./visibility";
 
 export const ruleSets = {
@@ -12,6 +13,7 @@ export const ruleSets = {
   movement: movementRules,
   state: stateRules,
   lifecycle: lifecycleRules,
+  material: materialRules,
   visibility: visibilityRules,
 };
 

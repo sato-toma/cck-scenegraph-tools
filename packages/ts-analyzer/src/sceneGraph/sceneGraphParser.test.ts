@@ -137,6 +137,41 @@ Unsupported = 1979-05-27T07:32:00Z
     );
   });
 
+  it("parses top-level material records and rejects invalid emission state", () => {
+    const sceneGraph = SceneGraphParser.parse(`
+project = "TestProject"
+
+[[materials]]
+guid = "material-guid"
+name = "CubeColor"
+path = "Assets/CubeColor.mat"
+shader = "Standard"
+emissionEnabled = true
+emissionColor = [0.0, 0.0, 0.0, 1.0]
+`);
+
+    expect(sceneGraph.materials).toEqual([
+      {
+        guid: "material-guid",
+        name: "CubeColor",
+        path: "Assets/CubeColor.mat",
+        shader: "Standard",
+        emissionEnabled: true,
+        emissionColor: [0, 0, 0, 1],
+      },
+    ]);
+    expect(SceneGraphParser.parse('project = "TestProject"').materials).toBeUndefined();
+    expect(() =>
+      SceneGraphParser.parse(`
+project = "TestProject"
+
+[[materials]]
+guid = "material-guid"
+emissionEnabled = "yes"
+`),
+    ).toThrow();
+  });
+
   it("finds game objects by component", () => {
     const sceneGraph = SceneGraphParser.parse(sampleToml);
     const rigidbodies = SceneGraphParser.getGameObjectsWithComponent(

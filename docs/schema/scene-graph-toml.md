@@ -18,6 +18,22 @@ enabled = true
 
 [gameObjects.components.properties]
 Mass = 1.0
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-..."
+type = "UnityEngine.MeshRenderer"
+enabled = true
+
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["material-guid"]
+
+[[materials]]
+guid = "material-guid"
+name = "CubeColor"
+path = "Assets/CubeColor.mat"
+shader = "Standard"
+emissionEnabled = true
+emissionColor = [0.0, 0.0, 0.0, 1.0]
 ```
 
 ## フィールド
@@ -33,12 +49,23 @@ Mass = 1.0
 | component | `type` | コンポーネントの完全修飾型名 |
 | component | `enabled` | exporter が取得した有効状態。`Behaviour` と `Collider` は Unity の状態、それ以外の `Component` は `true` |
 | properties | 任意キー | exporter が出力できるシリアライズ済み値。null と未対応値は出力しない |
+| properties | `Renderer_Material_Guids` | Renderer に割り当てられた Material の GUID 配列 |
+| root | `materials` | ItemMaterialSetList が参照する Material の情報。Exporter が出力する任意の配列 |
+| material | `guid` / `name` / `path` / `shader` | Material の識別子と Asset 情報 |
+| material | `emissionEnabled` | `_EMISSION` キーワードの状態。暗黙ルール用の観測値 |
+| material | `emissionColor` | `_EmissionColor` 値。取得可能な場合のみ出力 |
 
 ### プロパティ値
 
 `properties` の値は TOML の文字列、数値、真偽値、またはそれらを含む配列です。Unity の Vector、Rect、Quaternion は数値配列、Bounds は二重配列として保存されます。オブジェクト参照は参照先の名前を文字列で保存し、参照 ID は保存しません。analyzer の `ComponentPropertyValue` は、この入れ子配列を含む値を表します。
 
 exporter は文字列内の引用符、バックスラッシュ、改行を TOML 用にエスケープし、浮動小数点数を `InvariantCulture` で出力します。そのため小数点は常に `.` です。エスケープやロケールに関する試験用 TOML は [SceneGraphParser のテスト](../../packages/ts-analyzer/src/sceneGraph/sceneGraphParser.test.ts) にあります。
+
+### Material の参照
+
+- `Item_Material_Sets` は `"<id>=<material-guid>"` 形式で出力されます。ID は Cluster Creator Kit の Item Material Set List 仕様に従います。
+- Renderer の `Renderer_Material_Guids` は、その Renderer に割り当てられた Material GUID の配列です。解析器は対象 ScriptableItem 自身と子孫 GameObject の Renderer だけを確認します。
+- `[[materials]]` は ItemMaterialSetList が参照する Material の shader 名と Emission 状態を記録します。`emissionEnabled` は経験則ベースの暗黙ルールを確認するための観測値であり、ClusterScript API の公式要件ではありません。
 
 ## 互換性ルール
 
