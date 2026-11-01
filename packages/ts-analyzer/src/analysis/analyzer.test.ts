@@ -212,6 +212,64 @@ ${componentEntry}
     },
   );
 
+  it("requires ItemMaterialSetList and a Renderer for $.material", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "material.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(tsFilePath, `$.material("cubeMat");\n`);
+
+    const analyzeWithComponents = (components: string[]) => {
+      const componentEntries = components
+        .map(
+          (type) => `
+[[gameObjects.components]]
+type = "${type}"
+enabled = true
+`,
+        )
+        .join("");
+      fs.writeFileSync(
+        sceneGraphPath,
+        `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "material.ts"
+${componentEntries}
+`,
+      );
+
+      const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+      return analyzer.analyzeTypeScriptFile(tsFilePath);
+    };
+
+    const itemMaterialSetList = "ClusterVR.CreatorKit.Item.Implements.ItemMaterialSetList";
+    const meshRenderer = "UnityEngine.MeshRenderer";
+
+    expect(analyzeWithComponents([]).issues).toMatchObject([
+      { code: "MISSING_COMPONENT", apiCall: "material" },
+    ]);
+    expect(analyzeWithComponents([itemMaterialSetList]).issues).toHaveLength(1);
+    expect(analyzeWithComponents([meshRenderer]).issues).toHaveLength(1);
+    expect(
+      analyzeWithComponents([itemMaterialSetList, meshRenderer]).issues,
+    ).toHaveLength(0);
+  });
+
   it("requires MovableItem for addForce", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
     const tsFilePath = path.join(tempDir, "sample.ts");
