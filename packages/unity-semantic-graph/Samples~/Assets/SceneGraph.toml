@@ -208,6 +208,106 @@ type = "UnityEngine.TextMesh"
 enabled = true
 
 [[gameObjects]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-2105694028-0"
+path = "getPositionNoMovable"
+name = "getPositionNoMovable"
+parent = ""
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-2105694030-0"
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+[gameObjects.components.properties]
+Item_Name = ""
+Size = [0, 0, 0]
+Movement_Type = "Smooth"
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-2105694031-0"
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "getPositionScript"
+Source_Code = ""
+
+
+[[gameObjects]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-965701373-0"
+path = "getPositionParent"
+name = "getPositionParent"
+parent = ""
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-965701375-0"
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+[gameObjects.components.properties]
+Item_Name = ""
+Size = [0, 0, 0]
+Movement_Type = "Smooth"
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-965701376-0"
+type = "UnityEngine.Rigidbody"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-965701377-0"
+type = "ClusterVR.CreatorKit.Item.Implements.MovableItem"
+enabled = true
+
+[[gameObjects]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-323355186-0"
+path = "getPositionParent/getPosition"
+name = "getPosition"
+parent = "getPositionParent"
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-323355188-0"
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+[gameObjects.components.properties]
+Item_Name = ""
+Size = [0, 0, 0]
+Movement_Type = "Smooth"
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-323355189-0"
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "getPositionScript"
+Source_Code = ""
+
+
+[[gameObjects]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1647012348-0"
+path = "getPositionSameMovable"
+name = "getPositionSameMovable"
+parent = ""
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1647012350-0"
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+[gameObjects.components.properties]
+Item_Name = ""
+Size = [0, 0, 0]
+Movement_Type = "Smooth"
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1647012351-0"
+type = "UnityEngine.Rigidbody"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1647012352-0"
+type = "ClusterVR.CreatorKit.Item.Implements.MovableItem"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1647012353-0"
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "getPositionScript"
+Source_Code = ""
+
+
+[[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-965996138-0"
 path = "onCollide"
 name = "onCollide"
