@@ -56,9 +56,10 @@ exporter は文字列内の引用符、バックスラッシュ、改行を TOML
 
 - 有効な `ClusterVR.CreatorKit.World.Implements.SpawnPoints.SpawnPoint` が1つ以上あり、`properties.Spawn_Type` が `Entrance` であること。
 - `ClusterVR.CreatorKit.World.Implements.DespawnHeights.DespawnHeight` がちょうど1つあり、有効であること。
+- `ClusterVR.CreatorKit.Item.Implements.Item` を持つ GameObject の子孫に、別の `Item` を配置しないこと。
 - 足場用 Collider の有無は検証しない。
 
-Spawn Point と Despawn Height は、SceneGraph 上の完全修飾型名・`enabled`・シリアライズ済み `Spawn_Type` で判定する。Hierarchy や短縮型名だけから SceneGraph を補完しない。
+Spawn Point と Despawn Height は、SceneGraph 上の完全修飾型名・`enabled`・シリアライズ済み `Spawn_Type` で判定する。Item の親子制約は完全修飾型名と `parent` パスの祖先関係で判定する。Hierarchy や短縮型名だけから SceneGraph を補完しない。
 
 ## 変更時の確認項目
 

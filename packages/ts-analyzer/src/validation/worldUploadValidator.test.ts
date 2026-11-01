@@ -4,6 +4,7 @@ import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
 import { WorldUploadValidator } from "./worldUploadValidator";
 
 const fixturePath = path.join(__dirname, "..", "fixtures", "scene-graph-export.toml");
+const itemType = "ClusterVR.CreatorKit.Item.Implements.Item";
 
 describe("WorldUploadValidator", () => {
   it("accepts one Entrance SpawnPoint and exactly one enabled DespawnHeight", () => {
@@ -60,5 +61,69 @@ describe("WorldUploadValidator", () => {
     expect(WorldUploadValidator.validate(sceneGraph)).toContain(
       'At least one enabled SpawnPoint with Spawn_Type = "Entrance" is required.',
     );
+  });
+
+  it("rejects an Item nested under any Item ancestor", () => {
+    const sceneGraph = SceneGraphParser.parse('project = "TestProject"');
+    sceneGraph.gameObjects.push(
+      {
+        id: "parent",
+        path: "Parent",
+        name: "Parent",
+        parent: "",
+        components: [{ id: "parent-item", type: itemType, enabled: true }],
+      },
+      {
+        id: "intermediate",
+        path: "Parent/Intermediate",
+        name: "Intermediate",
+        parent: "Parent",
+        components: [],
+      },
+      {
+        id: "child",
+        path: "Parent/Intermediate/Child",
+        name: "Child",
+        parent: "Parent/Intermediate",
+        components: [{ id: "child-item", type: itemType, enabled: true }],
+      },
+    );
+
+    expect(WorldUploadValidator.validate(sceneGraph)).toContain(
+      'Item component at "Parent/Intermediate/Child" cannot be nested under an Item component at "Parent".',
+    );
+  });
+
+  it("allows Item components on separate roots and child objects without an Item", () => {
+    const sceneGraph = SceneGraphParser.parse('project = "TestProject"');
+    sceneGraph.gameObjects.push(
+      {
+        id: "parent",
+        path: "Parent",
+        name: "Parent",
+        parent: "",
+        components: [{ id: "parent-item", type: itemType, enabled: true }],
+      },
+      {
+        id: "child",
+        path: "Parent/Child",
+        name: "Child",
+        parent: "Parent",
+        components: [],
+      },
+      {
+        id: "sibling-root",
+        path: "Sibling",
+        name: "Sibling",
+        parent: "",
+        components: [{ id: "sibling-item", type: itemType, enabled: true }],
+      },
+    );
+
+    expect(
+      WorldUploadValidator.validate(sceneGraph).filter((issue) =>
+        issue.startsWith("Item component"),
+      ),
+    ).toEqual([]);
   });
 });

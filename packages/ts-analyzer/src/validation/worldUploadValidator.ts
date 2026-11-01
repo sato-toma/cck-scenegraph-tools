@@ -4,6 +4,7 @@ const SPAWN_POINT_TYPE =
   "ClusterVR.CreatorKit.World.Implements.SpawnPoints.SpawnPoint";
 const DESPAWN_HEIGHT_TYPE =
   "ClusterVR.CreatorKit.World.Implements.DespawnHeights.DespawnHeight";
+const ITEM_TYPE = "ClusterVR.CreatorKit.Item.Implements.Item";
 
 export class WorldUploadValidator {
   static validate(sceneGraph: SceneGraph): string[] {
@@ -20,6 +21,32 @@ export class WorldUploadValidator {
       (component) => component.type === DESPAWN_HEIGHT_TYPE,
     );
     const issues: string[] = [];
+    const gameObjectsByPath = new Map(
+      sceneGraph.gameObjects.map((gameObject) => [gameObject.path, gameObject]),
+    );
+
+    for (const gameObject of sceneGraph.gameObjects) {
+      if (!gameObject.components.some((component) => component.type === ITEM_TYPE)) {
+        continue;
+      }
+
+      const visitedPaths = new Set([gameObject.path]);
+      let parentPath = gameObject.parent;
+      while (parentPath && !visitedPaths.has(parentPath)) {
+        visitedPaths.add(parentPath);
+        const parent = gameObjectsByPath.get(parentPath);
+        if (!parent) {
+          break;
+        }
+        if (parent.components.some((component) => component.type === ITEM_TYPE)) {
+          issues.push(
+            `Item component at "${gameObject.path}" cannot be nested under an Item component at "${parent.path}".`,
+          );
+          break;
+        }
+        parentPath = parent.parent;
+      }
+    }
 
     if (entranceSpawnPoints.length === 0) {
       issues.push(

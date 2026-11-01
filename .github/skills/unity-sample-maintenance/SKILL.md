@@ -29,6 +29,7 @@ This Skill owns changes to the Unity sample project's scenes and Unity-authored 
 4. After approval, use Unity MCP to configure the selected sample object and its ScriptableItem reference. Do not change unrelated scene content.
 5. If approved sample TypeScript source changes, build it from `packages/unity-semantic-graph/Samples~/Assets/Script` and use the resulting `Assets/Script/dist` output for the scene reference.
 6. Verify a negative configuration and a satisfying configuration. Restore the scene to the successful configuration at the end.
+   - Do not place an `Item` component on a descendant of another `Item`; Cluster upload rejects nested Items. Keep an intentionally invalid hierarchy only when the task is specifically testing the upload validator.
 7. Export SceneGraph using the batch command documented in `docs/repository-guide.md`, confirm the intended object and components appear, and run the analyzer against the source TypeScript and exported TOML.
 8. Record Unity observations separately from official API/component requirements in `docs/analysis-rule-backlog.md`. Do not claim Cluster runtime verification unless it was actually performed. Do not publish or upload a world unless explicitly requested.
 9. Report MCP operations performed, scene changes, export and analyzer results, and any unverified Unity/Cluster behavior.
