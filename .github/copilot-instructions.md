@@ -15,6 +15,13 @@ This repository exports Unity Cluster Creator Kit scene data to `SceneGraph.toml
 - Add or update tests for parser, validator, analyzer, and exporter behavior affected by a change.
 - Do not replace the current regex parser with AST parsing incrementally without fixtures for both supported and unsupported syntax.
 
+## Git workflow
+
+- Check the current branch, working tree, and upstream before starting changes and before committing.
+- Never commit task changes directly to `main`; create or switch to a task-specific development branch first.
+- Ensure pushes target the development branch, not `origin/main`. Set the branch's upstream to its matching remote branch before using plain `git push`.
+- Before creating a PR, confirm the remote head branch exists and contains commits not already in the base branch.
+
 ## Validation
 
 - For TypeScript changes, run `npm run verify` from `packages/ts-analyzer`.
