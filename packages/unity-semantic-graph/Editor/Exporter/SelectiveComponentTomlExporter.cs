@@ -13,6 +13,10 @@ namespace UnitySemanticGraph.Editor.Exporter
 {
     public static class SelectiveComponentTomlExporter
     {
+        private const string ItemMaterialSetListTypeName = "ClusterVR.CreatorKit.Item.Implements.ItemMaterialSetList";
+        private const string ItemMaterialSetsPropertyName = "itemMaterialSets";
+        private const string ItemMaterialSetsDisplayName = "Item Material Sets";
+
         public static void ExportGraphToToml()
         {
             try
@@ -234,8 +238,56 @@ namespace UnitySemanticGraph.Editor.Exporter
 
         private static void WriteSceneToml(string filePath, IEnumerable<GameObjectInfo> gameObjects)
         {
-            WriteToml(filePath, gameObjects.OrderBy(g => g.Path).ToList());
+            var sorted = gameObjects.OrderBy(g => g.Path).ToList();
+            WriteToml(filePath, sorted, GatherReferencedMaterials(sorted));
         }
+
+        /// <summary>
+        /// ItemMaterialSetList から参照されている Material を収集します。
+        /// </summary>
+        private static List<MaterialInfo> GatherReferencedMaterials(IEnumerable<GameObjectInfo> gameObjects)
+        {
+            var guids = new SortedSet<string>(StringComparer.Ordinal);
+            foreach (var gameObject in gameObjects)
+            {
+                foreach (var component in gameObject.Components)
+                {
+                    if (component.Type != ItemMaterialSetListTypeName) continue;
+                    if (!component.Properties.TryGetValue(ItemMaterialSetsDisplayName, out var value)) continue;
+                    if (!(value is IEnumerable<object> entries)) continue;
+
+                    foreach (var entry in entries)
+                    {
+                        if (!(entry is string text)) continue;
+                        var separator = text.LastIndexOf('=');
+                        if (separator <= 0 || separator == text.Length - 1) continue;
+                        guids.Add(text.Substring(separator + 1));
+                    }
+                }
+            }
+
+            var materials = new List<MaterialInfo>();
+            foreach (var guid in guids)
+            {
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                if (string.IsNullOrEmpty(assetPath)) continue;
+                var material = AssetDatabase.LoadAssetAtPath<Material>(assetPath);
+                if (material == null) continue;
+
+                materials.Add(new MaterialInfo
+                {
+                    Guid = guid,
+                    Name = material.name,
+                    Path = assetPath,
+                    Shader = material.shader != null ? material.shader.name : string.Empty,
+                    EmissionEnabled = material.IsKeywordEnabled("_EMISSION"),
+                    EmissionColor = material.HasProperty("_EmissionColor") ? material.GetColor("_EmissionColor") : (Color?)null,
+                });
+            }
+
+            return materials;
+        }
+
 
         private static IReadOnlyList<ComponentInfo> GatherComponents(GameObject go)
         {
@@ -292,7 +344,9 @@ namespace UnitySemanticGraph.Editor.Exporter
                 if (property.name.StartsWith("m_")) continue;
 
                 var key = property.displayName;
-                var value = GetSerializedPropertyValue(property);
+                var value = component.GetType().FullName == ItemMaterialSetListTypeName && property.name == ItemMaterialSetsPropertyName
+                    ? GetItemMaterialSetEntries(property)
+                    : GetSerializedPropertyValue(property);
                 if (value != null)
                 {
                     values[key] = value;
@@ -384,11 +438,29 @@ namespace UnitySemanticGraph.Editor.Exporter
             return elements.Count > 0 ? (object)elements : null;
         }
 
+        private static object GetItemMaterialSetEntries(SerializedProperty arrayProperty)
+        {
+            var entries = new List<object>();
+            for (var index = 0; index < arrayProperty.arraySize; index++)
+            {
+                var element = arrayProperty.GetArrayElementAtIndex(index);
+                var id = element.FindPropertyRelative("id")?.stringValue;
+                var material = element.FindPropertyRelative("material")?.objectReferenceValue;
+                if (string.IsNullOrEmpty(id) || material == null) continue;
+                if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(material, out var guid, out long _)) continue;
+
+                // 形式: "<id>=<material guid>"。GUID に '=' は含まれないため、区切りは最後の '=' を使う。
+                entries.Add($"{id}={guid}");
+            }
+
+            return entries.Count > 0 ? (object)entries : null;
+        }
+
         /// <summary>
         /// データをストリーム経由で直接ファイルに書き込みます。
         /// 巨大な文字列をメモリに生成するのを避けます。
         /// </summary>
-        private static void WriteToml(string filePath, IReadOnlyList<GameObjectInfo> gameObjects)
+        private static void WriteToml(string filePath, IReadOnlyList<GameObjectInfo> gameObjects, IReadOnlyList<MaterialInfo> materials)
         {
             using var writer = new StreamWriter(filePath);
 
@@ -428,6 +500,32 @@ namespace UnitySemanticGraph.Editor.Exporter
 
                 writer.WriteLine();
             }
+
+            foreach (var material in materials)
+            {
+                writer.WriteLine("[[materials]]");
+                writer.WriteLine($"guid = \"{EscapeTomlString(material.Guid)}\"");
+                writer.WriteLine($"name = \"{EscapeTomlString(material.Name)}\"");
+                writer.WriteLine($"path = \"{EscapeTomlString(material.Path)}\"");
+                writer.WriteLine($"shader = \"{EscapeTomlString(material.Shader)}\"");
+                writer.WriteLine($"emissionEnabled = {material.EmissionEnabled.ToString().ToLowerInvariant()}");
+                if (material.EmissionColor.HasValue)
+                {
+                    var color = material.EmissionColor.Value;
+                    writer.WriteLine($"emissionColor = {FormatTomlValue(new Vector4(color.r, color.g, color.b, color.a))}");
+                }
+                writer.WriteLine();
+            }
+        }
+
+        private sealed class MaterialInfo
+        {
+            public string Guid { get; set; }
+            public string Name { get; set; }
+            public string Path { get; set; }
+            public string Shader { get; set; }
+            public bool EmissionEnabled { get; set; }
+            public Color? EmissionColor { get; set; }
         }
 
         private static string FormatTomlValue(object value)

@@ -270,6 +270,89 @@ ${componentEntries}
     ).toHaveLength(0);
   });
 
+  it("checks that $.material setEmissionColor targets an enabled _EMISSION material", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "emission.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    const writeScene = (options: {
+      emissionEnabled?: boolean;
+      includeMaterials?: boolean;
+      materialSetId?: string;
+    }) => {
+      const materialSetId = options.materialSetId ?? "cubeMat";
+      const materials =
+        options.includeMaterials === false
+          ? ""
+          : `
+[[materials]]
+guid = "material-guid"
+name = "CubeColor"
+path = "Assets/CubeColor.mat"
+shader = "Standard"
+emissionEnabled = ${options.emissionEnabled === false ? "false" : "true"}
+emissionColor = [0.0, 0.0, 0.0, 1.0]
+`;
+      fs.writeFileSync(
+        sceneGraphPath,
+        `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "emission.ts"
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ItemMaterialSetList"
+enabled = true
+[gameObjects.components.properties]
+Item_Material_Sets = ["${materialSetId}=material-guid"]
+
+[[gameObjects.components]]
+type = "UnityEngine.MeshRenderer"
+enabled = true
+${materials}`,
+      );
+      return new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+        tsFilePath,
+      );
+    };
+
+    fs.writeFileSync(
+      tsFilePath,
+      [
+        'const mat = $.material("cubeMat");',
+        'mat.setEmissionColor(1, 0, 0, 1);',
+        '$.material("cubeMat").setEmissionColor(0, 1, 0, 1);',
+      ].join("\n"),
+    );
+
+    expect(writeScene({ emissionEnabled: true }).issues).toHaveLength(0);
+
+    expect(writeScene({ emissionEnabled: false }).issues).toMatchObject([
+      { line: 2, severity: "warning", code: "MATERIAL_EMISSION_DISABLED", apiCall: "setEmissionColor" },
+      { line: 3, severity: "warning", code: "MATERIAL_EMISSION_DISABLED", apiCall: "setEmissionColor" },
+    ]);
+
+    expect(writeScene({ includeMaterials: false }).issues).toMatchObject([
+      { line: 2, severity: "warning", code: "UNVERIFIED_MATERIAL_EMISSION", apiCall: "setEmissionColor" },
+      { line: 3, severity: "warning", code: "UNVERIFIED_MATERIAL_EMISSION", apiCall: "setEmissionColor" },
+    ]);
+
+    expect(writeScene({ materialSetId: "otherMat" }).issues).toMatchObject([
+      { line: 2, severity: "warning", code: "UNVERIFIED_MATERIAL_EMISSION", apiCall: "setEmissionColor" },
+      { line: 3, severity: "warning", code: "UNVERIFIED_MATERIAL_EMISSION", apiCall: "setEmissionColor" },
+    ]);
+  });
+
   it("requires MovableItem for addForce", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
     const tsFilePath = path.join(tempDir, "sample.ts");

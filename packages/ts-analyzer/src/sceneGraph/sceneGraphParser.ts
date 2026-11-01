@@ -6,6 +6,7 @@ import {
   GameObject,
   Component,
   ComponentPropertyValue,
+  MaterialRecord,
 } from "../domain/types";
 
 type TomlRecord = Record<string, unknown>;
@@ -100,7 +101,52 @@ export class SceneGraphParser {
       gameObjects: this.parseGameObjects(rawGameObjects),
     };
 
+    const rawMaterials = parsed.materials;
+    if (rawMaterials !== undefined) {
+      if (!Array.isArray(rawMaterials)) {
+        throw new Error("SceneGraph.materials must be an array");
+      }
+      sceneGraph.materials = this.parseMaterials(rawMaterials);
+    }
+
     return sceneGraph;
+  }
+
+  /**
+   * materials を抽出・変換
+   */
+  private static parseMaterials(rawMaterials: unknown[]): MaterialRecord[] {
+    return rawMaterials.map((rawMaterial, index) => {
+      const location = `SceneGraph.materials[${index}]`;
+      const material = requireTomlRecord(rawMaterial, location);
+      if (typeof material.emissionEnabled !== "boolean") {
+        throw new Error(`${location}.emissionEnabled must be a boolean`);
+      }
+
+      const record: MaterialRecord = {
+        guid: requireString(material, "guid", location),
+        name: requireString(material, "name", location, true),
+        path: requireString(material, "path", location, true),
+        shader: requireString(material, "shader", location, true),
+        emissionEnabled: material.emissionEnabled,
+      };
+
+      if (material.emissionColor !== undefined) {
+        const color = parsePropertyValue(
+          material.emissionColor,
+          `${location}.emissionColor`,
+        );
+        if (
+          !Array.isArray(color) ||
+          !color.every((item) => typeof item === "number")
+        ) {
+          throw new Error(`${location}.emissionColor must be a number array`);
+        }
+        record.emissionColor = color as number[];
+      }
+
+      return record;
+    });
   }
 
   /**

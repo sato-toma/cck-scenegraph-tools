@@ -27,9 +27,22 @@ export interface GameObject {
   components: Component[];
 }
 
+/**
+ * ItemMaterialSetList から参照される Material の情報
+ */
+export interface MaterialRecord {
+  guid: string;
+  name: string;
+  path: string;
+  shader: string;
+  emissionEnabled: boolean;
+  emissionColor?: number[];
+}
+
 export interface SceneGraph {
   project: string;
   gameObjects: GameObject[];
+  materials?: MaterialRecord[];
 }
 
 /**
