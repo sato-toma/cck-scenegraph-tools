@@ -41,6 +41,17 @@
   - このリポジトリで Agent が守る作業規約
 - `.github/skills/`
   - Unity 出力、TOML スキーマ、TypeScript 解析をまたぐ作業手順
+  - `cluster-script-authoring/`: ClusterScript 作成と Unity シーン構成の参照資料。別リポジトリでも利用できる
+
+## 別リポジトリからの利用
+
+`cluster-script-authoring` は、別の Unity プロジェクトから `gh skill` で取得できる。
+
+```powershell
+gh skill install sato-toma/cck-scenegraph-tools cluster-script-authoring --allow-hidden-dirs
+```
+
+API の仕様は公式ドキュメント（https://docs.cluster.mu/creatorkit）を正とし、この skill では複製・生成しない。
 
 ## 基本的な利用手順
 
