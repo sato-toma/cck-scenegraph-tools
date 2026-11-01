@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CallbackContextAnalyzer } from "./callbackContextAnalyzer";
-import { TypeScriptCodeParser } from "./typeScriptParser";
+import { CallbackContextAnalyzer } from "../../src/analysis/callbackContextAnalyzer";
+import { TypeScriptCodeParser } from "../../src/analysis/typeScriptParser";
 
 const sampleScript = `
 $.onStart(() => {

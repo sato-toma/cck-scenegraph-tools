@@ -1,12 +1,12 @@
-import { ValidationIssue, SceneGraph } from "../domain/types";
-import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
+import { ValidationIssue, SceneGraph } from "../../domain/types";
+import { SceneGraphParser } from "../../sceneGraph/sceneGraphParser";
 import {
   Token,
   createSourceIssue,
   getCallArguments,
   getStringArgument,
   tokenizeSource,
-} from "./sourceTokens";
+} from "../../analysis/sourceTokens";
 
 export class SubNodeExistenceValidator {
   static validate(

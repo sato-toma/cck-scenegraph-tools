@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ComponentRequirementExtractor } from "./extractor";
+import { ComponentRequirementExtractor } from "../../../src/analysis/componentRequirements/extractor";
 
 describe("ComponentRequirementExtractor", () => {
   it("extracts literal getUnityComponent requests with source evidence", () => {

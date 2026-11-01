@@ -22,8 +22,8 @@
   - `src/domain/`: 解析・SceneGraph の共有型
   - `src/rules/`: API 制約と物理、インタラクション、移動、state変更のルール
   - `src/reporting/`: 解析結果や計画のテキスト整形
-  - `src/integration/`: Exporter 出力との統合テスト
-  - `src/fixtures/`: MCP 応答などの変換テスト用fixture
+  - `src/rules/diagnostics/`: 実行可能な診断ルールとその registry
+  - `test/`: unit / integration tests とテスト専用 fixture
   - `examples/`: CLI の実行例
   - `IMPLEMENTATION.md`: 現在の実装ガイド
 - `packages/unity-semantic-graph/`

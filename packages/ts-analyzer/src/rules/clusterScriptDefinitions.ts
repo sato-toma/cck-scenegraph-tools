@@ -33,9 +33,17 @@ export class ClusterScriptDefinitions {
 
     for (const ruleSet of Object.values(ruleSets)) {
       for (const method of ruleSet.methods) {
+        if (methods.has(method.name)) {
+          throw new Error(`Duplicate ClusterScript method rule: ${method.name}`);
+        }
         methods.set(method.name, method);
       }
       for (const property of ruleSet.properties) {
+        if (properties.has(property.name)) {
+          throw new Error(
+            `Duplicate ClusterScript property rule: ${property.name}`,
+          );
+        }
         properties.set(property.name, property);
       }
     }

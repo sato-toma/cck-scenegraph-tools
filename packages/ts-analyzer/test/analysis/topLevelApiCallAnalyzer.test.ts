@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TopLevelApiCallAnalyzer } from "./topLevelApiCallAnalyzer";
+import { TopLevelApiCallAnalyzer } from "../../src/analysis/topLevelApiCallAnalyzer";
 
 describe("TopLevelApiCallAnalyzer", () => {
   it("accepts direct callback registration statements", () => {

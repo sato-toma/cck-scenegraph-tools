@@ -4,13 +4,13 @@ import type {
   AnalysisResult,
   ComponentRequirementRequest,
   ValidationIssue,
-} from "../domain/types";
+} from "../../src/domain/types";
 import {
   formatGitHubActionsAnnotations,
   formatJsonAnalysisReport,
   formatSarifAnalysisReport,
   formatVSCodeProblems,
-} from "./structuredAnalysisFormatter";
+} from "../../src/reporting/structuredAnalysisFormatter";
 
 const workspaceRoot = path.resolve("workspace");
 const sourcePath = "packages/ts-analyzer/examples/demo.ts";

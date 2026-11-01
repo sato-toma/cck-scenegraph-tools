@@ -65,15 +65,16 @@ console.log(SceneGraphParser.visualizeHierarchy(sceneGraph));
 - 構造の可視化
 - コンポーネント統計
 
-### 3. rules/clusterScriptDefinitions.ts
-**ClusterScript API と制約定義**
+### 3. rules/
+**宣言的な API 制約と実行可能な診断ルール**
 
-ルール定義は [src/rules](src/rules) 配下に分離されており、以下のようにカテゴリ単位で管理しています。
+`src/rules` は追加するルールの種類で分けます。
 
-- [src/rules/physics.ts](src/rules/physics.ts) - Rigidbody などの物理系ルール
-- [src/rules/interactions.ts](src/rules/interactions.ts) - GrabbableItem / RidableItem などのインタラクション系ルール
-- [src/rules/movement.ts](src/rules/movement.ts) - MovableItem などの移動系ルール
-- [src/rules/stateMutation.ts](src/rules/stateMutation.ts) - `$.state.*` の直接変更を検出するルール
+- `physics.ts`、`interactions.ts` など: API ごとの Component 制約や実行 context を宣言するデータ
+- `clusterScriptDefinitions.ts`: カテゴリ別定義を API 名で引ける形にまとめる。重複する method / property 名はエラーにする
+- `diagnostics/`: 引数、呼び出し位置、SceneGraph の内容など、宣言的な制約だけでは判定できない診断
+- `diagnostics/index.ts`: 診断ルールの一意な ID と実行順を登録する唯一の場所
+- `stateMutation.ts`: state mutation の検出パターン。parser と診断ルールが同じ定義を使う
 
 ```typescript
 // メソッドの制約を取得
@@ -163,9 +164,7 @@ const complexity = TypeScriptCodeParser.calculateCodeComplexity(code);
 ### 6. analysis/analyzer.ts
 **統合解析エンジン**
 
-解析結果には、通常のコンポーネント制約違反に加えて、`INVALID_STATE_MUTATION` というコードで state の直接変更違反も含めます。これにより、ClusterScript の仕様に沿った書き方を静的に検出できます。
-
-解析器は入力の解決と各解析処理を統合します。人向けテキストの書式は `src/reporting/analysisReportFormatter.ts` に分離し、`ClusterScriptAnalyzer` のレポートメソッドは既存 API として formatter に委譲します。出力形式を変更する場合は formatter のテストと CLI の出力確認を更新してください。
+`ClusterScriptAnalyzer` は入力を解決し、`rules/diagnostics` のルール実行と Component 要求の抽出・照合をまとめます。新しい診断ロジックを analyzer に直接追加せず、診断ルールの実装と registry の登録として追加します。人向けテキストの書式は `src/reporting/analysisReportFormatter.ts` に分離し、Analyzer の公開 report API は formatter に委譲します。
 
 ```typescript
 const analyzer = new ClusterScriptAnalyzer("SceneGraph.toml");
@@ -378,31 +377,38 @@ interface ComponentConstraint {
 
 ## 拡張方法
 
-### カスタムAPI制約を追加
+### API の Component 制約を追加
+
+1. 公式 ClusterScript API と Creator Kit Component の仕様を確認し、`docs/analysis-rule-backlog.md` に根拠と検証状況を記録する。
+2. 該当するカテゴリの `src/rules/*.ts` に `ApiMethod` または `ApiProperty` を追加する。Component 型は完全修飾名を使い、代替型は `componentType` の配列で表す。
+3. API 名はカテゴリをまたいで一意にする。`ClusterScriptDefinitions` が重複を拒否する。
+4. `test/rules/apiDefinitions.test.ts` の registry 契約を維持し、必要な Component がある場合・ない場合の Analyzer 統合テストを追加する。
+
+### 独自の診断ルールを追加
 
 ```typescript
-// clusterScriptDefinitions.ts を拡張
-methods.set("customMethod", {
-  name: "customMethod",
-  requiredComponents: [
-    {
-      componentType: "MyCustomComponent",
-      requirement: "required",
-    },
-  ],
-  description: "Custom method description",
-});
+const customRule: DiagnosticRule = {
+  id: "custom-rule",
+  analyze(context) {
+    return [];
+  },
+};
 ```
 
-### カスタム検証ルールを追加
+1. `src/rules/diagnostics/` にルールを追加し、安定して一意な `id` と `DiagnosticRuleContext` を受け取る `analyze` を実装する。
+2. `src/rules/diagnostics/index.ts` に登録する。Analyzer から個別ルールを直接呼び出さない。
+3. `test/rules/` に、違反する入力と受け入れる入力の unit test を追加する。SceneGraph との紐付けや report への統合も確認する場合は `test/integration/` に Analyzer テストを追加する。
+4. 検出できない構文を推測で違反扱いにせず、既存の unsupported / unverified 方針に合わせる。
+5. `npm run verify` で production source と test の型検査、全テストを実行する。
 
-```typescript
-class CustomValidator extends ConstraintValidator {
-  static validateCustomRule(gameObject: GameObject): boolean {
-    // カスタムルール実装
-  }
-}
-```
+### テストの配置
+
+- `test/rules/`: API 定義 registry と診断ルールの unit test
+- `test/analysis/`、`test/sceneGraph/`、`test/validation/`、`test/reporting/`: 各モジュールの unit test
+- `test/integration/`: Exporter、CLI 設定、Analyzer をまたぐ振る舞いの test
+- `test/fixtures/`: テスト専用の SceneGraph、MCP 応答、fake server
+
+テストは `src/` のビルド成果物に含めず、`test/tsconfig.json` で別に型検査します。この標準名の config により、VS Code でもテストが Node.js と Vitest の型を持つ TypeScript project に所属します。
 
 ### TypeScript Compiler API を使用した正確な解析
 

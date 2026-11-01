@@ -1,7 +1,7 @@
 import * as path from "path";
 import { describe, expect, it } from "vitest";
-import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
-import { WorldUploadValidator } from "./worldUploadValidator";
+import { SceneGraphParser } from "../../src/sceneGraph/sceneGraphParser";
+import { WorldUploadValidator } from "../../src/validation/worldUploadValidator";
 
 const fixturePath = path.join(__dirname, "..", "fixtures", "scene-graph-export.toml");
 const itemType = "ClusterVR.CreatorKit.Item.Implements.Item";
