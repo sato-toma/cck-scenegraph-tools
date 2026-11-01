@@ -129,7 +129,7 @@ interface McpReconciliationReport {
 2. 実機の MCP 応答から fixture を採取し、アダプタ（応答の正規化）を追加する。
 3. CLI へ照合コマンドを追加するかは、手順 1・2 の結果を見て別途決める。追加する場合は終了コードを文書化する。
 
-手順 2 の読み取り応答 fixture と正規化アダプタは `packages/ts-analyzer/src/fixtures/mcp-on-grab-scene.json` および `McpSceneAdapter` に実装した。現段階では Unity CLI MCP のツール呼び出しは Agent Host が担い、アダプタは読み取りツールの応答を入力として受け取る。Component の `enabled` が取得できないこと、および MCP 取得と SceneGraph 照合をつなぐ CLI は未完了である。
+手順 2 の読み取り応答 fixture と正規化アダプタは `packages/ts-analyzer/test/fixtures/mcp-on-grab-scene.json` および `McpSceneAdapter` に実装した。現段階では Unity CLI MCP のツール呼び出しは Agent Host が担い、アダプタは読み取りツールの応答を入力として受け取る。Component の `enabled` が取得できないこと、および MCP 取得と SceneGraph 照合をつなぐ CLI は未完了である。
 
 ## 未確認の事項
 
