@@ -13,7 +13,8 @@
         "scenegraph:analyze": "node ./scripts/export-and-analyze.js",
         "dev": "tsc --watch",
         "test": "vitest run",
-        "verify": "npm run build && npm run test",
+        "typecheck:test": "tsc --noEmit -p test/tsconfig.json",
+        "verify": "npm run build && npm run typecheck:test && npm run test",
         "update-types": "node ./scripts/update-types.js"
     },
     "keywords": [

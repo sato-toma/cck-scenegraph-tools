@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import liveResponseFixture from "../fixtures/mcp-on-grab-scene.json";
-import { McpSceneAdapter, McpSceneAdapterError } from "./mcpSceneAdapter";
+import { McpSceneAdapter, McpSceneAdapterError } from "../../src/sceneGraph/mcpSceneAdapter";
 
 describe("McpSceneAdapter", () => {
   it("normalizes captured hierarchy and GlobalObjectId responses", () => {

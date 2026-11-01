@@ -23,10 +23,10 @@ Unity と Cluster Creator Kit の組み合わせはプロジェクトごとに�
 Set-Location packages\ts-analyzer
 npm ci
 npm run build
-node dist\cli.js analyze src\fixtures\scene-graph-export.toml examples\sample.ts
+node dist\cli.js analyze test\fixtures\scene-graph-export.toml examples\sample.ts
 ```
 
-サンプルでは満たされた要求と不足した要求の両方が表示されます。`src\fixtures\scene-graph-export.toml` は説明用の固定データで、自分の Unity シーンを表すものではありません。
+サンプルでは満たされた要求と不足した要求の両方が表示されます。`test\fixtures\scene-graph-export.toml` は説明用の固定データで、自分の Unity シーンを表すものではありません。
 
 ## Unity プロジェクトを解析する
 

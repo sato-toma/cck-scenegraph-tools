@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
+import { mkdtemp, readFile, rm, writeFile } from "fs/promises";
+import { execPath } from "process";
+import os from "os";
+import path from "path";
 import {
   COMPONENT_CHANGE_ACTION_STATUSES,
   COMPONENT_CHANGE_VERIFICATION_STATUSES,
@@ -10,14 +11,14 @@ import {
   createComponentChangePlan,
   resolveComponentChangeSettings,
   type ComponentChangePlan,
-} from ".";
-import { formatComponentChangeVerificationReport } from "../../reporting/componentChangeVerificationFormatter";
-import { applyApprovedComponentChangePlanViaUnityCliMcp } from "./unityCliMcp";
+} from "../../../src/analysis/componentChangePlan";
+import { formatComponentChangeVerificationReport } from "../../../src/reporting/componentChangeVerificationFormatter";
+import { applyApprovedComponentChangePlanViaUnityCliMcp } from "../../../src/analysis/componentChangePlan/unityCliMcp";
 import type {
   AnalysisResult,
   ComponentRequirementRequest,
   SceneGraph,
-} from "../../domain/types";
+} from "../../../src/domain/types";
 
 const sceneGraph: SceneGraph = {
   project: "TestProject",
@@ -128,7 +129,7 @@ async function createMcpConfig(scenario = ""): Promise<{
       mcpServers: {
         unity: {
           type: "stdio",
-          command: process.execPath,
+          command: execPath,
           args: [fixturePath, statePath, scenario],
         },
       },

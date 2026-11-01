@@ -1,0 +1,388 @@
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { describe, expect, it } from "vitest";
+import { ClusterScriptAnalyzer } from "../../../src/analysis/analyzer";
+import { SceneGraphParser } from "../../../src/sceneGraph/sceneGraphParser";
+
+describe("ClusterScriptAnalyzer: source-mapping", () => {
+  it("validates scriptable item behavior against the matching scene object", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(tsFilePath, "$.onGrab(() => {});\n");
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.GrabbableItem"
+enabled = true
+
+[[gameObjects.components]]
+type = "UnityEngine.Rigidbody"
+enabled = true
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.MovableItem"
+enabled = true
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+
+[[gameObjects]]
+id = "other-object"
+path = "Other"
+name = "Other"
+parent = ""
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests).toMatchObject([
+      {
+        api: "$.onGrab",
+        componentTypes: [
+          "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+        ],
+        target: {
+          resolution: "resolved",
+          gameObjectId: "item-object",
+          gameObjectPath: "Item",
+        },
+        verificationStatus: "satisfied",
+        validation: {
+          presentComponentTypes: [
+            "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+          ],
+          missingComponentTypes: [],
+          matchedComponents: [
+            {
+              gameObjectId: "item-object",
+              gameObjectPath: "Item",
+              componentType:
+                "ClusterVR.CreatorKit.Item.Implements.GrabbableItem",
+            },
+          ],
+        },
+      },
+    ]);
+  });
+
+  it("validates the specific ScriptableItem that matches the analyzed file", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "setRotationScript.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(
+      tsFilePath,
+      "$.setRotation(new Quaternion().setFromEulerAngles(new Vector3(0, 90, 0)));\n",
+    );
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "movable-object"
+path = "Movable"
+name = "Movable"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.MovableItem"
+enabled = true
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "onGrabScript"
+
+[[gameObjects]]
+id = "rotation-object"
+path = "setRotation"
+name = "setRotation"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.MovableItem"
+enabled = false
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "setRotationScript"
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.issues).toHaveLength(1);
+    expect(result.issues[0]?.apiCall).toBe("setRotation");
+    expect(result.issues[0]?.requiredComponents).toEqual([
+      "ClusterVR.CreatorKit.Item.Implements.MovableItem",
+    ]);
+    expect(result.componentRequests).toMatchObject([
+      {
+        api: "$.setRotation",
+        target: {
+          resolution: "resolved",
+          gameObjectId: "rotation-object",
+          gameObjectPath: "setRotation",
+        },
+        verificationStatus: "missing",
+        validation: {
+          presentComponentTypes: [],
+          missingComponentTypes: [
+            "ClusterVR.CreatorKit.Item.Implements.MovableItem",
+          ],
+          matchedComponents: [],
+        },
+      },
+    ]);
+  });
+
+  it("marks a request ambiguous when one script is attached to multiple objects", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(tsFilePath, "$.onGrab(() => {});\n");
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "first-object"
+path = "Root/Duplicate-1"
+name = "Duplicate"
+parent = "Root"
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+
+[[gameObjects]]
+id = "second-object"
+path = "Root/Duplicate-2"
+name = "Duplicate"
+parent = "Root"
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.GrabbableItem"
+enabled = true
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.componentRequests[0]).toMatchObject({
+      verificationStatus: "ambiguous",
+      target: {
+        resolution: "ambiguous",
+        candidates: [
+          {
+            gameObjectId: "first-object",
+            gameObjectPath: "Root/Duplicate-1",
+          },
+          {
+            gameObjectId: "second-object",
+            gameObjectPath: "Root/Duplicate-2",
+          },
+        ],
+      },
+    });
+    expect(result.issues).toHaveLength(0);
+    const report = analyzer.generateReport(
+      new Map([[tsFilePath, result]]),
+    );
+    expect(report).toContain("[AMBIGUOUS] $.onGrab");
+    expect(report).toContain("Root/Duplicate-1 (first-object)");
+    expect(report).toContain("Root/Duplicate-2 (second-object)");
+    expect(report).toContain("ambiguous: 1");
+    expect(report).not.toContain("No issues found!");
+    expect(report).toContain("component requirements need review");
+  });
+
+  it("does not infer missing components when the source target is unresolved", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "unattached.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(tsFilePath, "$.setPosition(position);\n");
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "other-object"
+path = "Other"
+name = "Other"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "other.ts"
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile(tsFilePath);
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests[0]).toMatchObject({
+      target: { resolution: "unresolved" },
+      verificationStatus: "unverified",
+      verificationReason:
+        "No ScriptableItem GameObject could be mapped to this source file.",
+    });
+  });
+
+  it("reports conditional component requests with their source condition", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "sample.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(
+      tsFilePath,
+      "if (canMove) {\n  $.setPosition(position);\n}\n",
+    );
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "sample.ts"
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile(tsFilePath);
+    const report = analyzer.generateReport(
+      new Map([[tsFilePath, result]]),
+    );
+
+    expect(result.componentRequests[0]).toMatchObject({
+      verificationStatus: "missing",
+      occurrences: [
+        { condition: { kind: "conditional", expression: "canMove" } },
+      ],
+    });
+    expect(report).toContain("[MISSING] $.setPosition at 2:2 when (canMove)");
+    expect(report).toContain("Missing: ClusterVR.CreatorKit.Item.Implements.MovableItem");
+  });
+
+  it("resolves a nested script from Source_Code_Asset by basename", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+    const sourceDir = path.join(tempDir, "src");
+    const sourceFilePath = path.join(sourceDir, "setRotationScript.ts");
+
+    fs.mkdirSync(sourceDir, { recursive: true });
+    fs.writeFileSync(
+      sourceFilePath,
+      "$.setRotation(new Quaternion().setFromEulerAngles(new Vector3(0, 90, 0)));\n",
+    );
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "rotation-object"
+path = "setRotation"
+name = "setRotation"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "setRotationScript"
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile();
+
+    expect(result.filePath).toBe(sourceFilePath);
+  });
+
+  it("resolves a script from Source_Code_Asset when no file path is provided", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+    const sourceDir = path.join(tempDir, "src");
+    const sourceFilePath = path.join(sourceDir, "setPosition.ts");
+
+    fs.mkdirSync(sourceDir, { recursive: true });
+    fs.writeFileSync(sourceFilePath, "$.setPosition(new Vector3(1, 2, 3));\n");
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "src/setPosition"
+`,
+    );
+
+    const analyzer = new ClusterScriptAnalyzer(sceneGraphPath);
+    const result = analyzer.analyzeTypeScriptFile();
+
+    expect(result.filePath).toBe(sourceFilePath);
+  });
+
+});

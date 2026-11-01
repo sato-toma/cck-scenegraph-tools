@@ -2,10 +2,10 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { describe, expect, it } from "vitest";
-import { ClusterScriptAnalyzer } from "../analysis/analyzer";
-import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
-import { ClusterScriptDefinitions } from "../rules/clusterScriptDefinitions";
-import { WorldUploadValidator } from "../validation/worldUploadValidator";
+import { ClusterScriptAnalyzer } from "../../src/analysis/analyzer";
+import { SceneGraphParser } from "../../src/sceneGraph/sceneGraphParser";
+import { ClusterScriptDefinitions } from "../../src/rules/clusterScriptDefinitions";
+import { WorldUploadValidator } from "../../src/validation/worldUploadValidator";
 
 const fixturePath = path.join(
   __dirname,

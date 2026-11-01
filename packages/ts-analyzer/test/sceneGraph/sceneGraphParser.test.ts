@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SceneGraphParser } from "./sceneGraphParser";
+import { SceneGraphParser } from "../../src/sceneGraph/sceneGraphParser";
 
 const sampleToml = `
 project = "TestProject"

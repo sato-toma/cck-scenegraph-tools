@@ -58,4 +58,11 @@ Export and Analyze は MCP 応答を解析入力にせず、Component を自動�
 npm run verify
 ```
 
+### 解析ルールの追加
+
+- API の Component 制約は `src/rules/` のカテゴリ別定義に追加します。API 名は重複できず、追加・変更時は `test/rules/` と Analyzer 統合テストで、違反するケースと成立するケースを確認します。
+- 引数や呼び出し位置などの独自診断は `src/rules/diagnostics/` に実装し、`src/rules/diagnostics/index.ts` に一意な ID で登録します。Analyzer 本体へ個別の判定処理を追加しないでください。
+- テストは `test/rules/`、`test/analysis/` など機能別に置き、テスト専用の SceneGraph / MCP fixture は `test/fixtures/` に置きます。
+- API の要求条件と検証状況の出典は [ルールバックログ](../../docs/analysis-rule-backlog.md) に記録してください。新しいルールを含む変更では `npm run verify` を実行します。
+
 解析 API や結果の型、データフローなどの開発向け詳細は [IMPLEMENTATION.md](IMPLEMENTATION.md) とリポジトリの [開発ガイド](../../docs/repository-guide.md) を参照してください。
