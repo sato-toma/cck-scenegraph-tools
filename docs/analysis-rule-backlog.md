@@ -50,7 +50,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 
 | 状態 | API | Unity で確認すること | 想定する制約 |
 | --- | --- | --- | --- |
-| [ ] | `getPosition` | MCP で「MovableItem なし」「同一 GameObject」「親のみ」の3構成を `test.unity` に追加し、同じ `getPositionScript` を参照。SceneGraph export で構成を確認し、Analyzer は Issue 0。Cluster ログによる戻り値は未確認 | [公式 ClusterScript API](https://docs.cluster.mu/script/interfaces/ClusterScript.html#getposition) に Component 制約の説明なし。[`index.d.ts`](../packages/unity-semantic-graph/Samples~/Assets/Script/external/index.d.ts) はグローバル座標の `Vector3` を返すと記載し、`setPosition` と異なり `MovableItem` 必須の記述なし。[Movable Item コンポーネント](https://docs.cluster.mu/creatorkit/item-components/movable-item/) は位置同期と Rigidbody 要件を記載。Cluster runtime で無 Movable / 親のみの挙動を確認するまで制約未確定、ルール未追加 |
+| [x] | `getPosition` | Cluster runtime で3構成の戻り値を確認: `getPositionNoMovable`（MovableItem なし）→ `(0, 0, 0)`、`getPositionParent`（親のみ）→ `(3, -0.05885995179414749, 0)`、`getPositionSameMovable`（同一 GameObject）→ `(4, -0.05885995179414749, 0)`。3構成すべてで座標を取得 | [公式 ClusterScript API](https://docs.cluster.mu/script/interfaces/ClusterScript.html#getposition) と [`index.d.ts`](../packages/unity-semantic-graph/Samples~/Assets/Script/external/index.d.ts) に MovableItem 必須の記述なし。API はグローバル座標の `Vector3` を返す。[Movable Item コンポーネント](https://docs.cluster.mu/creatorkit/item-components/movable-item/) の Rigidbody 要件は Movable Item 自体の要件。確認した3構成からも `MovableItem` は `getPosition` の必須条件ではないため、Component ルールは追加しない |
 | [ ] | `getRotation` | MovableItem なし、親にある場合、戻り値 | `MovableItem`。要確認 |
 | [x] | `onPhysicsUpdate` | Unity サンプルの `addForceScript` でコールバックの動作を確認済み。必須 Component は公式 API 定義に明記されていない | 確定した制約なし（`MovableItem` は `addForce` の制約として扱う） |
 | [ ] | `useGravity` | 読み取り、書き込み、トップレベル外の制限 | `MovableItem`。要確認 |
