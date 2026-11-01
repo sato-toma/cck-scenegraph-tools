@@ -38,18 +38,20 @@ export class ConstraintValidator {
     missingRequired: string[];
     extraForbidden: string[];
   } {
-    const components = sceneGraph
-      ? SceneGraphParser.getEnabledComponentsInHierarchy(sceneGraph, gameObject)
-      : gameObject.components;
-
-    const availableComponents = new Set(
-      components.filter((c) => c.enabled).map((c) => c.type),
-    );
-
     const missingRequired: string[] = [];
     const extraForbidden: string[] = [];
 
     for (const constraint of constraints) {
+      const components = sceneGraph
+        ? this.getComponentsForScope(
+            gameObject,
+            sceneGraph,
+            constraint.scope ?? "hierarchy",
+          )
+        : gameObject.components;
+      const availableComponents = new Set(
+        components.filter((component) => component.enabled).map((c) => c.type),
+      );
       const acceptedTypes = ConstraintValidator.normalizeComponentTypes(
         constraint.componentType,
       );
@@ -92,6 +94,28 @@ export class ConstraintValidator {
       missingRequired,
       extraForbidden,
     };
+  }
+
+  private static getComponentsForScope(
+    gameObject: GameObject,
+    sceneGraph: SceneGraph,
+    scope: NonNullable<ComponentConstraint["scope"]>,
+  ): Component[] {
+    if (scope === "target") {
+      return gameObject.components;
+    }
+
+    const gameObjects =
+      scope === "target-and-descendants"
+        ? [
+            gameObject,
+            ...SceneGraphParser.getGameObjectDescendants(
+              sceneGraph,
+              gameObject,
+            ),
+          ]
+        : SceneGraphParser.getGameObjectsInHierarchy(sceneGraph, gameObject);
+    return gameObjects.flatMap((object) => object.components);
   }
 
   /**

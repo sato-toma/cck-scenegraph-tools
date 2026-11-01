@@ -55,6 +55,7 @@ export interface ComponentConstraint {
   /** A single Unity component full name, or an array meaning "any of these types". */
   componentType: string | string[];
   requirement: ComponentRequirement;
+  scope?: "target" | "target-and-descendants" | "hierarchy";
   properties?: {
     [key: string]: {
       type: string;

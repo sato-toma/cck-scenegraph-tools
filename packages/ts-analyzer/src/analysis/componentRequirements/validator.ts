@@ -7,6 +7,7 @@ import {
   GameObject,
   SceneGraph,
 } from "../../domain/types";
+import { ClusterScriptDefinitions } from "../../rules/clusterScriptDefinitions";
 
 /** Resolves a request to its owning ScriptableItem and validates it. */
 export class ComponentRequirementValidator {
@@ -174,22 +175,40 @@ export class ComponentRequirementValidator {
         constraints,
         sceneGraph,
       );
-      const matchedComponents = SceneGraphParser.getGameObjectsInHierarchy(
-        sceneGraph,
-        target,
-      ).flatMap((gameObject) =>
-        gameObject.components
-          .filter(
-            (component) =>
-              component.enabled &&
-              request.componentTypes.includes(component.type),
-          )
-          .map((component) => ({
-            gameObjectId: gameObject.id,
-            gameObjectPath: gameObject.path,
-            componentId: component.id,
-            componentType: component.type,
-          })),
+      const matchedComponents = this.toConstraints(request).flatMap(
+        (constraint) => {
+          const componentTypes = Array.isArray(constraint.componentType)
+            ? constraint.componentType
+            : [constraint.componentType];
+          const gameObjects =
+            constraint.scope === "target"
+              ? [target]
+              : constraint.scope === "target-and-descendants"
+                ? [
+                    target,
+                    ...SceneGraphParser.getGameObjectDescendants(
+                      sceneGraph,
+                      target,
+                    ),
+                  ]
+                : SceneGraphParser.getGameObjectsInHierarchy(
+                    sceneGraph,
+                    target,
+                  );
+          return gameObjects.flatMap((gameObject) =>
+            gameObject.components
+              .filter(
+                (component) =>
+                  component.enabled && componentTypes.includes(component.type),
+              )
+              .map((component) => ({
+                gameObjectId: gameObject.id,
+                gameObjectPath: gameObject.path,
+                componentId: component.id,
+                componentType: component.type,
+              })),
+          );
+        },
       );
       const availableTypes = new Set(
         matchedComponents.map((component) => component.componentType),
@@ -252,19 +271,38 @@ export class ComponentRequirementValidator {
   private static toConstraints(
     request: ComponentRequirementRequest,
   ): ComponentConstraint[] {
+    const methodName = request.api.startsWith("$.")
+      ? request.api.slice(2)
+      : request.api;
+    const apiConstraints =
+      ClusterScriptDefinitions.getMethodConstraints(methodName);
+    const scopeForType = (componentType: string) =>
+      apiConstraints.find((constraint) => {
+        const types = Array.isArray(constraint.componentType)
+          ? constraint.componentType
+          : [constraint.componentType];
+        return types.includes(componentType);
+      })?.scope;
+
     if (request.componentMatch === "any") {
+      const scope = scopeForType(request.componentTypes[0]!);
       return [
         {
           componentType: request.componentTypes,
           requirement: "required",
+          ...(scope ? { scope } : {}),
         },
       ];
     }
 
-    return request.componentTypes.map((componentType) => ({
-      componentType,
-      requirement: "required",
-    }));
+    return request.componentTypes.map((componentType) => {
+      const scope = scopeForType(componentType);
+      return {
+        componentType,
+        requirement: "required",
+        ...(scope ? { scope } : {}),
+      };
+    });
   }
 
   private static withStatus(

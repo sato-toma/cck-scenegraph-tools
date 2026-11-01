@@ -14,7 +14,7 @@ import { ComponentRequirementValidator } from "./componentRequirements/validator
 import { SetStateCompatArgumentValidator } from "./setStateCompatArgumentValidator";
 import { SetVisiblePlayersArgumentValidator } from "./setVisiblePlayersArgumentValidator";
 import { SubNodeExistenceValidator } from "./subNodeExistenceValidator";
-import { MaterialEmissionValidator } from "./materialEmissionValidator";
+import { MaterialApiValidator } from "./materialApiValidator";
 import {
   summarizeComponentRequirements,
 } from "./componentRequirements/summary";
@@ -81,7 +81,7 @@ export class ClusterScriptAnalyzer {
           this.sceneGraph,
           resolvedTsFilePath,
         ),
-        MaterialEmissionValidator.validate(
+        MaterialApiValidator.validate(
           sourceContent,
           this.sceneGraphPath,
           this.sceneGraph,

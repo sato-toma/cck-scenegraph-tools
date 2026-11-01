@@ -8,15 +8,24 @@ export const materialMethodRules: ApiMethod[] = [
         componentType:
           "ClusterVR.CreatorKit.Item.Implements.ItemMaterialSetList",
         requirement: "required",
+        scope: "target",
       },
       {
-        // Material は Item 自身またはその子孫の Renderer に割り当てられている必要がある
-        componentType: ["UnityEngine.MeshRenderer", "UnityEngine.SkinnedMeshRenderer"],
+        componentType: [
+          "UnityEngine.MeshRenderer",
+          "UnityEngine.SkinnedMeshRenderer",
+          "UnityEngine.SpriteRenderer",
+          "UnityEngine.LineRenderer",
+          "UnityEngine.TrailRenderer",
+          "UnityEngine.ParticleSystemRenderer",
+          "UnityEngine.Tilemaps.TilemapRenderer",
+        ],
         requirement: "required",
+        scope: "target-and-descendants",
       },
     ],
     description:
-      "ItemMaterialSetList に登録された Material の MaterialHandle を取得します。Id は ItemMaterialSetList の Id と一致させる必要があります。",
+      "ItemMaterialSetList の ID で MaterialHandle を取得します。対象 Item に ItemMaterialSetList が必要で、登録 Material は Item 自身または子孫 GameObject の Renderer で使用します。",
   },
 ];
 

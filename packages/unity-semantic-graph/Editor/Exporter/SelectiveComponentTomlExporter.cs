@@ -16,6 +16,7 @@ namespace UnitySemanticGraph.Editor.Exporter
         private const string ItemMaterialSetListTypeName = "ClusterVR.CreatorKit.Item.Implements.ItemMaterialSetList";
         private const string ItemMaterialSetsPropertyName = "itemMaterialSets";
         private const string ItemMaterialSetsDisplayName = "Item Material Sets";
+        private const string RendererMaterialGuidsPropertyName = "Renderer_Material_Guids";
 
         public static void ExportGraphToToml()
         {
@@ -329,6 +330,11 @@ namespace UnitySemanticGraph.Editor.Exporter
         private static Dictionary<string, object> GatherSerializableProperties(Component component)
         {
             var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            if (component is Renderer renderer)
+            {
+                values[RendererMaterialGuidsPropertyName] = GetRendererMaterialGuids(renderer);
+            }
+
             var serializedObject = new SerializedObject(component);
             var property = serializedObject.GetIterator();
 
@@ -355,6 +361,19 @@ namespace UnitySemanticGraph.Editor.Exporter
             while (property.NextVisible(false));
 
             return values;
+        }
+
+        private static object GetRendererMaterialGuids(Renderer renderer)
+        {
+            var guids = new List<object>();
+            foreach (var material in renderer.sharedMaterials)
+            {
+                if (material == null) continue;
+                if (!AssetDatabase.TryGetGUIDAndLocalFileIdentifier(material, out var guid, out long _)) continue;
+                guids.Add(guid);
+            }
+
+            return guids;
         }
 
         private static object GetSerializedPropertyValue(SerializedProperty property)
