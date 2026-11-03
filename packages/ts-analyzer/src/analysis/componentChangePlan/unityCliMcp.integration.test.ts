@@ -172,6 +172,14 @@ enabled = ${enabled}
 
 [gameObjects.components.properties]
 Mass = 2
+
+[[gameObjects.components]]
+id = "box-collider-component"
+type = "UnityEngine.BoxCollider"
+enabled = true
+
+[gameObjects.components.properties]
+Is_Trigger = false
 `;
 }
 
@@ -227,7 +235,7 @@ describe("Unity CLI MCP application integration", () => {
       analysisResults: [
         {
           componentRequestCounts: {
-            satisfied: 1,
+            satisfied: 2,
             missing: 0,
             ambiguous: 0,
             unsupported: 0,

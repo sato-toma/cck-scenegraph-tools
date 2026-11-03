@@ -334,6 +334,10 @@ namespace UnitySemanticGraph.Editor.Exporter
             {
                 values[RendererMaterialGuidsPropertyName] = GetRendererMaterialGuids(renderer);
             }
+            if (component is Collider collider)
+            {
+                values["Is_Trigger"] = collider.isTrigger;
+            }
 
             var serializedObject = new SerializedObject(component);
             var property = serializedObject.GetIterator();

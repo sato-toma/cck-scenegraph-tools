@@ -50,6 +50,7 @@ emissionColor = [0.0, 0.0, 0.0, 1.0]
 | component | `enabled` | exporter が取得した有効状態。`Behaviour` と `Collider` は Unity の状態、それ以外の `Component` は `true` |
 | properties | 任意キー | exporter が出力できるシリアライズ済み値。null と未対応値は出力しない |
 | properties | `Renderer_Material_Guids` | Renderer に割り当てられた Material の GUID 配列 |
+| properties | `Is_Trigger` | Collider の `isTrigger` 状態。Collider コンポーネントに対して exporter が出力 |
 | root | `materials` | ItemMaterialSetList が参照する Material の情報。Exporter が出力する任意の配列 |
 | material | `guid` / `name` / `path` / `shader` | Material の識別子と Asset 情報 |
 | material | `emissionEnabled` | `_EMISSION` キーワードの状態。暗黙ルール用の観測値 |

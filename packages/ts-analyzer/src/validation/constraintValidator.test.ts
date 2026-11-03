@@ -60,6 +60,93 @@ describe("ConstraintValidator", () => {
     expect(result.missingRequired).toHaveLength(0);
   });
 
+  it("validates a required component property", () => {
+    const result = ConstraintValidator.validateGameObject(
+      {
+        ...gameObject,
+        components: [
+          ...gameObject.components,
+          {
+            id: "collider",
+            type: "UnityEngine.BoxCollider",
+            enabled: true,
+            properties: { Is_Trigger: false },
+          },
+        ],
+      },
+      [
+        {
+          componentType: ["UnityEngine.BoxCollider", "UnityEngine.SphereCollider"],
+          requirement: "required",
+          properties: { Is_Trigger: { type: "boolean", value: false } },
+        },
+      ],
+    );
+
+    expect(result.isValid).toBe(true);
+    expect(result.missingRequired).toHaveLength(0);
+    expect(result.unverifiedRequired).toHaveLength(0);
+  });
+
+  it("reports a required component property mismatch", () => {
+    const result = ConstraintValidator.validateGameObject(
+      {
+        ...gameObject,
+        components: [
+          ...gameObject.components,
+          {
+            id: "collider",
+            type: "UnityEngine.BoxCollider",
+            enabled: true,
+            properties: { Is_Trigger: true },
+          },
+        ],
+      },
+      [
+        {
+          componentType: "UnityEngine.BoxCollider",
+          requirement: "required",
+          properties: { Is_Trigger: { type: "boolean", value: false } },
+        },
+      ],
+    );
+
+    expect(result.isValid).toBe(false);
+    expect(result.missingRequired).toEqual([
+      "UnityEngine.BoxCollider (Is_Trigger=false)",
+    ]);
+  });
+
+  it("does not claim a required component property when it is not exported", () => {
+    const result = ConstraintValidator.validateGameObject(
+      {
+        ...gameObject,
+        components: [
+          ...gameObject.components,
+          {
+            id: "collider",
+            type: "UnityEngine.BoxCollider",
+            enabled: true,
+            properties: {},
+          },
+        ],
+      },
+      [
+        {
+          componentType: "UnityEngine.BoxCollider",
+          requirement: "required",
+          properties: { Is_Trigger: { type: "boolean", value: false } },
+        },
+      ],
+    );
+
+    expect(result.isValid).toBe(false);
+    expect(result.missingRequired).toHaveLength(0);
+    expect(result.unverifiedRequired).toEqual([
+      "UnityEngine.BoxCollider (Is_Trigger=false)",
+    ]);
+  });
+
   it("detects missing required components", () => {
     const result = ConstraintValidator.validateGameObject(gameObject, [
       { componentType: "UnityEngine.Collider", requirement: "required" },

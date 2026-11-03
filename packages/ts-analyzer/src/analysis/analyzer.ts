@@ -196,14 +196,22 @@ export class ClusterScriptAnalyzer {
       if (!validation.isValid) {
         const requiredComponents = constraints
           .filter((c) => c.requirement === "required")
-          .map((c) => ConstraintValidator.formatComponentType(c.componentType));
+          .map((constraint) => ConstraintValidator.formatConstraint(constraint));
+        const onlyUnverifiedRequirements =
+          validation.missingRequired.length === 0 &&
+          validation.extraForbidden.length === 0 &&
+          validation.unverifiedRequired.length > 0;
 
         issues.push({
           line: call.line,
           column: call.column,
-          severity: "error",
-          code: "MISSING_COMPONENT",
-          message: `Method '${call.methodName}' requires components: ${requiredComponents.join(", ")}`,
+          severity: onlyUnverifiedRequirements ? "warning" : "error",
+          code: onlyUnverifiedRequirements
+            ? "UNVERIFIED_COMPONENT_REQUIREMENT"
+            : "MISSING_COMPONENT",
+          message: onlyUnverifiedRequirements
+            ? `Could not verify component requirements for method '${call.methodName}': ${validation.unverifiedRequired.join(", ")}`
+            : `Method '${call.methodName}' requires components: ${requiredComponents.join(", ")}`,
           apiCall: call.methodName,
           requiredComponents: requiredComponents,
           availableComponents: SceneGraphParser.getEnabledComponentsInHierarchy(

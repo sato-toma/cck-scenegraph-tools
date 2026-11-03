@@ -74,6 +74,42 @@ describe("SceneGraph exporter integration", () => {
     );
   });
 
+  it("exports and satisfies the non-trigger collider required by onCollide", () => {
+    const sampleAssetsPath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "unity-semantic-graph",
+      "Samples~",
+      "Assets",
+    );
+    const sceneGraphPath = path.join(sampleAssetsPath, "SceneGraph.toml");
+    const sceneGraph = SceneGraphParser.parseFile(sceneGraphPath);
+    const collider = sceneGraph.gameObjects
+      .find((gameObject) => gameObject.path === "onCollide/Cube")
+      ?.components.find((component) => component.type === "UnityEngine.BoxCollider");
+
+    expect(collider?.properties?.Is_Trigger).toBe(false);
+
+    const result = new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+      path.join(sampleAssetsPath, "Script", "src", "onCollideScript.ts"),
+    );
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          api: "$.onCollide",
+          verificationStatus: "satisfied",
+          componentProperties: {
+            Is_Trigger: { type: "boolean", value: false },
+          },
+        }),
+      ]),
+    );
+  });
+
   it("analyzes the successful setVisiblePlayers overlap Unity sample", () => {
     const sampleAssetsPath = path.join(
       __dirname,

@@ -130,6 +130,21 @@ export class AnalysisReportFormatter {
         request.componentMatch === "any"
           ? `one of ${request.componentTypes.join(" | ")}`
           : request.componentTypes.join(", ") || "(component type unknown)";
+      const propertyRequirements = Object.entries(
+        request.componentProperties ?? {},
+      ).map(([propertyName, requirement]) => {
+        const values =
+          requirement.values ??
+          (requirement.value !== undefined ? [requirement.value] : undefined);
+        const expected = values
+          ? values.map((value) => JSON.stringify(value)).join(" | ")
+          : `type ${requirement.type}`;
+        return `${propertyName}=${expected}`;
+      });
+      const componentRequirement =
+        propertyRequirements.length > 0
+          ? `${componentTypes} (${propertyRequirements.join(", ")})`
+          : componentTypes;
       const locations = request.occurrences
         .map(({ source, condition }) => {
           const when =
@@ -150,7 +165,7 @@ export class AnalysisReportFormatter {
             : "OPTIONAL LOOKUP MISSING"
           : request.verificationStatus.toUpperCase();
       lines.push(
-        `     [${statusLabel}] ${request.api} at ${locations}: ${componentTypes}`,
+        `     [${statusLabel}] ${request.api} at ${locations}: ${componentRequirement}`,
       );
       if (request.target.resolution === "resolved") {
         lines.push(

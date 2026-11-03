@@ -26,6 +26,26 @@ export class ConstraintValidator {
       " | ",
     );
   }
+
+  static formatConstraint(constraint: ComponentConstraint): string {
+    const componentType = this.formatComponentType(constraint.componentType);
+    const properties = Object.entries(constraint.properties ?? {}).map(
+      ([propertyName, requirement]) => {
+        const expectedValues =
+          requirement.values ??
+          (requirement.value !== undefined ? [requirement.value] : undefined);
+        const expectation = expectedValues
+          ? expectedValues.map((value) => JSON.stringify(value)).join(" | ")
+          : `type ${requirement.type}`;
+        return `${propertyName}=${expectation}`;
+      },
+    );
+
+    return properties.length > 0
+      ? `${componentType} (${properties.join(", ")})`
+      : componentType;
+  }
+
   /**
    * GameObjectが指定されたコンポーネント制約を満たしているかチェック
    */
@@ -37,9 +57,11 @@ export class ConstraintValidator {
     isValid: boolean;
     missingRequired: string[];
     extraForbidden: string[];
+    unverifiedRequired: string[];
   } {
     const missingRequired: string[] = [];
     const extraForbidden: string[] = [];
+    const unverifiedRequired: string[] = [];
 
     for (const constraint of constraints) {
       const components = sceneGraph
@@ -49,34 +71,37 @@ export class ConstraintValidator {
             constraint.scope ?? "hierarchy",
           )
         : gameObject.components;
-      const availableComponents = new Set(
-        components.filter((component) => component.enabled).map((c) => c.type),
-      );
       const acceptedTypes = ConstraintValidator.normalizeComponentTypes(
         constraint.componentType,
+      );
+      const matchingComponents = components.filter(
+        (component) =>
+          component.enabled && acceptedTypes.includes(component.type),
+      );
+      const propertyResults = matchingComponents.map((component) =>
+        this.validateConstraintProperties(component, constraint.properties),
       );
 
       switch (constraint.requirement) {
         case "required":
-          if (
-            !acceptedTypes.some((componentType) =>
-              availableComponents.has(componentType),
-            )
-          ) {
-            missingRequired.push(
-              ConstraintValidator.formatComponentType(constraint.componentType),
-            );
+          if (!propertyResults.includes("satisfied")) {
+            const formattedConstraint =
+              ConstraintValidator.formatConstraint(constraint);
+            if (
+              matchingComponents.length > 0 &&
+              propertyResults.includes("unverified")
+            ) {
+              unverifiedRequired.push(formattedConstraint);
+            } else {
+              missingRequired.push(formattedConstraint);
+            }
           }
           break;
 
         case "forbidden":
-          if (
-            acceptedTypes.some((componentType) =>
-              availableComponents.has(componentType),
-            )
-          ) {
+          if (propertyResults.includes("satisfied")) {
             extraForbidden.push(
-              ConstraintValidator.formatComponentType(constraint.componentType),
+              ConstraintValidator.formatConstraint(constraint),
             );
           }
           break;
@@ -87,12 +112,16 @@ export class ConstraintValidator {
       }
     }
 
-    const isValid = missingRequired.length === 0 && extraForbidden.length === 0;
+    const isValid =
+      missingRequired.length === 0 &&
+      extraForbidden.length === 0 &&
+      unverifiedRequired.length === 0;
 
     return {
       isValid,
       missingRequired,
       extraForbidden,
+      unverifiedRequired,
     };
   }
 
@@ -228,6 +257,50 @@ export class ConstraintValidator {
     }
 
     return true;
+  }
+
+  private static validateConstraintProperties(
+    component: Component,
+    properties: ComponentConstraint["properties"],
+  ): "satisfied" | "missing" | "unverified" {
+    if (!properties) {
+      return "satisfied";
+    }
+
+    for (const [propertyName, requirement] of Object.entries(properties)) {
+      if (!component.properties || !(propertyName in component.properties)) {
+        return "unverified";
+      }
+
+      const actualValue = component.properties[propertyName];
+      const matchesType =
+        requirement.type === "boolean"
+          ? typeof actualValue === "boolean"
+          : requirement.type === "number"
+            ? typeof actualValue === "number"
+            : requirement.type === "string"
+              ? typeof actualValue === "string"
+              : requirement.type === "array"
+                ? Array.isArray(actualValue)
+                : false;
+      if (!matchesType) {
+        return "unverified";
+      }
+
+      const expectedValues =
+        requirement.values ??
+        (requirement.value !== undefined ? [requirement.value] : undefined);
+      if (
+        expectedValues &&
+        !expectedValues.some((expectedValue) =>
+          Object.is(actualValue, expectedValue),
+        )
+      ) {
+        return "missing";
+      }
+    }
+
+    return "satisfied";
   }
 
   /**

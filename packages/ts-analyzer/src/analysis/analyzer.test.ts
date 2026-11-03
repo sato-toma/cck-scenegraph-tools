@@ -5,6 +5,51 @@ import { describe, expect, it } from "vitest";
 import { ClusterScriptAnalyzer } from "./analyzer";
 import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
 
+function analyzeOnCollideWithColliderProperty(isTrigger?: boolean) {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+  const tsFilePath = path.join(tempDir, "onCollideScript.ts");
+  const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+  fs.writeFileSync(tsFilePath, "$.onCollide(() => {});\n");
+  fs.writeFileSync(
+    sceneGraphPath,
+    `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "UnityEngine.Rigidbody"
+enabled = true
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "onCollideScript"
+
+[[gameObjects]]
+id = "collider-child"
+path = "Item/Cube"
+name = "Cube"
+parent = "Item"
+
+[[gameObjects.components]]
+type = "UnityEngine.BoxCollider"
+enabled = true
+${isTrigger === undefined ? "" : `[gameObjects.components.properties]\nIs_Trigger = ${isTrigger}\n`}
+`,
+  );
+
+  return new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+    tsFilePath,
+  );
+}
+
 describe("ClusterScriptAnalyzer", () => {
   it("validates scriptable item behavior against the matching scene object", () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
@@ -1598,6 +1643,73 @@ enabled = true
         matchedComponents: [
           { componentType: "First.Namespace.SharedType" },
           { componentType: "Second.Namespace.SharedType" },
+        ],
+      },
+    });
+  });
+
+  it("requires a non-trigger Collider for onCollide", () => {
+    const result = analyzeOnCollideWithColliderProperty(true);
+
+    expect(result.issues).toMatchObject([
+      {
+        code: "MISSING_COMPONENT",
+        apiCall: "onCollide",
+        requiredComponents: expect.arrayContaining([
+          "UnityEngine.BoxCollider | UnityEngine.CapsuleCollider | UnityEngine.MeshCollider | UnityEngine.SphereCollider | UnityEngine.WheelCollider (Is_Trigger=false)",
+        ]),
+      },
+    ]);
+    expect(
+      result.componentRequests.find((request) => request.componentProperties),
+    ).toMatchObject({
+      api: "$.onCollide",
+      verificationStatus: "missing",
+      verificationReason:
+        "Required component constraint not satisfied: UnityEngine.BoxCollider | UnityEngine.CapsuleCollider | UnityEngine.MeshCollider | UnityEngine.SphereCollider | UnityEngine.WheelCollider (Is_Trigger=false)",
+    });
+  });
+
+  it("marks onCollide collider state unverified when Is_Trigger is not exported", () => {
+    const result = analyzeOnCollideWithColliderProperty();
+
+    expect(result.issues).toMatchObject([
+      {
+        code: "UNVERIFIED_COMPONENT_REQUIREMENT",
+        severity: "warning",
+        apiCall: "onCollide",
+      },
+    ]);
+    expect(
+      result.componentRequests.find((request) => request.componentProperties),
+    ).toMatchObject({
+      verificationStatus: "unverified",
+      verificationReason:
+        "Required component constraint could not be verified: UnityEngine.BoxCollider | UnityEngine.CapsuleCollider | UnityEngine.MeshCollider | UnityEngine.SphereCollider | UnityEngine.WheelCollider (Is_Trigger=false)",
+    });
+  });
+
+  it("accepts a non-trigger Collider for onCollide", () => {
+    const result = analyzeOnCollideWithColliderProperty(false);
+
+    expect(result.issues).toHaveLength(0);
+    expect(
+      result.componentRequests.find((request) => request.componentProperties),
+    ).toMatchObject({
+      api: "$.onCollide",
+      componentProperties: {
+        Is_Trigger: { type: "boolean", value: false },
+      },
+      verificationStatus: "satisfied",
+      validation: {
+        presentComponentTypes: ["UnityEngine.BoxCollider"],
+        missingComponentTypes: [],
+        matchedComponents: [
+          {
+            gameObjectId: "collider-child",
+            gameObjectPath: "Item/Cube",
+            componentType: "UnityEngine.BoxCollider",
+          },
         ],
       },
     });

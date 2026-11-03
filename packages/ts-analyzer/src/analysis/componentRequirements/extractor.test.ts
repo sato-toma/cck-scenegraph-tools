@@ -188,6 +188,32 @@ describe("ComponentRequirementExtractor", () => {
     });
   });
 
+  it("preserves required component property constraints", () => {
+    const requests = ComponentRequirementExtractor.extractFromString(
+      "$.onCollide(() => {});",
+      "script.ts",
+    );
+
+    expect(requests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          api: "$.onCollide",
+          componentTypes: [
+            "UnityEngine.BoxCollider",
+            "UnityEngine.CapsuleCollider",
+            "UnityEngine.MeshCollider",
+            "UnityEngine.SphereCollider",
+            "UnityEngine.WheelCollider",
+          ],
+          componentMatch: "any",
+          componentProperties: {
+            Is_Trigger: { type: "boolean", value: false },
+          },
+        }),
+      ]),
+    );
+  });
+
   it("deduplicates equal requirements while retaining every occurrence", () => {
     const requests = ComponentRequirementExtractor.extractFromString(
       '$.getUnityComponent("UnityEngine.Rigidbody");\n$.getUnityComponent("UnityEngine.Rigidbody");',

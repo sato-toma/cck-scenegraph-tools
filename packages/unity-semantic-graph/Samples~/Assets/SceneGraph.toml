@@ -351,6 +351,9 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-287942460-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-767459597-0"

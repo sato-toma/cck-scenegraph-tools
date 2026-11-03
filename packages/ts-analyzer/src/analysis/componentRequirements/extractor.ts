@@ -3,6 +3,7 @@ import * as fs from "node:fs";
 import { ClusterScriptDefinitions } from "../../rules/clusterScriptDefinitions";
 import { TypeScriptCodeParser } from "../typeScriptParser";
 import {
+  ComponentConstraint,
   ComponentRequirementOccurrence,
   ComponentRequirementRequest,
 } from "../../domain/types";
@@ -12,6 +13,7 @@ interface ExtractedOccurrence {
   lookupTargetPath?: string[];
   kind?: ComponentRequirementRequest["kind"];
   componentTypes: string[];
+  componentProperties?: ComponentConstraint["properties"];
   componentMatch: ComponentRequirementRequest["componentMatch"];
   verificationStatus: ComponentRequirementRequest["verificationStatus"];
   occurrence: ComponentRequirementOccurrence;
@@ -52,6 +54,9 @@ export class ComponentRequirementExtractor {
           api: `$.${call.methodName}`,
           kind: undefined,
           componentTypes,
+          ...(constraint.properties
+            ? { componentProperties: constraint.properties }
+            : {}),
           componentMatch: componentTypes.length > 1 ? "any" : "all",
           verificationStatus: "unverified",
           occurrence: {
@@ -119,6 +124,7 @@ export class ComponentRequirementExtractor {
         item.lookupTargetPath,
         item.kind,
         item.componentTypes,
+        item.componentProperties,
         item.componentMatch,
         item.verificationStatus,
       ]);
@@ -133,6 +139,9 @@ export class ComponentRequirementExtractor {
             ? { lookupTargetPath: item.lookupTargetPath }
             : {}),
           componentTypes: item.componentTypes,
+          ...(item.componentProperties
+            ? { componentProperties: item.componentProperties }
+            : {}),
           componentMatch: item.componentMatch,
           target: {
             kind: "current-scriptable-item",

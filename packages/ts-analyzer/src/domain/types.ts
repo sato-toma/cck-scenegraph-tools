@@ -129,6 +129,7 @@ export interface ComponentRequirementRequest {
   target: ComponentRequirementTarget;
   verificationStatus: ComponentRequirementVerificationStatus;
   verificationReason?: string;
+  componentProperties?: ComponentConstraint["properties"];
   validation: {
     presentComponentTypes: string[];
     missingComponentTypes: string[];
