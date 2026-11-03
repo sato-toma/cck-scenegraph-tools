@@ -22,7 +22,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | `setPlayerScript` | ワールドアイテムでは同じItem上の `ClusterVR.CreatorKit.Item.Implements.PlayerScript` 必須。Craft Itemでの利用はベータのため対象外 | 静的テスト済み（不足・無効・有効）。Unity MCPで `SpinStart` の `PlayerScript` 参照とSceneGraph出力を確認。Cluster実機の動作は未確認 |
 | `onGrab` | `GrabbableItem` 必須 | 済み |
 | `onCollide` | `Rigidbody` と、対象 Item または子孫上の `Is_Trigger=false` の Collider が必要 | `onCollide` の `Is_Trigger` 正例・違反例・未出力例をAnalyzerテストで確認。公式 On Collide Item Trigger の説明はCollisionとTriggerを区別するが、ClusterScript API定義は `isTrigger` を直接記載しないため、要求根拠はUnity物理イベントの区別と実行時確認を分けて記録 |
-| `getOverlaps` | `OverlapDetectorShape` 必須 | 済み |
+| `getOverlaps` | `OverlapDetectorShape` 必須。検知対象にはPhysical ShapeまたはOverlap Source Shape等が必要。検知Colliderは物理衝突しない | 公式API定義・Shape仕様とUnityサンプルで確認。Spinのプレイヤー検知もこのAPIに切り替え |
 | `material` | 対象 Item の `ItemMaterialSetList`、有効な Material ID、Item 自身または子孫 Renderer への対象 Material 割り当てを確認。`setEmissionColor` に対する `_EMISSION` 警告は経験則ベースの暗黙ルールとして分離 | API 仕様と Item Material Set List の ID・Renderer 条件を実装。`test.unity` は MCP で ScriptableItem／Material 参照を確認。Exporter の新しい Renderer GUID 出力と Cluster 実機での色変化は未確認 |
 | state の配列メソッド | 状態の直接変更を検出 | コンポーネント制約なし |
 | state のネスト代入 | 状態の直接変更を検出 | コンポーネント制約なし |
