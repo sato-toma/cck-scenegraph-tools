@@ -287,7 +287,7 @@ export class ComponentRequirementValidator {
     const receiver = apiMatch?.[1] === "_" ? "_" : "$";
     const methodName = apiMatch?.[2] ?? request.api;
     const apiConstraints =
-      ClusterScriptDefinitions.getMethodConstraints(methodName);
+      ClusterScriptDefinitions.getMethodConstraints(methodName, receiver);
     const scopeForType = (componentType: string) =>
       apiConstraints.find((constraint) => {
         const types = Array.isArray(constraint.componentType)
