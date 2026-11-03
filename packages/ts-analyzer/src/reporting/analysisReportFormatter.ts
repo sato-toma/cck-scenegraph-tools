@@ -264,6 +264,7 @@ export class AnalysisReportFormatter {
     for (const call of apiCalls) {
       const constraints = ClusterScriptDefinitions.getMethodConstraints(
         call.methodName,
+        call.receiver,
       );
 
       for (const constraint of constraints) {

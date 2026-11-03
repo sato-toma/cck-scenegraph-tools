@@ -33,7 +33,10 @@ export class ComponentRequirementExtractor {
 
     for (const call of TypeScriptCodeParser.extractApiCallsFromString(content)) {
       const constraints = call.fullExpression.endsWith("(")
-        ? ClusterScriptDefinitions.getMethodConstraints(call.methodName)
+        ? ClusterScriptDefinitions.getMethodConstraints(
+            call.methodName,
+            call.receiver,
+          )
         : ClusterScriptDefinitions.getPropertyConstraints(call.methodName);
 
       for (const constraint of constraints) {
@@ -51,7 +54,7 @@ export class ComponentRequirementExtractor {
         );
 
         extracted.push({
-          api: `$.${call.methodName}`,
+          api: `${call.receiver}.${call.methodName}`,
           kind: undefined,
           componentTypes,
           ...(constraint.properties
@@ -62,7 +65,7 @@ export class ComponentRequirementExtractor {
           occurrence: {
             source: { filePath, line: call.line, column: call.column },
             condition,
-            evidence: `ClusterScript API constraint for $.${call.methodName}`,
+            evidence: `ClusterScript API constraint for ${call.receiver}.${call.methodName}`,
             confidence: "high",
           },
         });

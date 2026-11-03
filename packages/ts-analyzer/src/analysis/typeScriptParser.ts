@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import { ApiReceiver } from "../domain/types";
 
 /**
  * TypeScript コードの簡易パーサー（静的解析用）
@@ -13,7 +14,7 @@ export class TypeScriptCodeParser {
     line: number;
     column: number;
     methodName: string;
-    receiver: string;
+    receiver: ApiReceiver;
     fullExpression: string;
   }> {
     const content = fs.readFileSync(filePath, "utf-8");
@@ -27,14 +28,14 @@ export class TypeScriptCodeParser {
     line: number;
     column: number;
     methodName: string;
-    receiver: string;
+    receiver: ApiReceiver;
     fullExpression: string;
   }> {
     const results: Array<{
       line: number;
       column: number;
       methodName: string;
-      receiver: string;
+      receiver: ApiReceiver;
       fullExpression: string;
     }> = [];
 
@@ -54,7 +55,7 @@ export class TypeScriptCodeParser {
           line: lineIndex + 1,
           column: match.index,
           methodName: match[3]!,
-          receiver: match[2]!,
+          receiver: match[2] === "_" ? "_" : "$",
           fullExpression: match[0].trim(),
         });
       }
@@ -69,7 +70,7 @@ export class TypeScriptCodeParser {
             line: lineIndex + 1,
             column: match.index,
             methodName: match[3]!,
-            receiver: match[2]!,
+            receiver: match[2] === "_" ? "_" : "$",
             fullExpression: match[0].trim(),
           });
         }
@@ -89,7 +90,7 @@ export class TypeScriptCodeParser {
     line: number;
     column: number;
     methodName: string;
-    receiver: string;
+    receiver: ApiReceiver;
     fullExpression: string;
   }> {
     const allCalls = this.extractApiCalls(filePath);

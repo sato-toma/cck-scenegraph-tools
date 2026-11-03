@@ -185,6 +185,46 @@ Source_Code_Asset = "sample.ts"
     });
   });
 
+  it("does not require MovableItem for PlayerScript position and rotation APIs", () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "ts-analyzer-"));
+    const tsFilePath = path.join(tempDir, "player-script.ts");
+    const sceneGraphPath = path.join(tempDir, "SceneGraph.toml");
+
+    fs.writeFileSync(
+      tsFilePath,
+      "_.setPosition(new Vector3(1, 2, 3));\n_.setRotation(new Quaternion());\n",
+    );
+    fs.writeFileSync(
+      sceneGraphPath,
+      `
+project = "TestProject"
+
+[[gameObjects]]
+id = "item-object"
+path = "Item"
+name = "Item"
+parent = ""
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.Item"
+enabled = true
+
+[[gameObjects.components]]
+type = "ClusterVR.CreatorKit.Item.Implements.PlayerScript"
+enabled = true
+[gameObjects.components.properties]
+Source_Code_Asset = "player-script.ts"
+`,
+    );
+
+    const result = new ClusterScriptAnalyzer(sceneGraphPath).analyzeTypeScriptFile(
+      tsFilePath,
+    );
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.componentRequests).toHaveLength(0);
+  });
+
   it.each([
     ["$", "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"],
     ["_", "ClusterVR.CreatorKit.Item.Implements.PlayerScript"],

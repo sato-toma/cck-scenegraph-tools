@@ -1,6 +1,7 @@
 import {
   ApiMethod,
   ApiProperty,
+  ApiReceiver,
   ClusterScriptDefinition,
   ComponentConstraint,
 } from "../domain/types";
@@ -49,13 +50,24 @@ export class ClusterScriptDefinitions {
   /**
    * メソッドの必須コンポーネントを取得
    */
-  static getMethodConstraints(methodName: string): ComponentConstraint[] {
-    const method = this.getDefinitions().methods.get(methodName);
+  static getMethodConstraints(
+    methodName: string,
+    receiver: ApiReceiver = "$",
+  ): ComponentConstraint[] {
+    const method = this.getMethodDefinition(methodName, receiver);
     return method ? method.requiredComponents : [];
   }
 
-  static getMethodDefinition(methodName: string): ApiMethod | undefined {
-    return this.getDefinitions().methods.get(methodName);
+  static getMethodDefinition(
+    methodName: string,
+    receiver: ApiReceiver = "$",
+  ): ApiMethod | undefined {
+    const method = this.getDefinitions().methods.get(methodName);
+    if (!method || !(method.receivers ?? ["$"]).includes(receiver)) {
+      return undefined;
+    }
+
+    return method;
   }
 
   /**

@@ -283,9 +283,9 @@ export class ComponentRequirementValidator {
   private static toConstraints(
     request: ComponentRequirementRequest,
   ): ComponentConstraint[] {
-    const methodName = request.api.startsWith("$.")
-      ? request.api.slice(2)
-      : request.api;
+    const apiMatch = request.api.match(/^([$_])\.(.+)$/);
+    const receiver = apiMatch?.[1] === "_" ? "_" : "$";
+    const methodName = apiMatch?.[2] ?? request.api;
     const apiConstraints =
       ClusterScriptDefinitions.getMethodConstraints(methodName);
     const scopeForType = (componentType: string) =>

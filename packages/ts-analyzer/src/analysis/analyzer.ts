@@ -99,7 +99,10 @@ export class ClusterScriptAnalyzer {
 
     // 各APIコールについてチェック
     for (const call of apiCalls) {
-      const method = ClusterScriptDefinitions.getMethodDefinition(call.methodName);
+      const method = ClusterScriptDefinitions.getMethodDefinition(
+        call.methodName,
+        call.receiver,
+      );
       if (!method) {
         continue;
       }

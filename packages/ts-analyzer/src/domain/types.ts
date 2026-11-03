@@ -65,9 +65,13 @@ export interface ComponentConstraint {
   };
 }
 
+export type ApiReceiver = "$" | "_";
+
 export interface ApiMethod {
   name: string;
   requiredComponents: ComponentConstraint[];
+  /** Receivers supported by this rule; defaults to ScriptableItem (`$`). */
+  receivers?: ApiReceiver[];
   requiredCallbackContext?: string;
   requiresCallbackContext?: boolean;
   requiresTopLevelContext?: boolean;

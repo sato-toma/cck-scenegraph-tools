@@ -78,6 +78,7 @@ export const interactionMethodRules: ApiMethod[] = [
   },
   {
     name: "worldItemReference",
+    receivers: ["$", "_"],
     requiredComponents: [
       {
         componentType:
