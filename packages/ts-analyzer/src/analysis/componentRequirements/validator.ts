@@ -243,6 +243,12 @@ export class ComponentRequirementValidator {
           matchedComponents,
         },
       };
+      if (verificationReason === undefined) {
+        delete result.verificationReason;
+      } else {
+        result.verificationReason = verificationReason;
+      }
+      return result;
     });
   }
 
