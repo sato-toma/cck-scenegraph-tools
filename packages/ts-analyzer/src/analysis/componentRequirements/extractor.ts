@@ -3,6 +3,7 @@ import * as fs from "node:fs";
 import { ClusterScriptDefinitions } from "../../rules/clusterScriptDefinitions";
 import { TypeScriptCodeParser } from "../typeScriptParser";
 import {
+  ComponentConstraint,
   ComponentRequirementOccurrence,
   ComponentRequirementRequest,
 } from "../../domain/types";
@@ -12,6 +13,7 @@ interface ExtractedOccurrence {
   lookupTargetPath?: string[];
   kind?: ComponentRequirementRequest["kind"];
   componentTypes: string[];
+  componentProperties?: ComponentConstraint["properties"];
   componentMatch: ComponentRequirementRequest["componentMatch"];
   verificationStatus: ComponentRequirementRequest["verificationStatus"];
   occurrence: ComponentRequirementOccurrence;
@@ -31,7 +33,10 @@ export class ComponentRequirementExtractor {
 
     for (const call of TypeScriptCodeParser.extractApiCallsFromString(content)) {
       const constraints = call.fullExpression.endsWith("(")
-        ? ClusterScriptDefinitions.getMethodConstraints(call.methodName)
+        ? ClusterScriptDefinitions.getMethodConstraints(
+            call.methodName,
+            call.receiver,
+          )
         : ClusterScriptDefinitions.getPropertyConstraints(call.methodName);
 
       for (const constraint of constraints) {
@@ -49,15 +54,18 @@ export class ComponentRequirementExtractor {
         );
 
         extracted.push({
-          api: `$.${call.methodName}`,
+          api: `${call.receiver}.${call.methodName}`,
           kind: undefined,
           componentTypes,
+          ...(constraint.properties
+            ? { componentProperties: constraint.properties }
+            : {}),
           componentMatch: componentTypes.length > 1 ? "any" : "all",
           verificationStatus: "unverified",
           occurrence: {
             source: { filePath, line: call.line, column: call.column },
             condition,
-            evidence: `ClusterScript API constraint for $.${call.methodName}`,
+            evidence: `ClusterScript API constraint for ${call.receiver}.${call.methodName}`,
             confidence: "high",
           },
         });
@@ -119,6 +127,7 @@ export class ComponentRequirementExtractor {
         item.lookupTargetPath,
         item.kind,
         item.componentTypes,
+        item.componentProperties,
         item.componentMatch,
         item.verificationStatus,
       ]);
@@ -133,6 +142,9 @@ export class ComponentRequirementExtractor {
             ? { lookupTargetPath: item.lookupTargetPath }
             : {}),
           componentTypes: item.componentTypes,
+          ...(item.componentProperties
+            ? { componentProperties: item.componentProperties }
+            : {}),
           componentMatch: item.componentMatch,
           target: {
             kind: "current-scriptable-item",

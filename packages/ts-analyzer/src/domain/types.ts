@@ -45,6 +45,11 @@ export interface SceneGraph {
   materials?: MaterialRecord[];
 }
 
+export interface WorldUploadValidationResult {
+  sceneGraphPath: string;
+  issues: string[];
+}
+
 /**
  * ClusterScript コンポーネント制約
  */
@@ -65,9 +70,13 @@ export interface ComponentConstraint {
   };
 }
 
+export type ApiReceiver = "$" | "_";
+
 export interface ApiMethod {
   name: string;
   requiredComponents: ComponentConstraint[];
+  /** Receivers supported by this rule; defaults to ScriptableItem (`$`). */
+  receivers?: ApiReceiver[];
   requiredCallbackContext?: string;
   requiresCallbackContext?: boolean;
   requiresTopLevelContext?: boolean;
@@ -129,6 +138,7 @@ export interface ComponentRequirementRequest {
   target: ComponentRequirementTarget;
   verificationStatus: ComponentRequirementVerificationStatus;
   verificationReason?: string;
+  componentProperties?: ComponentConstraint["properties"];
   validation: {
     presentComponentTypes: string[];
     missingComponentTypes: string[];

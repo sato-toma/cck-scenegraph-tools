@@ -13,10 +13,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-456175543-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-456175542-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-456175546-0"
 type = "ClusterVR.CreatorKit.Item.Implements.Item"
@@ -52,6 +58,9 @@ parent = "addForce"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-374904791-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-374904790-0"
 type = "UnityEngine.TextMesh"
@@ -76,10 +85,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-569126641-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-569126640-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1083906085-0"
@@ -129,10 +144,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-221868670-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-221868669-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-931326577-0"
@@ -143,6 +164,9 @@ parent = "getGrabbingPlayer/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-931326580-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-931326579-0"
 type = "UnityEngine.TextMesh"
@@ -184,10 +208,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1649809482-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1649809481-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = true
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1649809484-0"
 type = "ClusterVR.CreatorKit.Item.Implements.OverlapDetectorShape"
@@ -202,6 +232,9 @@ parent = "getOverlaps/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-897938181-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-897938180-0"
 type = "UnityEngine.TextMesh"
@@ -231,80 +264,74 @@ Source_Code = ""
 
 
 [[gameObjects]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-965701373-0"
-path = "getPositionParent"
-name = "getPositionParent"
-parent = ""
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-2002289655-0"
+path = "getPositionNoMovable/API_Label"
+name = "API_Label"
+parent = "getPositionNoMovable"
 [[gameObjects.components]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-965701375-0"
-type = "ClusterVR.CreatorKit.Item.Implements.Item"
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-2002289658-0"
+type = "UnityEngine.MeshRenderer"
 enabled = true
 [gameObjects.components.properties]
-Item_Name = ""
-Size = [0, 0, 0]
-Movement_Type = "Smooth"
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
 
 [[gameObjects.components]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-965701376-0"
-type = "UnityEngine.Rigidbody"
-enabled = true
-[[gameObjects.components]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-965701377-0"
-type = "ClusterVR.CreatorKit.Item.Implements.MovableItem"
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-2002289657-0"
+type = "UnityEngine.TextMesh"
 enabled = true
 
 [[gameObjects]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-323355186-0"
-path = "getPositionParent/getPosition"
-name = "getPosition"
-parent = "getPositionParent"
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-3600000001-0"
+path = "MaterialTestCube"
+name = "MaterialTestCube"
+parent = ""
 [[gameObjects.components]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-323355188-0"
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-3600000005-0"
+type = "UnityEngine.BoxCollider"
+enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-3600000006-0"
 type = "ClusterVR.CreatorKit.Item.Implements.Item"
 enabled = true
 [gameObjects.components.properties]
-Item_Name = ""
-Size = [0, 0, 0]
+Item_Name = "MaterialTestCube"
+Size = [1, 1, 1]
 Movement_Type = "Smooth"
 
 [[gameObjects.components]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-323355189-0"
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-3600000007-0"
+type = "ClusterVR.CreatorKit.Item.Implements.ItemMaterialSetList"
+enabled = true
+[gameObjects.components.properties]
+Item_Material_Sets = ["cubeMat=08d2be92f49742829c5e850ceccde19b"]
+
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-3600000008-0"
 type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
 enabled = true
 [gameObjects.components.properties]
-Source_Code_Asset = "getPositionScript"
+Source_Code_Asset = "setMaterialColorScript"
 Source_Code = ""
 
 
 [[gameObjects]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1647012348-0"
-path = "getPositionSameMovable"
-name = "getPositionSameMovable"
-parent = ""
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1781986797-0"
+path = "MaterialTestCube/ColorRenderer"
+name = "ColorRenderer"
+parent = "MaterialTestCube"
 [[gameObjects.components]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1647012350-0"
-type = "ClusterVR.CreatorKit.Item.Implements.Item"
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1781986801-0"
+type = "UnityEngine.MeshFilter"
+enabled = true
+[[gameObjects.components]]
+id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1781986799-0"
+type = "UnityEngine.MeshRenderer"
 enabled = true
 [gameObjects.components.properties]
-Item_Name = ""
-Size = [0, 0, 0]
-Movement_Type = "Smooth"
-
-[[gameObjects.components]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1647012351-0"
-type = "UnityEngine.Rigidbody"
-enabled = true
-[[gameObjects.components]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1647012352-0"
-type = "ClusterVR.CreatorKit.Item.Implements.MovableItem"
-enabled = true
-[[gameObjects.components]]
-id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1647012353-0"
-type = "ClusterVR.CreatorKit.Item.Implements.ScriptableItem"
-enabled = true
-[gameObjects.components.properties]
-Source_Code_Asset = "getPositionScript"
-Source_Code = ""
+Renderer_Material_Guids = ["08d2be92f49742829c5e850ceccde19b"]
 
 
 [[gameObjects]]
@@ -347,10 +374,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-287942461-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-287942460-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-767459597-0"
@@ -361,6 +394,9 @@ parent = "onCollide/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-767459600-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-767459599-0"
 type = "UnityEngine.TextMesh"
@@ -414,10 +450,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-676474047-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-676474046-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1937518588-0"
@@ -428,6 +470,9 @@ parent = "onGrab/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1937518591-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1937518590-0"
 type = "UnityEngine.TextMesh"
@@ -477,10 +522,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-845208728-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-845208727-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-575553753-0"
@@ -491,6 +542,9 @@ parent = "onInterract/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-575553756-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-575553755-0"
 type = "UnityEngine.TextMesh"
@@ -539,10 +593,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-835506156-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-835506155-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-917058066-0"
@@ -553,6 +613,9 @@ parent = "onRide/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-917058069-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-917058068-0"
 type = "UnityEngine.TextMesh"
@@ -606,10 +669,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1225602653-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1225602652-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1696444400-0"
@@ -620,6 +689,9 @@ parent = "onUse/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1696444403-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1696444402-0"
 type = "UnityEngine.TextMesh"
@@ -661,10 +733,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-498747884-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-498747883-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154523-0"
@@ -679,10 +757,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154525-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154524-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1689154528-0"
 type = "ClusterVR.CreatorKit.Item.Implements.Item"
@@ -718,6 +802,9 @@ parent = "setPlayerScript"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-443706367-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-443706368-0"
 type = "UnityEngine.TextMesh"
@@ -767,10 +854,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-558795960-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-558795959-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1861068872-0"
@@ -781,6 +874,9 @@ parent = "setPosition/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1861068875-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1861068874-0"
 type = "UnityEngine.TextMesh"
@@ -830,10 +926,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-345345550-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-345345549-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-637466239-0"
@@ -844,6 +946,9 @@ parent = "setRotation/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-637466242-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-637466241-0"
 type = "UnityEngine.TextMesh"
@@ -885,10 +990,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-250414312-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = true
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-250414311-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-250414314-0"
 type = "ClusterVR.CreatorKit.Item.Implements.OverlapDetectorShape"
@@ -903,6 +1014,9 @@ parent = "setVisiblePlayers/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-826982896-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-826982895-0"
 type = "UnityEngine.TextMesh"
@@ -944,10 +1058,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-786325185-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-786325184-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1862200440-0"
@@ -958,6 +1078,9 @@ parent = "subNode/SubNodeTarget"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1862200443-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-1862200442-0"
 type = "UnityEngine.TextMesh"
@@ -1043,10 +1166,16 @@ enabled = true
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-354923341-0"
 type = "UnityEngine.BoxCollider"
 enabled = true
+[gameObjects.components.properties]
+Is_Trigger = false
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-354923340-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000f000000000000000"]
+
 
 [[gameObjects]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-548280261-0"
@@ -1057,8 +1186,19 @@ parent = "worldItemReference/Cube"
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-548280264-0"
 type = "UnityEngine.MeshRenderer"
 enabled = true
+[gameObjects.components.properties]
+Renderer_Material_Guids = ["0000000000000000e000000000000000"]
+
 [[gameObjects.components]]
 id = "GlobalObjectId_V1-2-4623955290552cb4fb2bccad9a61aa7c-548280263-0"
 type = "UnityEngine.TextMesh"
 enabled = true
+
+[[materials]]
+guid = "08d2be92f49742829c5e850ceccde19b"
+name = "CubeColor"
+path = "Assets/CubeColor.mat"
+shader = "Standard"
+emissionEnabled = true
+emissionColor = [0.09999997, 0.09999997, 0.09999997, 1.0]
 

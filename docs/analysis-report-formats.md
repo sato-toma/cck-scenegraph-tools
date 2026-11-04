@@ -40,6 +40,10 @@ npm run --silent scenegraph:analyze -- `
 ```json
 {
   "schemaVersion": 1,
+  "worldUploadValidation": {
+    "sceneGraphPath": "SceneGraph.toml",
+    "issues": []
+  },
   "results": [
     {
       "filePath": "Assets/Script/main.ts",
@@ -63,21 +67,29 @@ npm run --silent scenegraph:analyze -- `
 }
 ```
 
+`analyze` コマンドは既存互換性のため schemaVersion 1 を維持したまま、SceneGraph単位の `worldUploadValidation` を追加します。`issues` が空でなければ、World Upload Validator の検証違反があります。この追加フィールドは既存の `results` 配列の構造を変更しません。
+
 各 result は `issues`、`componentRequests`、`summary` を持ちます。要求の型、対象、状態、根拠、ソース位置は `componentRequests` に含まれます。互換性のない変更では `schemaVersion` を更新します。
 
 `getUnityComponent` のリテラル型が対象 GameObject にない場合、`kind: "optional-lookup"` と `optionalLookupMissing` で記録します。既定は警告です。`--strict-optional-lookups` を指定すると要求の `severity` が `error` になり、`--fail-on-issues` の対象になります。
+
+## VS Code Problems
+
+`--format vscode-problems` は VS Code の Problem Matcher が読める絶対パス付きの1行1診断形式です。World Upload Validator の違反はSceneGraphファイルの1行目にエラーとして表示します。検証違反はファイル全体に関するもので、特定のTOML行には対応しません。
 
 ## SARIF
 
 `--format sarif` は SARIF 2.1.0 を出力します。`$schema` は HTTPS のバージョン固定 URL を示すメタデータであり、Analyzer は実行時に外部からスキーマを取得しません。SARIF の仕様バージョンを更新する場合は、対応する出力実装とテストを更新してください。schema URL は仕様バージョンから組み立てられ、別々の値が食い違わないようになっています。
 
 未解決の要求を SARIF result に含め、required の `missing` は `error`、`ambiguous` / `unsupported` / `unverified` は `warning` とします。`satisfied` は省略し、要求の詳細は `properties.componentRequest` に保持します。
+World Upload Validator の違反も `world-upload-validation` rule の `error` として含めます。該当箇所を特定できないシーン全体の検証のため、SceneGraphファイルへの位置情報はファイル単位です。
 
 GitHub Actions の artifact upload や SARIF consumer に渡す場合は、標準出力を `.sarif` ファイルへリダイレクトします。source URI は GitHub Actions では `GITHUB_WORKSPACE` を基準にします。
 
 ## GitHub Actions annotation
 
 `--format github-actions` は未解決要求と analyzer issue を workflow annotation として出力します。required の `missing` は `error`、その他の未解決状態は `warning`、`info` は `notice` です。位置情報はソースの file / line / column を指します。
+World Upload Validator の違反はファイル位置なしの `error` annotation として出力します。
 
 ```yaml
 - name: Analyze ClusterScript

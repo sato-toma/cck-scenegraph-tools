@@ -4,11 +4,13 @@ import type {
   AnalysisResult,
   ComponentRequirementRequest,
   ValidationIssue,
+  WorldUploadValidationResult,
 } from "../../src/domain/types";
 import {
   formatGitHubActionsAnnotations,
   formatJsonAnalysisReport,
   formatSarifAnalysisReport,
+  formatStructuredAnalysisReport,
   formatVSCodeProblems,
 } from "../../src/reporting/structuredAnalysisFormatter";
 
@@ -128,6 +130,25 @@ describe("structured analysis formatters", () => {
     expect(report.results[0]?.summary.componentRequestCounts.unverified).toBe(1);
   });
 
+  it("includes upload validation without changing the existing JSON schema version", () => {
+    const uploadValidation: WorldUploadValidationResult = {
+      sceneGraphPath: "SceneGraph.toml",
+      issues: ["Exactly one DespawnHeight component is required; found 0."],
+    };
+    const report = JSON.parse(
+      formatJsonAnalysisReport([], uploadValidation),
+    ) as {
+      schemaVersion: number;
+      worldUploadValidation: WorldUploadValidationResult;
+    };
+
+    expect(report).toEqual({
+      schemaVersion: 1,
+      worldUploadValidation: uploadValidation,
+      results: [],
+    });
+  });
+
   it("generates SARIF findings with source positions and component details", () => {
     const sarif = JSON.parse(
       formatSarifAnalysisReport([createAnalysisResult()], workspaceRoot, workspaceRoot),
@@ -184,6 +205,74 @@ describe("structured analysis formatters", () => {
     });
 
     expect(run.results[1]?.level).toBe("warning");
+  });
+
+  it("includes scene-level upload validation findings in every structured format", () => {
+    const uploadValidation: WorldUploadValidationResult = {
+      sceneGraphPath: "SceneGraph.toml",
+      issues: ["Exactly one DespawnHeight component is required; found 0."],
+    };
+
+    const sarif = JSON.parse(
+      formatStructuredAnalysisReport(
+        "sarif",
+        [],
+        workspaceRoot,
+        workspaceRoot,
+        uploadValidation,
+      ),
+    ) as {
+      runs: Array<{
+        results: Array<{
+          ruleId: string;
+          level: string;
+          message: { text: string };
+          locations: Array<{
+            physicalLocation: {
+              artifactLocation: { uri: string };
+              region?: unknown;
+            };
+          }>;
+        }>;
+      }>;
+    };
+    expect(sarif.runs[0]?.results).toEqual([
+      {
+        ruleId: "world-upload-validation",
+        level: "error",
+        message: { text: uploadValidation.issues[0] },
+        locations: [
+          {
+            physicalLocation: {
+              artifactLocation: { uri: "SceneGraph.toml" },
+            },
+          },
+        ],
+      },
+    ]);
+
+    expect(
+      formatStructuredAnalysisReport(
+        "github-actions",
+        [],
+        workspaceRoot,
+        workspaceRoot,
+        uploadValidation,
+      ),
+    ).toContain(
+      "::error title=CCK world upload validation::Exactly one DespawnHeight component is required; found 0.",
+    );
+    expect(
+      formatStructuredAnalysisReport(
+        "vscode-problems",
+        [],
+        workspaceRoot,
+        workspaceRoot,
+        uploadValidation,
+      ),
+    ).toContain(
+      `${path.resolve(workspaceRoot, "SceneGraph.toml")}(1,1): error SCENEGRAPH_WORLD_UPLOAD: Exactly one DespawnHeight component is required; found 0.`,
+    );
   });
 
   it("reports a missing optional lookup as a warning, not an error", () => {

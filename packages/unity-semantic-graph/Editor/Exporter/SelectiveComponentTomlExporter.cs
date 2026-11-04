@@ -334,6 +334,10 @@ namespace UnitySemanticGraph.Editor.Exporter
             {
                 values[RendererMaterialGuidsPropertyName] = GetRendererMaterialGuids(renderer);
             }
+            if (component is Collider collider)
+            {
+                values["Is_Trigger"] = collider.isTrigger;
+            }
 
             var serializedObject = new SerializedObject(component);
             var property = serializedObject.GetIterator();
@@ -560,25 +564,25 @@ namespace UnitySemanticGraph.Editor.Exporter
                 case long l:
                     return l.ToString();
                 case float f:
-                    return f.ToString("G", System.Globalization.CultureInfo.InvariantCulture);
+                    return FormatTomlFloat(f.ToString("G", System.Globalization.CultureInfo.InvariantCulture));
                 case double d:
-                    return d.ToString("G", System.Globalization.CultureInfo.InvariantCulture);
+                    return FormatTomlFloat(d.ToString("G", System.Globalization.CultureInfo.InvariantCulture));
                 case Vector2 v2:
-                    return $"[{v2.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {v2.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}]";
+                    return $"[{FormatTomlFloat(v2.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(v2.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}]";
                 case Vector3 v3:
-                    return $"[{v3.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {v3.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {v3.z.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}]";
+                    return $"[{FormatTomlFloat(v3.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(v3.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(v3.z.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}]";
                 case Vector4 v4:
-                    return $"[{v4.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {v4.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {v4.z.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {v4.w.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}]";
+                    return $"[{FormatTomlFloat(v4.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(v4.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(v4.z.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(v4.w.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}]";
                 case Vector2Int v2i:
                     return $"[{v2i.x}, {v2i.y}]";
                 case Vector3Int v3i:
                     return $"[{v3i.x}, {v3i.y}, {v3i.z}]";
                 case Rect rect:
-                    return $"[{rect.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {rect.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {rect.width.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {rect.height.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}]";
+                    return $"[{FormatTomlFloat(rect.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(rect.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(rect.width.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(rect.height.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}]";
                 case Bounds bounds:
-                    return $"[[{bounds.center.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {bounds.center.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {bounds.center.z.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}], [{bounds.extents.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {bounds.extents.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {bounds.extents.z.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}]]";
+                    return $"[[{FormatTomlFloat(bounds.center.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(bounds.center.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(bounds.center.z.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}], [{FormatTomlFloat(bounds.extents.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(bounds.extents.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(bounds.extents.z.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}]]";
                 case Quaternion quaternion:
-                    return $"[{quaternion.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {quaternion.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {quaternion.z.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}, {quaternion.w.ToString("G", System.Globalization.CultureInfo.InvariantCulture)}]";
+                    return $"[{FormatTomlFloat(quaternion.x.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(quaternion.y.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(quaternion.z.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}, {FormatTomlFloat(quaternion.w.ToString("G", System.Globalization.CultureInfo.InvariantCulture))}]";
                 case IList<object> list:
                     return $"[{string.Join(", ", list.Select(FormatTomlValue))}]";
                 case IEnumerable<object> enumerable:
@@ -586,6 +590,13 @@ namespace UnitySemanticGraph.Editor.Exporter
                 default:
                     return $"\"{EscapeTomlString(value.ToString())}\"";
             }
+        }
+
+        private static string FormatTomlFloat(string value)
+        {
+            return value.IndexOf('.') >= 0 || value.IndexOf('E') >= 0 || value.IndexOf('e') >= 0
+                ? value
+                : value + ".0";
         }
 
         private static string EscapeTomlString(string value)

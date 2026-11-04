@@ -19,10 +19,10 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 | --- | --- | --- |
 | `setPosition` | `MovableItem` 必須 | 済み |
 | `setRotation` | `MovableItem` 必須 | 済み |
-| `setPlayerScript` | ワールドアイテムでは同じItem上の `ClusterVR.CreatorKit.Item.Implements.PlayerScript` 必須。Craft Itemでの利用はベータのため対象外 | 静的テスト済み（不足・無効・有効）。Unityシーン確認はMCP/Pipeline未接続のため未実施 |
+| `setPlayerScript` | ワールドアイテムでは同じItem上の `ClusterVR.CreatorKit.Item.Implements.PlayerScript` 必須。Craft Itemでの利用はベータのため対象外 | 静的テスト済み（不足・無効・有効）。Unity MCPで `SpinStart` の `PlayerScript` 参照とSceneGraph出力を確認。Cluster実機の動作は未確認 |
 | `onGrab` | `GrabbableItem` 必須 | 済み |
-| `onCollide` | `Rigidbody` 必須 | 済み |
-| `getOverlaps` | `OverlapDetectorShape` 必須 | 済み |
+| `onCollide` | `Rigidbody` と、対象 Item または子孫上の `Is_Trigger=false` の Collider が必要 | `onCollide` の `Is_Trigger` 正例・違反例・未出力例をAnalyzerテストで確認。公式 On Collide Item Trigger の説明はCollisionとTriggerを区別するが、ClusterScript API定義は `isTrigger` を直接記載しないため、要求根拠はUnity物理イベントの区別と実行時確認を分けて記録 |
+| `getOverlaps` | `OverlapDetectorShape` 必須。検知対象にはPhysical ShapeまたはOverlap Source Shape等が必要。検知Colliderは物理衝突しない | 公式API定義・Shape仕様とUnityサンプルで確認。Spinのプレイヤー検知もこのAPIに切り替え |
 | `material` | 対象 Item の `ItemMaterialSetList`、有効な Material ID、Item 自身または子孫 Renderer への対象 Material 割り当てを確認。`setEmissionColor` に対する `_EMISSION` 警告は経験則ベースの暗黙ルールとして分離 | API 仕様と Item Material Set List の ID・Renderer 条件を実装。`test.unity` は MCP で ScriptableItem／Material 参照を確認。Exporter の新しい Renderer GUID 出力と Cluster 実機での色変化は未確認 |
 | state の配列メソッド | 状態の直接変更を検出 | コンポーネント制約なし |
 | state のネスト代入 | 状態の直接変更を検出 | コンポーネント制約なし |
@@ -47,12 +47,12 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 
 | 状態 | API | Unity で確認すること | 想定する制約 |
 | --- | --- | --- | --- |
-| [x] | [`setPlayerScript`](https://docs.cluster.mu/script/interfaces/ClusterScript.html#setplayerscript) | Player Scriptコンポーネント不足・無効・有効時のAnalyzer結果をfixtureで確認。Unity実シーンでの確認は未実施（Editor/Pipeline未接続） | ワールドアイテムの同一GameObject上に `ClusterVR.CreatorKit.Item.Implements.PlayerScript` が必要。Craft Itemでの利用はベータのため対象外 |
+| [x] | [`setPlayerScript`](https://docs.cluster.mu/script/interfaces/ClusterScript.html#setplayerscript) | Player Scriptコンポーネント不足・無効・有効時のAnalyzer結果をfixtureで確認。`test.unity` の `SpinStart` で参照とSceneGraph出力を確認。Cluster実機の動作は未確認 | ワールドアイテムの同一GameObject上に `ClusterVR.CreatorKit.Item.Implements.PlayerScript` が必要。Craft Itemでの利用はベータのため対象外 |
 | [x] | `onInteract` | UnityでCollider必須条件を確認。`test.unity` のExportでは子GameObjectの有効な `BoxCollider` を確認 | `UnityEngine.BoxCollider` / `SphereCollider` / `CapsuleCollider` / `MeshCollider` / `WheelCollider` のいずれか1個以上 |
 | [x] | `onUse` | Unity サンプルの `onUseScript` と `onUseMissingScript` で、GrabbableItem の有無を含む動作を確認済み | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem`（ClusterScript 定義に必須と明記） |
 | [x] | [`onRide`](https://docs.cluster.mu/script/interfaces/ClusterScript.html#onride) | トップレベル登録と有効な `RidableItem` を要求。サンプルの負例（無効化）では `MISSING_COMPONENT` が1件、有効状態の再Exportではエラー0件を確認。Creator Kitの追加要件（Seat設定、同階層または子のCollider）はサンプルに設定するが、Analyzerでは自動検査しない | [公式 ClusterScript API Reference](https://docs.cluster.mu/script/interfaces/ClusterScript.html#onride)、[`Ridable Item コンポーネント`](https://docs.cluster.mu/creatorkit/item-components/ridable-item/)、[`index.d.ts` の `ClusterScript.onRide`](../packages/unity-semantic-graph/Samples~/Assets/Script/external/index.d.ts) を参照。実例は [`onRideScript.ts`](../packages/unity-semantic-graph/Samples~/Assets/Script/src/onRideScript.ts) と [`test.unity`](../packages/unity-semantic-graph/Samples~/Assets/test.unity) |
 | [x] | `getGrabbingPlayer` | ClusterScript API 定義で `GrabbableItem` 必須を確認。非 Grab 中は `null`。ルールは Component の有無のみを判定 | `ClusterVR.CreatorKit.Item.Implements.GrabbableItem` 必須 |
-| [x] | `worldItemReference` | [`ClusterScript API`](https://docs.cluster.mu/script/interfaces/ClusterScript.html) と [`World Item Reference List`](https://docs.cluster.mu/creatorkit/item-components/world-item-reference-list/) を確認。`$` / `_` の両形式に対応 | 同じ Item GameObject に有効な `ClusterVR.CreatorKit.Item.Implements.WorldItemReferenceList` が必須。リスト内 ID と参照先の照合は、現在の SceneGraph TOML に要素データが出力されないため対象外 |
+| [x] | `$.worldItemReference` | [`ClusterScript API`](https://docs.cluster.mu/script/interfaces/ClusterScript.html) と [`World Item Reference List`](https://docs.cluster.mu/creatorkit/item-components/world-item-reference-list/) を確認 | 同じ Item GameObject に有効な `ClusterVR.CreatorKit.Item.Implements.WorldItemReferenceList` が必須。リスト内 ID と参照先の照合は、現在の SceneGraph TOML に要素データが出力されないため対象外 |
 | [ ] | `getRidingPlayer` | Ride 中と非 Ride 中の戻り値 | `RidableItem`。要確認 |
 
 ### P1: 移動・物理

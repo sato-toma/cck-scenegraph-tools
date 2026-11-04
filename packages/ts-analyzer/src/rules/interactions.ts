@@ -78,6 +78,7 @@ export const interactionMethodRules: ApiMethod[] = [
   },
   {
     name: "worldItemReference",
+    receivers: ["$", "_"],
     requiredComponents: [
       {
         componentType:
@@ -96,8 +97,25 @@ export const interactionMethodRules: ApiMethod[] = [
         componentType: "UnityEngine.Rigidbody",
         requirement: "required",
       },
+      {
+        componentType: [
+          "UnityEngine.BoxCollider",
+          "UnityEngine.CapsuleCollider",
+          "UnityEngine.MeshCollider",
+          "UnityEngine.SphereCollider",
+          "UnityEngine.WheelCollider",
+        ],
+        requirement: "required",
+        scope: "target-and-descendants",
+        properties: {
+          Is_Trigger: {
+            type: "boolean",
+            value: false,
+          },
+        },
+      },
     ],
-    description: `アイテムが別の物体と衝突したときのコールバック
+    description: `アイテムが別の物体と物理衝突したときのコールバック。RigidbodyとIs_TriggerがfalseのColliderが必要
 
 注意:
 - IsKinematic が設定されている Rigidbody は、Rigidbody のないコライダーや IsKinematic が設定されていない Rigidbody との Collision 判定を行いません。

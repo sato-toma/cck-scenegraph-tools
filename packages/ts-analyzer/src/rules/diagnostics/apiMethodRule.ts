@@ -46,6 +46,7 @@ export const apiMethodRule: DiagnosticRule = {
     for (const call of apiCalls) {
       const method = ClusterScriptDefinitions.getMethodDefinition(
         call.methodName,
+        call.receiver,
       );
       if (!method) {
         continue;
@@ -142,14 +143,22 @@ export const apiMethodRule: DiagnosticRule = {
       const requiredComponents = method.requiredComponents
         .filter((constraint) => constraint.requirement === "required")
         .map((constraint) =>
-          ConstraintValidator.formatComponentType(constraint.componentType),
+          ConstraintValidator.formatConstraint(constraint),
         );
+      const onlyUnverifiedRequirements =
+        validation.missingRequired.length === 0 &&
+        validation.extraForbidden.length === 0 &&
+        validation.unverifiedRequired.length > 0;
       issues.push({
         line: call.line,
         column: call.column,
-        severity: "error",
-        code: "MISSING_COMPONENT",
-        message: `Method '${call.methodName}' requires components: ${requiredComponents.join(", ")}`,
+        severity: onlyUnverifiedRequirements ? "warning" : "error",
+        code: onlyUnverifiedRequirements
+          ? "UNVERIFIED_COMPONENT_REQUIREMENT"
+          : "MISSING_COMPONENT",
+        message: onlyUnverifiedRequirements
+          ? `Could not verify component requirements for method '${call.methodName}': ${validation.unverifiedRequired.join(", ")}`
+          : `Method '${call.methodName}' requires components: ${requiredComponents.join(", ")}`,
         apiCall: call.methodName,
         requiredComponents,
         availableComponents: SceneGraphParser.getEnabledComponentsInHierarchy(

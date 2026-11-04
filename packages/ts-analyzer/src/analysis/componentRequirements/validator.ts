@@ -221,16 +221,34 @@ export class ComponentRequirementValidator {
           ? []
           : request.componentTypes.filter((type) => !availableTypes.has(type));
 
-      return {
+      const verificationStatus = validation.isValid
+        ? "satisfied"
+        : validation.missingRequired.length > 0 ||
+            validation.extraForbidden.length > 0
+          ? "missing"
+          : "unverified";
+      const verificationReason =
+        validation.missingRequired.length > 0
+          ? `Required component constraint not satisfied: ${validation.missingRequired.join(", ")}`
+          : validation.unverifiedRequired.length > 0
+            ? `Required component constraint could not be verified: ${validation.unverifiedRequired.join(", ")}`
+            : undefined;
+      const result: ComponentRequirementRequest = {
         ...request,
         target: resolvedTarget,
-        verificationStatus: validation.isValid ? "satisfied" : "missing",
+        verificationStatus,
         validation: {
           presentComponentTypes,
           missingComponentTypes,
           matchedComponents,
         },
       };
+      if (verificationReason === undefined) {
+        delete result.verificationReason;
+      } else {
+        result.verificationReason = verificationReason;
+      }
+      return result;
     });
   }
 
@@ -271,11 +289,11 @@ export class ComponentRequirementValidator {
   private static toConstraints(
     request: ComponentRequirementRequest,
   ): ComponentConstraint[] {
-    const methodName = request.api.startsWith("$.")
-      ? request.api.slice(2)
-      : request.api;
+    const apiMatch = request.api.match(/^([$_])\.(.+)$/);
+    const receiver = apiMatch?.[1] === "_" ? "_" : "$";
+    const methodName = apiMatch?.[2] ?? request.api;
     const apiConstraints =
-      ClusterScriptDefinitions.getMethodConstraints(methodName);
+      ClusterScriptDefinitions.getMethodConstraints(methodName, receiver);
     const scopeForType = (componentType: string) =>
       apiConstraints.find((constraint) => {
         const types = Array.isArray(constraint.componentType)
@@ -290,6 +308,9 @@ export class ComponentRequirementValidator {
         {
           componentType: request.componentTypes,
           requirement: "required",
+          ...(request.componentProperties
+            ? { properties: request.componentProperties }
+            : {}),
           ...(scope ? { scope } : {}),
         },
       ];
@@ -300,6 +321,9 @@ export class ComponentRequirementValidator {
       return {
         componentType,
         requirement: "required",
+        ...(request.componentProperties
+          ? { properties: request.componentProperties }
+          : {}),
         ...(scope ? { scope } : {}),
       };
     });

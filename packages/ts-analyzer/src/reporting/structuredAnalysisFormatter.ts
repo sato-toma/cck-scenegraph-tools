@@ -4,6 +4,7 @@ import type {
   AnalysisResult,
   ComponentRequirementRequest,
   ValidationIssue,
+  WorldUploadValidationResult,
 } from "../domain/types";
 
 export const ANALYSIS_REPORT_FORMATS = [
@@ -30,7 +31,7 @@ interface SarifLocation {
     artifactLocation: {
       uri: string;
     };
-    region: {
+    region?: {
       startLine: number;
       startColumn: number;
     };
@@ -57,10 +58,16 @@ interface SarifRule {
   };
 }
 
-export function formatJsonAnalysisReport(results: AnalysisResult[]): string {
+export function formatJsonAnalysisReport(
+  results: AnalysisResult[],
+  worldUploadValidation?: WorldUploadValidationResult,
+): string {
   return JSON.stringify(
     {
       schemaVersion: 1,
+      ...(worldUploadValidation
+        ? { worldUploadValidation }
+        : {}),
       results,
     },
     null,
@@ -72,6 +79,7 @@ export function formatSarifAnalysisReport(
   results: AnalysisResult[],
   workingDirectory = process.cwd(),
   workspaceRoot = process.env.GITHUB_WORKSPACE ?? workingDirectory,
+  worldUploadValidation?: WorldUploadValidationResult,
 ): string {
   const rules = new Map<string, SarifRule>();
   const sarifResults: SarifResult[] = [];
@@ -169,6 +177,35 @@ export function formatSarifAnalysisReport(
     }
   }
 
+  if (worldUploadValidation) {
+    const ruleId = "world-upload-validation";
+    rules.set(ruleId, {
+      id: ruleId,
+      shortDescription: { text: "World upload validation failed" },
+      defaultConfiguration: { level: "error" },
+    });
+    for (const issue of worldUploadValidation.issues) {
+      sarifResults.push({
+        ruleId,
+        level: "error",
+        message: { text: issue },
+        locations: [
+          {
+            physicalLocation: {
+              artifactLocation: {
+                uri: getSarifUri(
+                  worldUploadValidation.sceneGraphPath,
+                  workingDirectory,
+                  workspaceRoot,
+                ),
+              },
+            },
+          },
+        ],
+      });
+    }
+  }
+
   return JSON.stringify(
     {
       $schema: SARIF_SCHEMA_URL,
@@ -194,6 +231,7 @@ export function formatGitHubActionsAnnotations(
   results: AnalysisResult[],
   workingDirectory = process.cwd(),
   workspaceRoot = process.env.GITHUB_WORKSPACE ?? workingDirectory,
+  worldUploadValidation?: WorldUploadValidationResult,
 ): string {
   const annotations: string[] = [];
 
@@ -247,12 +285,21 @@ export function formatGitHubActionsAnnotations(
     }
   }
 
+  if (worldUploadValidation) {
+    for (const issue of worldUploadValidation.issues) {
+      annotations.push(
+        `::error title=CCK world upload validation::${escapeGitHubData(issue)}`,
+      );
+    }
+  }
+
   return annotations.join("\n");
 }
 
 export function formatVSCodeProblems(
   results: AnalysisResult[],
   workingDirectory = process.cwd(),
+  worldUploadValidation?: WorldUploadValidationResult,
 ): string {
   const problems: string[] = [];
 
@@ -303,6 +350,22 @@ export function formatVSCodeProblems(
     }
   }
 
+  if (worldUploadValidation) {
+    for (const issue of worldUploadValidation.issues) {
+      problems.push(
+        formatVSCodeProblem(
+          worldUploadValidation.sceneGraphPath,
+          1,
+          0,
+          "error",
+          "SCENEGRAPH_WORLD_UPLOAD",
+          toSingleLine(issue),
+          workingDirectory,
+        ),
+      );
+    }
+  }
+
   return problems.join("\n");
 }
 
@@ -311,24 +374,31 @@ export function formatStructuredAnalysisReport(
   results: AnalysisResult[],
   workingDirectory = process.cwd(),
   workspaceRoot = process.env.GITHUB_WORKSPACE ?? workingDirectory,
+  worldUploadValidation?: WorldUploadValidationResult,
 ): string {
   switch (format) {
     case "json":
-      return formatJsonAnalysisReport(results);
+      return formatJsonAnalysisReport(results, worldUploadValidation);
     case "sarif":
       return formatSarifAnalysisReport(
         results,
         workingDirectory,
         workspaceRoot,
+        worldUploadValidation,
       );
     case "github-actions":
       return formatGitHubActionsAnnotations(
         results,
         workingDirectory,
         workspaceRoot,
+        worldUploadValidation,
       );
     case "vscode-problems":
-      return formatVSCodeProblems(results, workingDirectory);
+      return formatVSCodeProblems(
+        results,
+        workingDirectory,
+        worldUploadValidation,
+      );
   }
 }
 
