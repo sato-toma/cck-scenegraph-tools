@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { runAnalysis } from "./cli";
+import { runAnalysis } from "../src/cli";
 
 const temporaryDirectories: string[] = [];
 

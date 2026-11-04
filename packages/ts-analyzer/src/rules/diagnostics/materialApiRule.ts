@@ -1,5 +1,5 @@
-import { Component, SceneGraph, ValidationIssue } from "../domain/types";
-import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
+import { Component, SceneGraph, ValidationIssue } from "../../domain/types";
+import { SceneGraphParser } from "../../sceneGraph/sceneGraphParser";
 import {
   Token,
   createSourceIssue,
@@ -7,7 +7,7 @@ import {
   getCallArguments,
   getStringArgument,
   tokenizeSource,
-} from "./sourceTokens";
+} from "../../analysis/sourceTokens";
 
 const ITEM_MATERIAL_SET_LIST_TYPE =
   "ClusterVR.CreatorKit.Item.Implements.ItemMaterialSetList";

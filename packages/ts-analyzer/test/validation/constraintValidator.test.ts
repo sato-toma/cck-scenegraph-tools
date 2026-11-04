@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ConstraintValidator } from "./constraintValidator";
+import { ConstraintValidator } from "../../src/validation/constraintValidator";
 
 const gameObject = {
   id: "test-obj-1",

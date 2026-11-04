@@ -33,7 +33,7 @@ ClusterScript API の解析ルールは、Unity 上でコンポーネント構�
 - Analyzer は `ItemMaterialSetList` を対象 ScriptableItem 上で要求し、ID の形式と登録を確認する。Renderer は対象 Item と子孫に限定し、Exporter が出す Material GUID と登録 GUID の一致を検証する。親の Renderer だけでは充足しない。
 - `_EMISSION` キーワード有効化は公式要件として記載されていない。一方、経験則として無効時に `setEmissionColor` の見た目への反映が期待どおりでない場合があるため、`IMPLICIT_MATERIAL_EMISSION_DISABLED` を error ではなく warning として報告する。これは公式仕様の検証ではなく、SceneGraph による静的なヒントである。
 - `setColor` は Creator Kit からアップロードしたワールド向けで、Craft Item では利用できないと公式定義にある。今回のサンプルは `setBaseColor` を使い、Item 種別を識別できない analyzer ではこの `setColor` 条件を検査しない。
-- [ClusterScript `material` API](https://docs.cluster.mu/script/interfaces/ClusterScript.html)、[MaterialHandle](https://docs.cluster.mu/script/interfaces/MaterialHandle.html)、[Item Material Set List](https://docs.cluster.mu/creatorkit/item-components/item-material-set-list/) を参照。Unity MCP で確認した `test.unity` では ScriptableItem の Source Code Asset は設定済みだが、`CubeColor.mat` は当初 `Unlit/Texture`（`_MainTex` のみ）として読み込まれていた。Standard Shader に切り替え、`_Color`／`_EmissionColor` を設定した。Cluster 実機での動作は未確認。
+- [ClusterScript `material` API](https://docs.cluster.mu/script/interfaces/ClusterScript.html)、[MaterialHandle](https://docs.cluster.mu/script/interfaces/MaterialHandle.html)、[Item Material Set List](https://docs.cluster.mu/creatorkit/item-components/item-material-set-list/) を参照。Unity MCP で確認した `test.unity` では ScriptableItem の Source Code Asset は設定済みだが、`CubeColor.mat` は当初 `Unlit/Texture`（`_MainTex` のみ）として読み込まれていた。Standard Shader に切り替え、`_Color`／`_EmissionColor` を設定した。Cluster 実機での色・Emission 変更は確認済み。
 
 ### ステート変更APIの制約
 

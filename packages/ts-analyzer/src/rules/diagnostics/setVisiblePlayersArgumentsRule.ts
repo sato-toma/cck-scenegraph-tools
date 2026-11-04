@@ -1,4 +1,4 @@
-import { ValidationIssue } from "../domain/types";
+import { ValidationIssue } from "../../domain/types";
 
 interface Token {
   text: string;

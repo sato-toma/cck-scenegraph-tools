@@ -1,5 +1,6 @@
 import * as fs from "fs";
-import { ApiReceiver } from "../domain/types";
+import type { ApiReceiver } from "../domain/types";
+import { stateMutationRules } from "../rules/stateMutation";
 
 /**
  * TypeScript コードの簡易パーサー（静的解析用）
@@ -116,30 +117,18 @@ export class TypeScriptCodeParser {
       fullExpression: string;
     }> = [];
 
-    const mutatingMethodPattern =
-      /\$\s*\.\s*state\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[\s*['"]([^'"]+)['"]\s*\])(?:\s*(?:\.\s*[A-Za-z_$][\w$]*|\[\s*['"][^'"]+['"]\s*\]))*\s*\.(push|splice|pop|shift|unshift|sort|reverse)\s*\(/g;
-    const nestedAssignmentPattern =
-      /\$\s*\.\s*state\s*(?:\.\s*([A-Za-z_$][\w$]*)|\[\s*['"]([^'"]+)['"]\s*\])(?:\s*(?:\.\s*[A-Za-z_$][\w$]*|\[\s*['"][^'"]+['"]\s*\]))+\s*(?:[+\-*/%&|^]?=|--|\+\+)/g;
-
     lines.forEach((line: string, lineIndex: number) => {
-      let match: RegExpExecArray | null;
-
-      while ((match = mutatingMethodPattern.exec(line)) !== null) {
-        results.push({
-          line: lineIndex + 1,
-          column: match.index,
-          propertyName: match[1] ?? match[2] ?? "",
-          fullExpression: match[0].trim(),
-        });
-      }
-
-      while ((match = nestedAssignmentPattern.exec(line)) !== null) {
-        results.push({
-          line: lineIndex + 1,
-          column: match.index,
-          propertyName: match[1] ?? match[2] ?? "",
-          fullExpression: match[0].trim(),
-        });
+      for (const rule of stateMutationRules) {
+        rule.pattern.lastIndex = 0;
+        let match: RegExpExecArray | null;
+        while ((match = rule.pattern.exec(line)) !== null) {
+          results.push({
+            line: lineIndex + 1,
+            column: match.index,
+            propertyName: match[1] ?? match[2] ?? "",
+            fullExpression: match[0].trim(),
+          });
+        }
       }
     });
 

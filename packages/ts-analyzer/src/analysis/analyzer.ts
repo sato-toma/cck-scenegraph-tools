@@ -1,31 +1,15 @@
 import {
   SceneGraph,
   AnalysisResult,
-  ValidationIssue,
-  GameObject,
 } from "../domain/types";
 import * as fs from "fs";
 import { SceneGraphParser } from "../sceneGraph/sceneGraphParser";
-import { TypeScriptCodeParser } from "./typeScriptParser";
-import { ConstraintValidator } from "../validation/constraintValidator";
-import { ClusterScriptDefinitions } from "../rules/clusterScriptDefinitions";
 import { ComponentRequirementExtractor } from "./componentRequirements/extractor";
 import { ComponentRequirementValidator } from "./componentRequirements/validator";
-import { SetStateCompatArgumentValidator } from "./setStateCompatArgumentValidator";
-import { SetVisiblePlayersArgumentValidator } from "./setVisiblePlayersArgumentValidator";
-import { SubNodeExistenceValidator } from "./subNodeExistenceValidator";
-import { MaterialApiValidator } from "./materialApiValidator";
+import { runDiagnosticRules } from "../rules/diagnostics";
 import {
   summarizeComponentRequirements,
 } from "./componentRequirements/summary";
-import {
-  CallbackContextAnalyzer,
-  CallbackContextStatus,
-} from "./callbackContextAnalyzer";
-import {
-  TopLevelApiCallAnalyzer,
-  TopLevelApiCallStatus,
-} from "./topLevelApiCallAnalyzer";
 import * as path from "path";
 import { AnalysisReportFormatter } from "../reporting/analysisReportFormatter";
 import {
@@ -59,187 +43,15 @@ export class ClusterScriptAnalyzer {
     this.options = options;
   }
 
-  private getCandidateGameObjects(tsFilePath: string = ""): GameObject[] {
-    const matchingGameObjects = SceneGraphParser.findGameObjectsForSourceFile(
-      this.sceneGraphPath,
-      this.sceneGraph,
-      tsFilePath,
-    );
-    return matchingGameObjects.length === 1 ? matchingGameObjects : [];
-  }
-
   analyzeTypeScriptFile(tsFilePath: string = ""): AnalysisResult {
     const resolvedTsFilePath = this.resolveTypeScriptFile(tsFilePath);
     const sourceContent = fs.readFileSync(resolvedTsFilePath, "utf-8");
-    const apiCalls = TypeScriptCodeParser.extractApiCallsFromString(sourceContent);
-    const issues: ValidationIssue[] =
-      SetStateCompatArgumentValidator.validate(sourceContent).concat(
-        SetVisiblePlayersArgumentValidator.validate(sourceContent),
-        SubNodeExistenceValidator.validate(
-          sourceContent,
-          this.sceneGraphPath,
-          this.sceneGraph,
-          resolvedTsFilePath,
-        ),
-        MaterialApiValidator.validate(
-          sourceContent,
-          this.sceneGraphPath,
-          this.sceneGraph,
-          resolvedTsFilePath,
-        ),
-      );
-    const callbackContexts = new Map<
-      string,
-      Map<string, CallbackContextStatus>
-    >();
-    const topLevelContexts = new Map<
-      string,
-      Map<string, TopLevelApiCallStatus>
-    >();
-
-    // 各APIコールについてチェック
-    for (const call of apiCalls) {
-      const method = ClusterScriptDefinitions.getMethodDefinition(
-        call.methodName,
-        call.receiver,
-      );
-      if (!method) {
-        continue;
-      }
-
-      if (method.requiresTopLevelContext) {
-        let methodContexts = topLevelContexts.get(method.name);
-        if (!methodContexts) {
-          methodContexts = TopLevelApiCallAnalyzer.analyze(
-            sourceContent,
-            method.name,
-          );
-          topLevelContexts.set(method.name, methodContexts);
-        }
-
-        const contextStatus = methodContexts.get(
-          `${call.line}:${call.column}`,
-        );
-        if (contextStatus === "nested" || contextStatus === "unverified") {
-          const isUnverified = contextStatus === "unverified";
-          issues.push({
-            line: call.line,
-            column: call.column,
-            severity: isUnverified ? "warning" : "error",
-            code: isUnverified
-              ? "UNVERIFIED_API_CONTEXT"
-              : "INVALID_API_CONTEXT",
-            message: isUnverified
-              ? `Could not verify that '${call.methodName}' is a direct top-level statement.`
-              : `Method '${call.methodName}' must be a direct top-level statement.`,
-            apiCall: call.methodName,
-            requiredComponents: [],
-            availableComponents: [],
-          });
-        }
-      }
-
-      if (method.requiredCallbackContext || method.requiresCallbackContext) {
-        const contextKey = `${method.name}:${method.requiredCallbackContext ?? "any"}`;
-        let methodContexts = callbackContexts.get(contextKey);
-        if (!methodContexts) {
-          methodContexts = CallbackContextAnalyzer.analyze(
-            sourceContent,
-            method.name,
-            method.requiredCallbackContext,
-          );
-          callbackContexts.set(contextKey, methodContexts);
-        }
-
-        const contextStatus = methodContexts.get(`${call.line}:${call.column}`);
-        if (contextStatus === "outside" || contextStatus === "unverified") {
-          const isUnverified = contextStatus === "unverified";
-          const requiredContext = method.requiredCallbackContext
-            ? "'$." + method.requiredCallbackContext + "'"
-            : "a callback";
-          const invalidContext = method.requiredCallbackContext
-            ? `the callback registered with ${requiredContext}`
-            : "a callback";
-          issues.push({
-            line: call.line,
-            column: call.column,
-            severity: isUnverified ? "warning" : "error",
-            code: isUnverified
-              ? "UNVERIFIED_API_CONTEXT"
-              : "INVALID_API_CONTEXT",
-            message: isUnverified
-              ? `Could not verify that '${call.methodName}' is called directly inside ${requiredContext}.`
-              : `Method '${call.methodName}' must be called inside ${invalidContext}.`,
-            apiCall: call.methodName,
-            requiredComponents: [],
-            availableComponents: [],
-          });
-        }
-      }
-
-      const constraints = method.requiredComponents;
-      if (constraints.length === 0) {
-        continue;
-      }
-
-      const candidateGameObjects =
-        this.getCandidateGameObjects(resolvedTsFilePath);
-      const gameObject = candidateGameObjects[0];
-      if (!gameObject) {
-        continue;
-      }
-
-      // 制約を検証
-      const validation = ConstraintValidator.validateGameObject(
-        gameObject,
-        constraints,
-        this.sceneGraph,
-      );
-
-      if (!validation.isValid) {
-        const requiredComponents = constraints
-          .filter((c) => c.requirement === "required")
-          .map((constraint) => ConstraintValidator.formatConstraint(constraint));
-        const onlyUnverifiedRequirements =
-          validation.missingRequired.length === 0 &&
-          validation.extraForbidden.length === 0 &&
-          validation.unverifiedRequired.length > 0;
-
-        issues.push({
-          line: call.line,
-          column: call.column,
-          severity: onlyUnverifiedRequirements ? "warning" : "error",
-          code: onlyUnverifiedRequirements
-            ? "UNVERIFIED_COMPONENT_REQUIREMENT"
-            : "MISSING_COMPONENT",
-          message: onlyUnverifiedRequirements
-            ? `Could not verify component requirements for method '${call.methodName}': ${validation.unverifiedRequired.join(", ")}`
-            : `Method '${call.methodName}' requires components: ${requiredComponents.join(", ")}`,
-          apiCall: call.methodName,
-          requiredComponents: requiredComponents,
-          availableComponents: SceneGraphParser.getEnabledComponentsInHierarchy(
-            this.sceneGraph,
-            gameObject,
-          ).map((c) => c.type),
-        });
-      }
-    }
-
-    const invalidStateMutations =
-      TypeScriptCodeParser.extractInvalidStateMutations(resolvedTsFilePath);
-
-    for (const invalidMutation of invalidStateMutations) {
-      issues.push({
-        line: invalidMutation.line,
-        column: invalidMutation.column,
-        severity: "error",
-        code: "INVALID_STATE_MUTATION",
-        message: `Directly mutating $.state.${invalidMutation.propertyName} with property assignment or array/object mutating methods does not update state. Use a temporary variable, modify it, and reassign it back to $.state.${invalidMutation.propertyName}.`,
-        apiCall: `$.state.${invalidMutation.propertyName}.push`,
-        requiredComponents: [],
-        availableComponents: [],
-      });
-    }
+    const issues = runDiagnosticRules({
+      source: sourceContent,
+      sourceFilePath: resolvedTsFilePath,
+      sceneGraphPath: this.sceneGraphPath,
+      sceneGraph: this.sceneGraph,
+    });
 
     const extractedComponentRequests =
       ComponentRequirementExtractor.extractFromFile(resolvedTsFilePath);

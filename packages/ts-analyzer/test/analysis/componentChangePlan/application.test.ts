@@ -6,12 +6,12 @@ import {
   resolveComponentChangeSettings,
   type ComponentChangePlan,
   type UnityComponentApplicationBridge,
-} from ".";
+} from "../../../src/analysis/componentChangePlan";
 import type {
   AnalysisResult,
   ComponentRequirementRequest,
   SceneGraph,
-} from "../../domain/types";
+} from "../../../src/domain/types";
 
 const sceneGraph: SceneGraph = {
   project: "TestProject",
