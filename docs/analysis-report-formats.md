@@ -39,7 +39,7 @@ npm run --silent scenegraph:analyze -- `
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "worldUploadValidation": {
     "sceneGraphPath": "SceneGraph.toml",
     "issues": []
@@ -67,7 +67,7 @@ npm run --silent scenegraph:analyze -- `
 }
 ```
 
-`analyze` コマンドは schemaVersion 2 を出力し、SceneGraph単位の `worldUploadValidation` を追加します。`issues` が空でなければ、World Upload Validator の検証違反があります。
+`analyze` コマンドは既存互換性のため schemaVersion 1 を維持したまま、SceneGraph単位の `worldUploadValidation` を追加します。`issues` が空でなければ、World Upload Validator の検証違反があります。この追加フィールドは既存の `results` 配列の構造を変更しません。
 
 各 result は `issues`、`componentRequests`、`summary` を持ちます。要求の型、対象、状態、根拠、ソース位置は `componentRequests` に含まれます。互換性のない変更では `schemaVersion` を更新します。
 

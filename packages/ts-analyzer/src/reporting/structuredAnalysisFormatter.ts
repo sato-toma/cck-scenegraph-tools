@@ -64,7 +64,7 @@ export function formatJsonAnalysisReport(
 ): string {
   return JSON.stringify(
     {
-      schemaVersion: worldUploadValidation ? 2 : 1,
+      schemaVersion: 1,
       ...(worldUploadValidation
         ? { worldUploadValidation }
         : {}),

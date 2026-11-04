@@ -56,7 +56,7 @@ describe("analyze CLI", () => {
       schemaVersion: number;
       worldUploadValidation: { issues: string[] };
     };
-    expect(report.schemaVersion).toBe(2);
+    expect(report.schemaVersion).toBe(1);
     expect(report.worldUploadValidation.issues).toContain(
       "Exactly one DespawnHeight component is required; found 0.",
     );

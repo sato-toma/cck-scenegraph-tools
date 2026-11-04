@@ -130,7 +130,7 @@ describe("structured analysis formatters", () => {
     expect(report.results[0]?.summary.componentRequestCounts.unverified).toBe(1);
   });
 
-  it("includes upload validation in the JSON report and bumps its schema version", () => {
+  it("includes upload validation without changing the existing JSON schema version", () => {
     const uploadValidation: WorldUploadValidationResult = {
       sceneGraphPath: "SceneGraph.toml",
       issues: ["Exactly one DespawnHeight component is required; found 0."],
@@ -143,7 +143,7 @@ describe("structured analysis formatters", () => {
     };
 
     expect(report).toEqual({
-      schemaVersion: 2,
+      schemaVersion: 1,
       worldUploadValidation: uploadValidation,
       results: [],
     });
