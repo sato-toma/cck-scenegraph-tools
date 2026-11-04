@@ -8,6 +8,7 @@ import { TypeScriptCodeParser } from "./analysis/typeScriptParser";
 import { ClusterScriptDefinitions } from "./rules/clusterScriptDefinitions";
 import { formatComponentRequirementStatusCounts } from "./analysis/componentRequirements/summary";
 import type { AnalysisResult } from "./domain/types";
+import { WorldUploadValidator } from "./validation/worldUploadValidator";
 import { formatComponentChangePlan } from "./reporting/componentChangePlanFormatter";
 import {
   ANALYSIS_REPORT_FORMATS,
@@ -154,7 +155,7 @@ function analyzeCommand(args: string[]) {
   }
 }
 
-function runAnalysis(
+export function runAnalysis(
   sceneGraphPath: string,
   targetFiles: string[],
   format: AnalysisReportFormat,
@@ -163,13 +164,31 @@ function runAnalysis(
   const analyzer = new ClusterScriptAnalyzer(sceneGraphPath, {
     strictOptionalLookups,
   });
+  const worldUploadValidation = {
+    sceneGraphPath,
+    issues: WorldUploadValidator.validate(
+      SceneGraphParser.parseFile(sceneGraphPath),
+    ),
+  };
+  if (format === "text") {
+    printWorldUploadValidation(worldUploadValidation.issues);
+  }
+
   if (targetFiles.length === 0) {
     if (format === "text") {
       console.log(
         colorize("No ScriptableItem source files found.", ANSI.yellow),
       );
     } else {
-      console.log(formatStructuredAnalysisReport(format, []));
+      console.log(
+        formatStructuredAnalysisReport(
+          format,
+          [],
+          process.cwd(),
+          process.env.GITHUB_WORKSPACE ?? process.cwd(),
+          worldUploadValidation,
+        ),
+      );
     }
     return;
   }
@@ -189,7 +208,28 @@ function runAnalysis(
   }
 
   if (format !== "text") {
-    console.log(formatStructuredAnalysisReport(format, results));
+    console.log(
+      formatStructuredAnalysisReport(
+        format,
+        results,
+        process.cwd(),
+        process.env.GITHUB_WORKSPACE ?? process.cwd(),
+        worldUploadValidation,
+      ),
+    );
+  }
+}
+
+function printWorldUploadValidation(issues: string[]): void {
+  console.log(colorize("\n=== World Upload Validation ===", ANSI.bold));
+  if (issues.length === 0) {
+    console.log(colorize("No upload validation issues found.", ANSI.green));
+    return;
+  }
+
+  console.log(colorize(`Upload issues: ${issues.length}`, ANSI.red));
+  for (const issue of issues) {
+    console.log(`  ${colorize("[ERROR]", ANSI.red)} ${issue}`);
   }
 }
 
@@ -583,46 +623,51 @@ function listApisCommand() {
   }
 }
 
-// Main CLI entry point
-const args = process.argv.slice(2);
+function main(): void {
+  const args = process.argv.slice(2);
 
-if (args.length === 0) {
-  printUsage();
-  process.exit(0);
+  if (args.length === 0) {
+    printUsage();
+    process.exit(0);
+  }
+
+  const command = args[0];
+  const commandArgs = args.slice(1);
+
+  switch (command) {
+    case "analyze":
+      analyzeCommand(commandArgs);
+      break;
+    case "report":
+      reportCommand(commandArgs);
+      break;
+    case "coverage":
+      coverageCommand(commandArgs);
+      break;
+    case "recommend":
+      recommendCommand(commandArgs);
+      break;
+    case "plan":
+      planCommand(commandArgs);
+      break;
+    case "scene-graph":
+      sceneGraphCommand(commandArgs);
+      break;
+    case "list-apis":
+      listApisCommand();
+      break;
+    case "--help":
+    case "-h":
+    case "help":
+      printUsage();
+      break;
+    default:
+      console.error(`Unknown command: ${command}`);
+      printUsage();
+      process.exit(1);
+  }
 }
 
-const command = args[0];
-const commandArgs = args.slice(1);
-
-switch (command) {
-  case "analyze":
-    analyzeCommand(commandArgs);
-    break;
-  case "report":
-    reportCommand(commandArgs);
-    break;
-  case "coverage":
-    coverageCommand(commandArgs);
-    break;
-  case "recommend":
-    recommendCommand(commandArgs);
-    break;
-  case "plan":
-    planCommand(commandArgs);
-    break;
-  case "scene-graph":
-    sceneGraphCommand(commandArgs);
-    break;
-  case "list-apis":
-    listApisCommand();
-    break;
-  case "--help":
-  case "-h":
-  case "help":
-    printUsage();
-    break;
-  default:
-    console.error(`Unknown command: ${command}`);
-    printUsage();
-    process.exit(1);
+if (typeof require !== "undefined" && require.main === module) {
+  main();
 }

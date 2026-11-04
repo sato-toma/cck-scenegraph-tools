@@ -45,6 +45,11 @@ export interface SceneGraph {
   materials?: MaterialRecord[];
 }
 
+export interface WorldUploadValidationResult {
+  sceneGraphPath: string;
+  issues: string[];
+}
+
 /**
  * ClusterScript コンポーネント制約
  */
